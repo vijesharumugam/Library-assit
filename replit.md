@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a full-stack library management system built with React, Express, and PostgreSQL. The application provides role-based access control for students, librarians, and administrators to manage books, track borrowing transactions, and oversee library operations. Students can browse and borrow books, librarians can manage the book catalog and transactions, while administrators have full system control including user management and role assignments.
+This is a full-stack library management system built with React, Express, and MongoDB Atlas (MEAN stack). The application provides role-based access control for students, librarians, and administrators to manage books, track borrowing transactions, and oversee library operations. Students can browse and borrow books, librarians can manage the book catalog and transactions, while administrators have full system control including user management and role assignments.
 
 ## User Preferences
 
@@ -23,7 +23,7 @@ Preferred communication style: Simple, everyday language.
 - **Framework**: Express.js with TypeScript
 - **Authentication**: Passport.js with local strategy using session-based auth
 - **Password Security**: Node.js crypto module with scrypt for password hashing
-- **Session Management**: Express sessions with PostgreSQL session store
+- **Session Management**: Express sessions with MongoDB session store
 - **API Design**: RESTful API with role-based authorization middleware
 - **Error Handling**: Centralized error handling with proper HTTP status codes
 
@@ -48,7 +48,7 @@ Preferred communication style: Simple, everyday language.
 ### Security Features
 - **CSRF Protection**: Trust proxy configuration for secure sessions
 - **Input Validation**: Zod schemas for both client and server-side validation
-- **SQL Injection Prevention**: Parameterized queries through Drizzle ORM
+- **NoSQL Injection Prevention**: Secure queries through Prisma ORM with MongoDB
 - **Session Security**: Secure session configuration with proper cookie settings
 
 ## External Dependencies
@@ -56,7 +56,7 @@ Preferred communication style: Simple, everyday language.
 ### Core Framework Dependencies
 - **React Ecosystem**: React 18 with TypeScript, Vite for development and building
 - **Express.js**: Web framework with TypeScript support via tsx
-- **PostgreSQL**: Database with Neon serverless driver for cloud deployment
+- **MongoDB Atlas**: Cloud-hosted MongoDB database service
 
 ### UI and Styling
 - **Shadcn/ui**: Complete UI component library built on Radix UI primitives
@@ -65,13 +65,13 @@ Preferred communication style: Simple, everyday language.
 
 ### Authentication & Security
 - **Passport.js**: Authentication middleware with local strategy
-- **Express Session**: Session management with connect-pg-simple for PostgreSQL storage
+- **Express Session**: Session management with connect-mongo for MongoDB storage
 - **Node.js Crypto**: Built-in cryptographic functions for password security
 
 ### Database & ORM
-- **Drizzle ORM**: Type-safe ORM with PostgreSQL dialect support
-- **Drizzle Kit**: Migration and schema management tooling
-- **Neon Database**: Serverless PostgreSQL database service
+- **Prisma ORM**: Type-safe ORM with MongoDB support
+- **Prisma Client**: Auto-generated and type-safe database client
+- **MongoDB Atlas**: Cloud-hosted MongoDB database service
 
 ### State Management & Forms
 - **TanStack Query**: Server state management and caching
