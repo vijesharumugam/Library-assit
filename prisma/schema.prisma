@@ -38,8 +38,6 @@ model Book {
   publisher       String?
   totalCopies     Int
   availableCopies Int
-  section         String   @default("A1")
-  shelf           String   @default("1")
   createdAt       DateTime @default(now())
 
   // Relations
