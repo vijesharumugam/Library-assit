@@ -1,8 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 
-if (!process.env.DATABASE_URL) {
+if (!process.env.MONGODB_URI) {
   throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
+    "MONGODB_URI must be set. Did you forget to provision a database?",
   );
 }
 
