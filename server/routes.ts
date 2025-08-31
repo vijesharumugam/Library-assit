@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertBookSchema, insertTransactionSchema, TransactionStatus } from "@shared/schema";
+import { insertBookSchema, insertTransactionSchema, insertBookRequestSchema, TransactionStatus, BookRequestStatus } from "@shared/schema";
 import { z } from "zod";
 import { prisma } from "./db";
 
@@ -130,43 +130,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/transactions/borrow", requireAuth, async (req, res) => {
+  // Book Request routes (for students)
+  app.post("/api/book-requests", requireAuth, async (req, res) => {
     try {
-      const { bookId } = req.body;
+      const { bookId, notes } = req.body;
       
       if (!bookId) {
         return res.status(400).json({ message: "Book ID is required" });
       }
 
-      // Check if book is available
+      // Check if book exists
       const book = await storage.getBook(bookId);
       if (!book) {
         return res.status(404).json({ message: "Book not found" });
       }
-      
-      if (book.availableCopies <= 0) {
-        return res.status(400).json({ message: "Book is not available" });
+
+      // Students can only request books
+      if (req.user!.role !== "STUDENT") {
+        return res.status(403).json({ message: "Only students can request books" });
       }
 
-      // Create transaction with due date 14 days from now
-      const dueDate = new Date();
-      dueDate.setDate(dueDate.getDate() + 14);
-
-      const transactionData = {
+      const requestData = {
         userId: req.user!.id,
         bookId,
-        dueDate,
-        status: TransactionStatus.BORROWED,
+        requestedBy: req.user!.fullName,
+        notes: notes || "",
+        status: BookRequestStatus.PENDING,
       };
 
-      const transaction = await storage.createTransaction(transactionData);
-      
-      // Update book availability
-      await storage.updateBookAvailability(bookId, -1);
-
-      res.status(201).json(transaction);
+      const request = await storage.createBookRequest(requestData);
+      res.status(201).json(request);
     } catch (error) {
-      res.status(500).json({ message: "Failed to borrow book" });
+      res.status(500).json({ message: "Failed to create book request" });
+    }
+  });
+
+  app.get("/api/book-requests/my", requireAuth, async (req, res) => {
+    try {
+      const requests = await storage.getBookRequestsByUser(req.user!.id);
+      res.json(requests);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch book requests" });
+    }
+  });
+
+  app.get("/api/book-requests", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const requests = await storage.getAllBookRequests();
+      res.json(requests);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch book requests" });
+    }
+  });
+
+  app.get("/api/book-requests/pending", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const requests = await storage.getPendingBookRequests();
+      res.json(requests);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch pending requests" });
+    }
+  });
+
+  app.post("/api/book-requests/:id/approve", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const transaction = await storage.approveBookRequest(req.params.id, req.user!.id);
+      
+      if (!transaction) {
+        return res.status(404).json({ message: "Request not found or cannot be approved" });
+      }
+
+      res.json(transaction);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to approve book request" });
+    }
+  });
+
+  app.post("/api/book-requests/:id/reject", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const request = await storage.updateBookRequestStatus(req.params.id, BookRequestStatus.REJECTED);
+      
+      if (!request) {
+        return res.status(404).json({ message: "Request not found" });
+      }
+
+      res.json(request);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to reject book request" });
     }
   });
 

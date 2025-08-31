@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { User, Book, Transaction, Role, TransactionStatus } from "@prisma/client";
+import { User, Book, Transaction, BookRequest, Role, TransactionStatus, BookRequestStatus } from "@prisma/client";
 
 // Prisma-generated types
-export type { User, Book, Transaction };
+export type { User, Book, Transaction, BookRequest };
 
 // Export enums both as types and runtime values
-export { Role, TransactionStatus } from "@prisma/client";
+export { Role, TransactionStatus, BookRequestStatus } from "@prisma/client";
 
 // Input validation schemas
 export const insertUserSchema = z.object({
@@ -33,10 +33,19 @@ export const insertTransactionSchema = z.object({
   status: z.enum(["BORROWED", "RETURNED", "OVERDUE"]).optional(),
 });
 
+export const insertBookRequestSchema = z.object({
+  userId: z.string(),
+  bookId: z.string(),
+  requestedBy: z.string(),
+  notes: z.string().optional(),
+  status: z.enum(["PENDING", "APPROVED", "REJECTED", "FULFILLED"]).optional(),
+});
+
 // Inferred types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertBook = z.infer<typeof insertBookSchema>;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
+export type InsertBookRequest = z.infer<typeof insertBookRequestSchema>;
 
 // Extended types for queries with relations
 export type TransactionWithBook = Transaction & {
@@ -44,6 +53,15 @@ export type TransactionWithBook = Transaction & {
 };
 
 export type TransactionWithUserAndBook = Transaction & {
+  user: User;
+  book: Book;
+};
+
+export type BookRequestWithBook = BookRequest & {
+  book: Book;
+};
+
+export type BookRequestWithUserAndBook = BookRequest & {
   user: User;
   book: Book;
 };

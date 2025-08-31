@@ -10,7 +10,7 @@ import { BookOpen, Users, Clock, TrendingUp, LogOut, Plus, Edit, Trash2 } from "
 import { useState } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Book, Transaction, User, TransactionStatus, Role } from "@shared/schema";
+import { Book, Transaction, User, BookRequest, TransactionStatus, BookRequestStatus, Role } from "@shared/schema";
 import { AddBookModal } from "@/components/add-book-modal";
 
 export default function LibrarianDashboard() {
@@ -28,6 +28,14 @@ export default function LibrarianDashboard() {
     queryKey: ["/api/transactions"],
   });
 
+  const { data: bookRequests = [], isLoading: requestsLoading } = useQuery<(BookRequest & { user: User; book: Book })[]>({
+    queryKey: ["/api/book-requests"],
+  });
+
+  const { data: pendingRequests = [], isLoading: pendingRequestsLoading } = useQuery<(BookRequest & { user: User; book: Book })[]>({
+    queryKey: ["/api/book-requests/pending"],
+  });
+
   const deleteBookMutation = useMutation({
     mutationFn: async (bookId: string) => {
       await apiRequest("DELETE", `/api/books/${bookId}`);
@@ -42,6 +50,52 @@ export default function LibrarianDashboard() {
     onError: (error: Error) => {
       toast({
         title: "Failed to delete book",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const approveRequestMutation = useMutation({
+    mutationFn: async (requestId: string) => {
+      const res = await apiRequest("POST", `/api/book-requests/${requestId}/approve`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/book-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/book-requests/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/books"] });
+      toast({
+        title: "Request approved successfully",
+        description: "The book has been borrowed by the student",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to approve request",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const rejectRequestMutation = useMutation({
+    mutationFn: async (requestId: string) => {
+      const res = await apiRequest("POST", `/api/book-requests/${requestId}/reject`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/book-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/book-requests/pending"] });
+      toast({
+        title: "Request rejected",
+        description: "The book request has been rejected",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to reject request",
         description: error.message,
         variant: "destructive",
       });
@@ -65,6 +119,7 @@ export default function LibrarianDashboard() {
     return dueDate < today;
   }).length;
   const activeUsers = new Set(allTransactions.filter(t => t.status === "BORROWED").map(t => t.userId)).size;
+  const totalPendingRequests = pendingRequests.length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -96,15 +151,16 @@ export default function LibrarianDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="dashboard" data-testid="tab-dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="requests" data-testid="tab-requests">Book Requests</TabsTrigger>
             <TabsTrigger value="books" data-testid="tab-books">Manage Books</TabsTrigger>
             <TabsTrigger value="transactions" data-testid="tab-transactions">Transactions</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
             {/* Statistics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center">
@@ -168,6 +224,22 @@ export default function LibrarianDashboard() {
                   </div>
                 </CardContent>
               </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <TrendingUp className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-muted-foreground">Pending Requests</p>
+                      <p className="text-2xl font-semibold text-foreground" data-testid="stat-pending-requests">
+                        {totalPendingRequests}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Recent Activity */}
@@ -203,6 +275,186 @@ export default function LibrarianDashboard() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="requests" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">Book Requests</h2>
+                <p className="text-muted-foreground">Manage student book requests</p>
+              </div>
+            </div>
+
+            {/* Pending Requests */}
+            <Card>
+              <CardHeader>
+                <CardTitle data-testid="title-pending-requests">Pending Requests</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {pendingRequestsLoading ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Loading pending requests...</p>
+                  </div>
+                ) : pendingRequests.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No pending requests</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-muted/50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Student</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Book</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Request Date</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Notes</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-card divide-y divide-border">
+                        {pendingRequests.map((request) => (
+                          <tr key={request.id} className="hover:bg-muted/50" data-testid={`row-request-${request.id}`}>
+                            <td className="px-6 py-4">
+                              <div>
+                                <div className="text-sm font-medium text-foreground" data-testid={`text-request-student-${request.id}`}>
+                                  {request.user.fullName}
+                                </div>
+                                <div className="text-sm text-muted-foreground" data-testid={`text-request-username-${request.id}`}>
+                                  {request.user.username}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center">
+                                <div className="h-12 w-8 bg-gradient-to-b from-blue-600 to-blue-800 rounded shadow-sm mr-4 flex items-center justify-center">
+                                  <BookOpen className="h-3 w-3 text-white" />
+                                </div>
+                                <div>
+                                  <div className="text-sm font-medium text-foreground" data-testid={`text-request-book-title-${request.id}`}>
+                                    {request.book.title}
+                                  </div>
+                                  <div className="text-sm text-muted-foreground" data-testid={`text-request-book-author-${request.id}`}>
+                                    {request.book.author}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-foreground" data-testid={`text-request-date-${request.id}`}>
+                              {new Date(request.requestDate).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-muted-foreground" data-testid={`text-request-notes-${request.id}`}>
+                              {request.notes || "—"}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex space-x-2">
+                                <Button
+                                  size="sm"
+                                  onClick={() => approveRequestMutation.mutate(request.id)}
+                                  disabled={approveRequestMutation.isPending}
+                                  data-testid={`button-approve-${request.id}`}
+                                >
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => rejectRequestMutation.mutate(request.id)}
+                                  disabled={rejectRequestMutation.isPending}
+                                  data-testid={`button-reject-${request.id}`}
+                                >
+                                  Reject
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* All Requests */}
+            <Card>
+              <CardHeader>
+                <CardTitle data-testid="title-all-requests">All Requests</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {requestsLoading ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Loading all requests...</p>
+                  </div>
+                ) : bookRequests.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No requests found</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-muted/50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Student</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Book</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Request Date</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Notes</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-card divide-y divide-border">
+                        {bookRequests.map((request) => (
+                          <tr key={request.id} className="hover:bg-muted/50" data-testid={`row-all-request-${request.id}`}>
+                            <td className="px-6 py-4">
+                              <div>
+                                <div className="text-sm font-medium text-foreground" data-testid={`text-all-request-student-${request.id}`}>
+                                  {request.user.fullName}
+                                </div>
+                                <div className="text-sm text-muted-foreground" data-testid={`text-all-request-username-${request.id}`}>
+                                  {request.user.username}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center">
+                                <div className="h-12 w-8 bg-gradient-to-b from-blue-600 to-blue-800 rounded shadow-sm mr-4 flex items-center justify-center">
+                                  <BookOpen className="h-3 w-3 text-white" />
+                                </div>
+                                <div>
+                                  <div className="text-sm font-medium text-foreground" data-testid={`text-all-request-book-title-${request.id}`}>
+                                    {request.book.title}
+                                  </div>
+                                  <div className="text-sm text-muted-foreground" data-testid={`text-all-request-book-author-${request.id}`}>
+                                    {request.book.author}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-foreground" data-testid={`text-all-request-date-${request.id}`}>
+                              {new Date(request.requestDate).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4">
+                              <Badge 
+                                variant={
+                                  request.status === "FULFILLED" ? "default" :
+                                  request.status === "REJECTED" ? "destructive" :
+                                  request.status === "APPROVED" ? "secondary" : "outline"
+                                }
+                                data-testid={`badge-all-request-status-${request.id}`}
+                              >
+                                {request.status}
+                              </Badge>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-muted-foreground" data-testid={`text-all-request-notes-${request.id}`}>
+                              {request.notes || "—"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </CardContent>

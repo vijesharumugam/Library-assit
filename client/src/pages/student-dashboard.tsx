@@ -3,13 +3,14 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Clock, CheckCircle, Search, LogOut } from "lucide-react";
+import { BookOpen, Clock, CheckCircle, Send, LogOut } from "lucide-react";
 import { useState } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Book, Transaction } from "@shared/schema";
+import { Book, Transaction, BookRequest } from "@shared/schema";
 
 export default function StudentDashboard() {
   const { user, logoutMutation } = useAuth();
@@ -25,22 +26,25 @@ export default function StudentDashboard() {
     queryKey: ["/api/transactions/my"],
   });
 
-  const borrowMutation = useMutation({
-    mutationFn: async (bookId: string) => {
-      const res = await apiRequest("POST", "/api/transactions/borrow", { bookId });
+  const { data: myRequests = [], isLoading: requestsLoading } = useQuery<(BookRequest & { book: Book })[]>({
+    queryKey: ["/api/book-requests/my"],
+  });
+
+  const requestMutation = useMutation({
+    mutationFn: async ({ bookId, notes }: { bookId: string; notes?: string }) => {
+      const res = await apiRequest("POST", "/api/book-requests", { bookId, notes });
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/books/available"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions/my"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/book-requests/my"] });
       toast({
-        title: "Book borrowed successfully",
-        description: "The book has been added to your account",
+        title: "Book request submitted",
+        description: "Your request has been sent to the librarian for approval",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to borrow book",
+        title: "Failed to request book",
         description: error.message,
         variant: "destructive",
       });
@@ -78,6 +82,7 @@ export default function StudentDashboard() {
   });
 
   const activeBorrowings = myTransactions.filter(t => t.status === "BORROWED");
+  const pendingRequests = myRequests.filter(r => r.status === "PENDING");
   const dueSoon = activeBorrowings.filter(t => {
     const dueDate = new Date(t.dueDate);
     const today = new Date();
@@ -116,7 +121,7 @@ export default function StudentDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -127,6 +132,22 @@ export default function StudentDashboard() {
                   <p className="text-sm font-medium text-muted-foreground">Currently Borrowed</p>
                   <p className="text-2xl font-semibold text-foreground" data-testid="stat-borrowed-count">
                     {activeBorrowings.length}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Send className="h-6 w-6 text-blue-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-muted-foreground">Pending Requests</p>
+                  <p className="text-2xl font-semibold text-foreground" data-testid="stat-pending-requests">
+                    {pendingRequests.length}
                   </p>
                 </div>
               </div>
@@ -259,12 +280,82 @@ export default function StudentDashboard() {
                         </td>
                         <td className="px-6 py-4">
                           <Button
-                            onClick={() => borrowMutation.mutate(book.id)}
-                            disabled={borrowMutation.isPending || book.availableCopies === 0}
-                            data-testid={`button-borrow-${book.id}`}
+                            onClick={() => requestMutation.mutate({ bookId: book.id })}
+                            disabled={requestMutation.isPending || book.availableCopies === 0}
+                            data-testid={`button-request-${book.id}`}
                           >
-                            {book.availableCopies === 0 ? "Unavailable" : "Borrow"}
+                            {book.availableCopies === 0 ? "Unavailable" : "Request Book"}
                           </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* My Book Requests */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle data-testid="title-my-book-requests">My Book Requests</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {requestsLoading ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Loading your requests...</p>
+              </div>
+            ) : myRequests.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">You haven't requested any books yet</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Book</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Request Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-card divide-y divide-border">
+                    {myRequests.map((request) => (
+                      <tr key={request.id} className="hover:bg-muted/50" data-testid={`row-request-${request.id}`}>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center">
+                            <div className="h-12 w-8 bg-gradient-to-b from-blue-600 to-blue-800 rounded shadow-sm mr-4 flex items-center justify-center">
+                              <BookOpen className="h-3 w-3 text-white" />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-foreground" data-testid={`text-request-book-title-${request.id}`}>
+                                {request.book.title}
+                              </div>
+                              <div className="text-sm text-muted-foreground" data-testid={`text-request-book-author-${request.id}`}>
+                                {request.book.author}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-foreground" data-testid={`text-request-date-${request.id}`}>
+                          {new Date(request.requestDate).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge 
+                            variant={
+                              request.status === "FULFILLED" ? "default" :
+                              request.status === "REJECTED" ? "destructive" :
+                              request.status === "APPROVED" ? "secondary" : "outline"
+                            }
+                            data-testid={`badge-request-status-${request.id}`}
+                          >
+                            {request.status}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-muted-foreground" data-testid={`text-request-notes-${request.id}`}>
+                          {request.notes || "—"}
                         </td>
                       </tr>
                     ))}

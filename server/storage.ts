@@ -2,13 +2,18 @@ import {
   User, 
   Book, 
   Transaction, 
+  BookRequest,
   Role, 
   TransactionStatus,
+  BookRequestStatus,
   InsertUser, 
   InsertBook, 
   InsertTransaction, 
+  InsertBookRequest,
   TransactionWithBook, 
-  TransactionWithUserAndBook 
+  TransactionWithUserAndBook,
+  BookRequestWithBook,
+  BookRequestWithUserAndBook
 } from "@shared/schema";
 import { prisma } from "./db";
 import session from "express-session";
@@ -40,6 +45,14 @@ export interface IStorage {
   getAllTransactions(): Promise<TransactionWithUserAndBook[]>;
   updateTransactionStatus(id: string, status: TransactionStatus, returnedDate?: Date): Promise<Transaction | null>;
   getActiveTransactions(): Promise<TransactionWithUserAndBook[]>;
+  
+  // Book Request methods
+  createBookRequest(request: InsertBookRequest): Promise<BookRequest>;
+  getBookRequestsByUser(userId: string): Promise<BookRequestWithBook[]>;
+  getAllBookRequests(): Promise<BookRequestWithUserAndBook[]>;
+  getPendingBookRequests(): Promise<BookRequestWithUserAndBook[]>;
+  updateBookRequestStatus(id: string, status: BookRequestStatus): Promise<BookRequest | null>;
+  approveBookRequest(requestId: string, librarianId: string): Promise<Transaction | null>;
   
   sessionStore: session.Store;
 }
@@ -237,6 +250,96 @@ export class DatabaseStorage implements IStorage {
       },
       orderBy: { borrowedDate: 'desc' }
     });
+  }
+
+  // Book Request methods
+  async createBookRequest(insertRequest: InsertBookRequest): Promise<BookRequest> {
+    return await prisma.bookRequest.create({
+      data: insertRequest
+    });
+  }
+
+  async getBookRequestsByUser(userId: string): Promise<BookRequestWithBook[]> {
+    return await prisma.bookRequest.findMany({
+      where: { userId },
+      include: { book: true },
+      orderBy: { requestDate: 'desc' }
+    });
+  }
+
+  async getAllBookRequests(): Promise<BookRequestWithUserAndBook[]> {
+    return await prisma.bookRequest.findMany({
+      include: { 
+        user: true, 
+        book: true 
+      },
+      orderBy: { requestDate: 'desc' }
+    });
+  }
+
+  async getPendingBookRequests(): Promise<BookRequestWithUserAndBook[]> {
+    return await prisma.bookRequest.findMany({
+      where: { 
+        status: BookRequestStatus.PENDING 
+      },
+      include: { 
+        user: true, 
+        book: true 
+      },
+      orderBy: { requestDate: 'desc' }
+    });
+  }
+
+  async updateBookRequestStatus(id: string, status: BookRequestStatus): Promise<BookRequest | null> {
+    try {
+      return await prisma.bookRequest.update({
+        where: { id },
+        data: { status }
+      });
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async approveBookRequest(requestId: string, librarianId: string): Promise<Transaction | null> {
+    try {
+      const request = await prisma.bookRequest.findUnique({
+        where: { id: requestId },
+        include: { book: true, user: true }
+      });
+
+      if (!request || request.status !== BookRequestStatus.PENDING) {
+        return null;
+      }
+
+      // Check if book is available
+      if (request.book.availableCopies <= 0) {
+        return null;
+      }
+
+      // Create transaction
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + 14); // 14 days from now
+
+      const transaction = await prisma.transaction.create({
+        data: {
+          userId: request.userId,
+          bookId: request.bookId,
+          dueDate,
+          status: TransactionStatus.BORROWED
+        }
+      });
+
+      // Update book availability
+      await this.updateBookAvailability(request.bookId, -1);
+
+      // Update request status
+      await this.updateBookRequestStatus(requestId, BookRequestStatus.FULFILLED);
+
+      return transaction;
+    } catch (error) {
+      return null;
+    }
   }
 }
 
