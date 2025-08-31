@@ -32,13 +32,6 @@ export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [rememberMe, setRememberMe] = useState(false);
 
-  // Redirect if already logged in
-  if (user) {
-    const redirectPath = user.role === "ADMIN" ? "/admin" : 
-                        user.role === "LIBRARIAN" ? "/librarian" : "/";
-    return <Redirect to={redirectPath} />;
-  }
-
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -58,6 +51,13 @@ export default function AuthPage() {
       confirmPassword: "",
     },
   });
+
+  // Redirect if already logged in
+  if (user) {
+    const redirectPath = user.role === "ADMIN" ? "/admin" : 
+                        user.role === "LIBRARIAN" ? "/librarian" : "/";
+    return <Redirect to={redirectPath} />;
+  }
 
   const onLogin = (data: LoginForm) => {
     loginMutation.mutate(data);
