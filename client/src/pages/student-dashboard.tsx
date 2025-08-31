@@ -99,14 +99,14 @@ export default function StudentDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <BookOpen className="h-8 w-8 text-primary mr-3" />
-              <h1 className="text-xl font-semibold text-foreground">Library Assist</h1>
+              <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-primary mr-2 sm:mr-3" />
+              <h1 className="text-lg sm:text-xl font-semibold text-foreground">Library Assist</h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-muted-foreground">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <span className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
                 Welcome, <span className="font-medium text-foreground" data-testid="text-user-name">{user?.fullName}</span>
               </span>
-              <Badge variant="secondary" data-testid="badge-user-role">Student</Badge>
+              <Badge variant="secondary" data-testid="badge-user-role" className="text-xs">Student</Badge>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
@@ -146,16 +146,16 @@ export default function StudentDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <BookOpen className="h-6 w-6 text-primary" />
+                <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg">
+                  <BookOpen className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Currently Borrowed</p>
-                  <p className="text-2xl font-semibold text-foreground" data-testid="stat-borrowed-count">
+                <div className="ml-2 sm:ml-4">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Currently Borrowed</p>
+                  <p className="text-lg sm:text-2xl font-semibold text-foreground" data-testid="stat-borrowed-count">
                     {activeBorrowings.length}
                   </p>
                 </div>
@@ -164,14 +164,14 @@ export default function StudentDashboard() {
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Send className="h-6 w-6 text-blue-600" />
+                <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg">
+                  <Send className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Pending Requests</p>
-                  <p className="text-2xl font-semibold text-foreground" data-testid="stat-pending-requests">
+                <div className="ml-2 sm:ml-4">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Pending Requests</p>
+                  <p className="text-lg sm:text-2xl font-semibold text-foreground" data-testid="stat-pending-requests">
                     {pendingRequests.length}
                   </p>
                 </div>
@@ -180,14 +180,14 @@ export default function StudentDashboard() {
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-accent/10 rounded-lg">
-                  <CheckCircle className="h-6 w-6 text-accent" />
+                <div className="p-1.5 sm:p-2 bg-accent/10 rounded-lg">
+                  <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6 text-accent" />
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Total Borrowed</p>
-                  <p className="text-2xl font-semibold text-foreground" data-testid="stat-total-borrowed">
+                <div className="ml-2 sm:ml-4">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Borrowed</p>
+                  <p className="text-lg sm:text-2xl font-semibold text-foreground" data-testid="stat-total-borrowed">
                     {myTransactions.length}
                   </p>
                 </div>
@@ -196,14 +196,14 @@ export default function StudentDashboard() {
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <Clock className="h-6 w-6 text-orange-600" />
+                <div className="p-1.5 sm:p-2 bg-orange-100 rounded-lg">
+                  <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-orange-600" />
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Due Soon</p>
-                  <p className="text-2xl font-semibold text-foreground" data-testid="stat-due-soon">
+                <div className="ml-2 sm:ml-4">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Due Soon</p>
+                  <p className="text-lg sm:text-2xl font-semibold text-foreground" data-testid="stat-due-soon">
                     {dueSoon.length}
                   </p>
                 </div>
@@ -213,20 +213,21 @@ export default function StudentDashboard() {
         </div>
 
         {/* Search and Filter */}
-        <Card className="mb-8">
-          <CardContent className="p-6">
+        <Card className="mb-6 sm:mb-8">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <Input
                   type="text"
-                  placeholder="Search books by title, author, or ISBN..."
+                  placeholder="Search books..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   data-testid="input-search-books"
+                  className="text-base"
                 />
               </div>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-48" data-testid="select-category-filter">
+                <SelectTrigger className="w-full sm:w-48" data-testid="select-category-filter">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
@@ -259,64 +260,114 @@ export default function StudentDashboard() {
                 <p className="text-muted-foreground">No books found matching your criteria</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-muted/50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Book Details</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Author</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Category</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Available</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-card divide-y divide-border">
-                    {filteredBooks.map((book) => (
-                      <tr key={book.id} className="hover:bg-muted/50" data-testid={`row-book-${book.id}`}>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center">
-                            <div className="h-12 w-8 bg-gradient-to-b from-blue-600 to-blue-800 rounded shadow-sm mr-4 flex items-center justify-center">
-                              <BookOpen className="h-3 w-3 text-white" />
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium text-foreground" data-testid={`text-book-title-${book.id}`}>
-                                {book.title}
-                              </div>
-                              {book.isbn && (
-                                <div className="text-sm text-muted-foreground" data-testid={`text-book-isbn-${book.id}`}>
-                                  ISBN: {book.isbn}
-                                </div>
-                              )}
+              <>
+                {/* Mobile Card Layout */}
+                <div className="block sm:hidden space-y-4">
+                  {filteredBooks.map((book) => (
+                    <div key={book.id} className="border border-border rounded-lg p-4" data-testid={`card-book-${book.id}`}>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start space-x-3 flex-1">
+                          <div className="h-16 w-10 bg-gradient-to-b from-blue-600 to-blue-800 rounded shadow-sm flex items-center justify-center">
+                            <BookOpen className="h-4 w-4 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-foreground text-sm" data-testid={`text-book-title-${book.id}`}>
+                              {book.title}
+                            </h3>
+                            <p className="text-sm text-muted-foreground" data-testid={`text-book-author-${book.id}`}>
+                              by {book.author}
+                            </p>
+                            {book.isbn && (
+                              <p className="text-xs text-muted-foreground mt-1" data-testid={`text-book-isbn-${book.id}`}>
+                                ISBN: {book.isbn}
+                              </p>
+                            )}
+                            <div className="flex items-center justify-between mt-2">
+                              <Badge variant="outline" data-testid={`badge-book-category-${book.id}`} className="text-xs">
+                                {book.category}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground" data-testid={`text-book-available-${book.id}`}>
+                                {book.availableCopies}/{book.totalCopies} available
+                              </span>
                             </div>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-foreground" data-testid={`text-book-author-${book.id}`}>
-                          {book.author}
-                        </td>
-                        <td className="px-6 py-4">
-                          <Badge variant="outline" data-testid={`badge-book-category-${book.id}`}>
-                            {book.category}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-foreground">
-                          <span className="font-medium" data-testid={`text-book-available-${book.id}`}>
-                            {book.availableCopies}
-                          </span> / {book.totalCopies}
-                        </td>
-                        <td className="px-6 py-4">
-                          <Button
-                            onClick={() => requestMutation.mutate({ bookId: book.id })}
-                            disabled={requestMutation.isPending || book.availableCopies === 0}
-                            data-testid={`button-request-${book.id}`}
-                          >
-                            {book.availableCopies === 0 ? "Unavailable" : "Request Book"}
-                          </Button>
-                        </td>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex justify-end">
+                        <Button
+                          size="sm"
+                          onClick={() => requestMutation.mutate({ bookId: book.id })}
+                          disabled={requestMutation.isPending || book.availableCopies === 0}
+                          data-testid={`button-request-${book.id}`}
+                          className="w-full sm:w-auto"
+                        >
+                          {book.availableCopies === 0 ? "Unavailable" : "Request Book"}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop Table Layout */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Book Details</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Author</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Category</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Available</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="bg-card divide-y divide-border">
+                      {filteredBooks.map((book) => (
+                        <tr key={book.id} className="hover:bg-muted/50" data-testid={`row-book-${book.id}`}>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center">
+                              <div className="h-12 w-8 bg-gradient-to-b from-blue-600 to-blue-800 rounded shadow-sm mr-4 flex items-center justify-center">
+                                <BookOpen className="h-3 w-3 text-white" />
+                              </div>
+                              <div>
+                                <div className="text-sm font-medium text-foreground" data-testid={`text-book-title-${book.id}`}>
+                                  {book.title}
+                                </div>
+                                {book.isbn && (
+                                  <div className="text-sm text-muted-foreground" data-testid={`text-book-isbn-${book.id}`}>
+                                    ISBN: {book.isbn}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-foreground" data-testid={`text-book-author-${book.id}`}>
+                            {book.author}
+                          </td>
+                          <td className="px-6 py-4">
+                            <Badge variant="outline" data-testid={`badge-book-category-${book.id}`}>
+                              {book.category}
+                            </Badge>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-foreground">
+                            <span className="font-medium" data-testid={`text-book-available-${book.id}`}>
+                              {book.availableCopies}
+                            </span> / {book.totalCopies}
+                          </td>
+                          <td className="px-6 py-4">
+                            <Button
+                              onClick={() => requestMutation.mutate({ bookId: book.id })}
+                              disabled={requestMutation.isPending || book.availableCopies === 0}
+                              data-testid={`button-request-${book.id}`}
+                            >
+                              {book.availableCopies === 0 ? "Unavailable" : "Request Book"}
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

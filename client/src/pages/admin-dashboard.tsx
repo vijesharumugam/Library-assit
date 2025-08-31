@@ -99,14 +99,14 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Shield className="h-8 w-8 text-primary mr-3" />
-              <h1 className="text-xl font-semibold text-foreground">Library Assist - Admin Portal</h1>
+              <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-primary mr-2 sm:mr-3" />
+              <h1 className="text-base sm:text-xl font-semibold text-foreground">Library Assist - Admin</h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-muted-foreground">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <span className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
                 Welcome, <span className="font-medium text-foreground" data-testid="text-user-name">{user?.fullName}</span>
               </span>
-              <Badge variant="destructive" data-testid="badge-user-role">Administrator</Badge>
+              <Badge variant="destructive" data-testid="badge-user-role" className="text-xs">Admin</Badge>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
@@ -146,7 +146,7 @@ export default function AdminDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
             <TabsTrigger value="dashboard" data-testid="tab-dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="users" data-testid="tab-users">User Management</TabsTrigger>
             <TabsTrigger value="books" data-testid="tab-books">Book Management</TabsTrigger>
@@ -155,7 +155,7 @@ export default function AdminDashboard() {
 
           <TabsContent value="dashboard" className="space-y-6">
             {/* System Overview Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center">

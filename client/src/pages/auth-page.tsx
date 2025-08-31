@@ -71,18 +71,18 @@ export default function AuthPage() {
 
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex ios-safe-area-top ios-safe-area-bottom">
       {/* Form Section */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-8">
-        <div className="w-full max-w-md space-y-8">
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12 lg:px-8">
+        <div className="w-full max-w-md space-y-6 sm:space-y-8">
           <div className="text-center">
-            <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center">
-                <BookOpen className="h-8 w-8 text-primary-foreground" />
+            <div className="flex justify-center mb-4 sm:mb-6">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary rounded-lg flex items-center justify-center">
+                <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground" />
               </div>
             </div>
-            <h2 className="text-3xl font-bold text-foreground">Library Assist</h2>
-            <p className="mt-2 text-muted-foreground">Comprehensive Library Management System</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Library Assist</h2>
+            <p className="mt-2 text-sm sm:text-base text-muted-foreground">Comprehensive Library Management System</p>
           </div>
 
           <Tabs defaultValue="login" className="space-y-6">

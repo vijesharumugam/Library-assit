@@ -25,15 +25,16 @@ export default function BorrowedBooksPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Link href="/librarian">
-                <Button variant="ghost" size="sm" data-testid="button-back-to-dashboard">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Dashboard
+                <Button variant="ghost" size="sm" data-testid="button-back-to-dashboard" className="text-xs sm:text-sm">
+                  <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Back to Dashboard</span>
+                  <span className="sm:hidden">Back</span>
                 </Button>
               </Link>
             </div>
             <div className="flex items-center">
-              <BookOpen className="h-8 w-8 text-primary mr-3" />
-              <h1 className="text-xl font-semibold text-foreground">Books Currently Borrowed</h1>
+              <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-primary mr-2 sm:mr-3" />
+              <h1 className="text-base sm:text-xl font-semibold text-foreground">Books Borrowed</h1>
             </div>
           </div>
         </div>
@@ -65,8 +66,68 @@ export default function BorrowedBooksPage() {
                 <p className="text-muted-foreground">No books are currently borrowed</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
+              <>
+                {/* Mobile Card Layout */}
+                <div className="block sm:hidden space-y-4">
+                  {borrowedTransactions.map((transaction) => {
+                    const dueDate = new Date(transaction.dueDate);
+                    const today = new Date();
+                    const isOverdue = dueDate < today;
+                    const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+                    return (
+                      <div key={transaction.id} className="border border-border rounded-lg p-4" data-testid={`card-borrowed-book-${transaction.id}`}>
+                        <div className="flex items-start space-x-3 mb-3">
+                          <div className="h-12 w-8 bg-gradient-to-b from-blue-600 to-blue-800 rounded shadow-sm flex items-center justify-center">
+                            <BookOpen className="h-3 w-3 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-foreground text-sm" data-testid={`text-book-title-${transaction.id}`}>
+                              {transaction.book.title}
+                            </h3>
+                            <p className="text-sm text-muted-foreground" data-testid={`text-book-author-${transaction.id}`}>
+                              by {transaction.book.author}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">Student:</span>
+                            <span className="text-sm font-medium" data-testid={`text-student-name-${transaction.id}`}>
+                              {transaction.user.fullName}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">Due Date:</span>
+                            <div className="text-right">
+                              <div className={`text-sm font-medium ${isOverdue ? 'text-red-600' : 'text-foreground'}`} data-testid={`text-due-date-${transaction.id}`}>
+                                {dueDate.toLocaleDateString()}
+                              </div>
+                              <div className={`text-xs ${isOverdue ? 'text-red-500' : 'text-muted-foreground'}`}>
+                                {isOverdue ? `${Math.abs(daysUntilDue)} days overdue` : `${daysUntilDue} days left`}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">Status:</span>
+                            <Badge 
+                              variant={isOverdue ? "destructive" : "secondary"}
+                              data-testid={`badge-status-${transaction.id}`}
+                              className="text-xs"
+                            >
+                              {isOverdue ? "Overdue" : "Active"}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop Table Layout */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="w-full">
                   <thead className="bg-muted/50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Student</th>
@@ -157,14 +218,15 @@ export default function BorrowedBooksPage() {
                       );
                     })}
                   </tbody>
-                </table>
-              </div>
+                  </table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-6">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">

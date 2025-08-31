@@ -131,14 +131,14 @@ export default function LibrarianDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <BookOpen className="h-8 w-8 text-primary mr-3" />
-              <h1 className="text-xl font-semibold text-foreground">Library Assist - Librarian Portal</h1>
+              <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-primary mr-2 sm:mr-3" />
+              <h1 className="text-base sm:text-xl font-semibold text-foreground">Library Assist - Librarian</h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-muted-foreground">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <span className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
                 Welcome, <span className="font-medium text-foreground" data-testid="text-user-name">{user?.fullName}</span>
               </span>
-              <Badge variant="default" data-testid="badge-user-role">Librarian</Badge>
+              <Badge variant="default" data-testid="badge-user-role" className="text-xs">Librarian</Badge>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
@@ -178,7 +178,7 @@ export default function LibrarianDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
             <TabsTrigger value="dashboard" data-testid="tab-dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="requests" data-testid="tab-requests">Book Requests</TabsTrigger>
             <TabsTrigger value="books" data-testid="tab-books">Manage Books</TabsTrigger>
@@ -187,7 +187,7 @@ export default function LibrarianDashboard() {
 
           <TabsContent value="dashboard" className="space-y-6">
             {/* Statistics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center">
