@@ -14,6 +14,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Book, Transaction, User, BookRequest, TransactionStatus, BookRequestStatus, Role } from "@shared/schema";
 import { AddBookModal } from "@/components/add-book-modal";
+import { FloatingLibraryElements } from "@/components/FloatingLibraryElements";
 
 export default function LibrarianDashboard() {
   const { user, logoutMutation } = useAuth();
@@ -125,14 +126,15 @@ export default function LibrarianDashboard() {
   const totalPendingRequests = pendingRequests.length;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background library-pattern relative">
+      <FloatingLibraryElements />
       {/* Header */}
-      <header className="bg-card border-b border-border shadow-sm">
+      <header className="bg-card border-b border-border elegant-shadow relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-primary mr-2 sm:mr-3" />
-              <h1 className="text-base sm:text-xl font-semibold text-foreground">Library Assist - Librarian</h1>
+              <h1 className="text-base sm:text-xl library-heading">Library Sanctum - Librarian</h1>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <span className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
@@ -187,15 +189,15 @@ export default function LibrarianDashboard() {
 
           <TabsContent value="dashboard" className="space-y-6">
             {/* Statistics Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
-              <Card>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 fade-in-float">
+              <Card className="library-card">
                 <CardContent className="p-6">
                   <div className="flex items-center">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <BookOpen className="h-6 w-6 text-primary" />
+                    <div className="p-2 gold-accent rounded-lg">
+                      <BookOpen className="h-6 w-6 text-primary-foreground" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-muted-foreground">Total Books</p>
+                      <p className="text-sm font-medium text-muted-foreground library-subheading">Total Books</p>
                       <p className="text-2xl font-semibold text-foreground" data-testid="stat-total-books">
                         {totalBooks}
                       </p>
@@ -205,17 +207,17 @@ export default function LibrarianDashboard() {
               </Card>
 
               <Card 
-                className="cursor-pointer hover:shadow-md transition-shadow"
+                className="cursor-pointer library-card"
                 onClick={() => setLocation("/librarian/borrowed-books")}
                 data-testid="card-borrowed-books"
               >
                 <CardContent className="p-6">
                   <div className="flex items-center">
-                    <div className="p-2 bg-accent/10 rounded-lg">
+                    <div className="p-2 bg-accent/20 rounded-lg">
                       <TrendingUp className="h-6 w-6 text-accent" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-muted-foreground">Books Borrowed</p>
+                      <p className="text-sm font-medium text-muted-foreground library-subheading">Books Borrowed</p>
                       <p className="text-2xl font-semibold text-foreground" data-testid="stat-borrowed-books">
                         {borrowedBooks}
                       </p>
@@ -225,17 +227,17 @@ export default function LibrarianDashboard() {
               </Card>
 
               <Card 
-                className="cursor-pointer hover:shadow-md transition-shadow"
+                className="cursor-pointer library-card"
                 onClick={() => setLocation("/librarian/overdue-books")}
                 data-testid="card-overdue-books"
               >
                 <CardContent className="p-6">
                   <div className="flex items-center">
-                    <div className="p-2 bg-orange-100 rounded-lg">
-                      <Clock className="h-6 w-6 text-orange-600" />
+                    <div className="p-2 bg-chart-4/20 rounded-lg">
+                      <Clock className="h-6 w-6 text-chart-4" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-muted-foreground">Overdue</p>
+                      <p className="text-sm font-medium text-muted-foreground library-subheading">Overdue</p>
                       <p className="text-2xl font-semibold text-foreground" data-testid="stat-overdue-books">
                         {overdueBooks}
                       </p>
@@ -244,14 +246,14 @@ export default function LibrarianDashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="library-card">
                 <CardContent className="p-6">
                   <div className="flex items-center">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Users className="h-6 w-6 text-blue-600" />
+                    <div className="p-2 bg-chart-5/20 rounded-lg">
+                      <Users className="h-6 w-6 text-chart-5" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-muted-foreground">Active Users</p>
+                      <p className="text-sm font-medium text-muted-foreground library-subheading">Active Users</p>
                       <p className="text-2xl font-semibold text-foreground" data-testid="stat-active-users">
                         {activeUsers}
                       </p>
@@ -260,14 +262,14 @@ export default function LibrarianDashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="library-card">
                 <CardContent className="p-6">
                   <div className="flex items-center">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <TrendingUp className="h-6 w-6 text-green-600" />
+                    <div className="p-2 bg-chart-2/20 rounded-lg">
+                      <TrendingUp className="h-6 w-6 text-chart-2" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-muted-foreground">Pending Requests</p>
+                      <p className="text-sm font-medium text-muted-foreground library-subheading">Pending Requests</p>
                       <p className="text-2xl font-semibold text-foreground" data-testid="stat-pending-requests">
                         {totalPendingRequests}
                       </p>
@@ -278,9 +280,9 @@ export default function LibrarianDashboard() {
             </div>
 
             {/* Recent Activity */}
-            <Card>
+            <Card className="library-card">
               <CardHeader>
-                <CardTitle data-testid="title-recent-activity">Recent Activity</CardTitle>
+                <CardTitle data-testid="title-recent-activity" className="library-heading">Recent Activity</CardTitle>
               </CardHeader>
               <CardContent>
                 {transactionsLoading ? (

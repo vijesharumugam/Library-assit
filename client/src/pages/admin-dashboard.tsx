@@ -13,6 +13,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Book, Transaction, User, TransactionStatus, Role } from "@shared/schema";
 import { AddBookModal } from "@/components/add-book-modal";
+import { FloatingLibraryElements } from "@/components/FloatingLibraryElements";
 
 export default function AdminDashboard() {
   const { user, logoutMutation } = useAuth();
@@ -93,14 +94,15 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background library-pattern relative">
+      <FloatingLibraryElements />
       {/* Header */}
       <header className="bg-card border-b border-border shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-primary mr-2 sm:mr-3" />
-              <h1 className="text-base sm:text-xl font-semibold text-foreground">Library Assist - Admin</h1>
+              <h1 className="text-base sm:text-xl library-heading">Library Sanctum - Admin</h1>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <span className="text-xs sm:text-sm text-muted-foreground hidden sm:block">

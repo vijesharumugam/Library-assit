@@ -67,6 +67,11 @@ export default {
         serif: ["var(--font-serif)"],
         mono: ["var(--font-mono)"],
       },
+      backgroundImage: {
+        'library-pattern': 'radial-gradient(circle at 20% 80%, hsl(25, 45%, 35%, 0.03) 0%, transparent 50%), radial-gradient(circle at 80% 20%, hsl(150, 40%, 35%, 0.03) 0%, transparent 50%)',
+        'book-spine': 'linear-gradient(90deg, hsl(25, 45%, 35%) 0%, hsl(25, 45%, 40%) 10%, hsl(25, 45%, 35%) 20%, hsl(25, 45%, 30%) 100%)',
+        'gold-accent': 'linear-gradient(135deg, hsl(35, 55%, 45%) 0%, hsl(35, 55%, 55%) 50%, hsl(35, 55%, 45%) 100%)',
+      },
       keyframes: {
         "accordion-down": {
           from: {

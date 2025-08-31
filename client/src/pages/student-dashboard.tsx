@@ -12,6 +12,7 @@ import { useState } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Book, Transaction, BookRequest } from "@shared/schema";
+import { FloatingLibraryElements } from "@/components/FloatingLibraryElements";
 
 export default function StudentDashboard() {
   const { user, logoutMutation } = useAuth();
@@ -93,14 +94,15 @@ export default function StudentDashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background library-pattern relative">
+      <FloatingLibraryElements />
       {/* Header */}
-      <header className="bg-card border-b border-border shadow-sm">
+      <header className="bg-card border-b border-border elegant-shadow relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-primary mr-2 sm:mr-3" />
-              <h1 className="text-lg sm:text-xl font-semibold text-foreground">Library Assist</h1>
+              <h1 className="text-lg sm:text-xl library-heading">Library Sanctum</h1>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <span className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
@@ -146,15 +148,15 @@ export default function StudentDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Overview */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <Card>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8 fade-in-float">
+          <Card className="library-card">
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center">
-                <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg">
-                  <BookOpen className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
+                <div className="p-1.5 sm:p-2 gold-accent rounded-lg">
+                  <BookOpen className="h-4 w-4 sm:h-6 sm:w-6 text-primary-foreground" />
                 </div>
                 <div className="ml-2 sm:ml-4">
-                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Currently Borrowed</p>
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground library-subheading">Currently Borrowed</p>
                   <p className="text-lg sm:text-2xl font-semibold text-foreground" data-testid="stat-borrowed-count">
                     {activeBorrowings.length}
                   </p>
@@ -163,14 +165,14 @@ export default function StudentDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="library-card">
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center">
-                <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg">
-                  <Send className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
+                <div className="p-1.5 sm:p-2 bg-chart-5/20 rounded-lg">
+                  <Send className="h-4 w-4 sm:h-6 sm:w-6 text-chart-5" />
                 </div>
                 <div className="ml-2 sm:ml-4">
-                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Pending Requests</p>
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground library-subheading">Pending Requests</p>
                   <p className="text-lg sm:text-2xl font-semibold text-foreground" data-testid="stat-pending-requests">
                     {pendingRequests.length}
                   </p>
@@ -179,14 +181,14 @@ export default function StudentDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="library-card">
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center">
-                <div className="p-1.5 sm:p-2 bg-accent/10 rounded-lg">
+                <div className="p-1.5 sm:p-2 bg-accent/20 rounded-lg">
                   <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6 text-accent" />
                 </div>
                 <div className="ml-2 sm:ml-4">
-                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Borrowed</p>
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground library-subheading">Total Borrowed</p>
                   <p className="text-lg sm:text-2xl font-semibold text-foreground" data-testid="stat-total-borrowed">
                     {myTransactions.length}
                   </p>
@@ -195,14 +197,14 @@ export default function StudentDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="library-card">
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center">
-                <div className="p-1.5 sm:p-2 bg-orange-100 rounded-lg">
-                  <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-orange-600" />
+                <div className="p-1.5 sm:p-2 bg-chart-4/20 rounded-lg">
+                  <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-chart-4" />
                 </div>
                 <div className="ml-2 sm:ml-4">
-                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Due Soon</p>
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground library-subheading">Due Soon</p>
                   <p className="text-lg sm:text-2xl font-semibold text-foreground" data-testid="stat-due-soon">
                     {dueSoon.length}
                   </p>
@@ -213,7 +215,7 @@ export default function StudentDashboard() {
         </div>
 
         {/* Search and Filter */}
-        <Card className="mb-6 sm:mb-8">
+        <Card className="mb-6 sm:mb-8 library-card">
           <CardContent className="p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
@@ -246,9 +248,9 @@ export default function StudentDashboard() {
         </Card>
 
         {/* Available Books */}
-        <Card className="mb-8">
+        <Card className="mb-8 library-card">
           <CardHeader>
-            <CardTitle data-testid="title-available-books">Available Books</CardTitle>
+            <CardTitle data-testid="title-available-books" className="library-heading">Available Books</CardTitle>
           </CardHeader>
           <CardContent>
             {booksLoading ? (
@@ -267,7 +269,7 @@ export default function StudentDashboard() {
                     <div key={book.id} className="border border-border rounded-lg p-4" data-testid={`card-book-${book.id}`}>
                       <div className="flex items-start justify-between">
                         <div className="flex items-start space-x-3 flex-1">
-                          <div className="h-16 w-10 bg-gradient-to-b from-blue-600 to-blue-800 rounded shadow-sm flex items-center justify-center">
+                          <div className="h-16 w-10 book-spine-gradient rounded shadow-sm flex items-center justify-center gentle-float">
                             <BookOpen className="h-4 w-4 text-white" />
                           </div>
                           <div className="flex-1">
@@ -373,9 +375,9 @@ export default function StudentDashboard() {
         </Card>
 
         {/* My Book Requests */}
-        <Card className="mb-8">
+        <Card className="mb-8 library-card">
           <CardHeader>
-            <CardTitle data-testid="title-my-book-requests">My Book Requests</CardTitle>
+            <CardTitle data-testid="title-my-book-requests" className="library-heading">My Book Requests</CardTitle>
           </CardHeader>
           <CardContent>
             {requestsLoading ? (
@@ -443,9 +445,9 @@ export default function StudentDashboard() {
         </Card>
 
         {/* My Borrowed Books */}
-        <Card>
+        <Card className="library-card">
           <CardHeader>
-            <CardTitle data-testid="title-my-borrowed-books">My Borrowed Books</CardTitle>
+            <CardTitle data-testid="title-my-borrowed-books" className="library-heading">My Borrowed Books</CardTitle>
           </CardHeader>
           <CardContent>
             {transactionsLoading ? (
