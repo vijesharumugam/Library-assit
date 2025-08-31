@@ -166,7 +166,7 @@ export default function OverdueBooksPage() {
                               <div className="flex items-center text-sm">
                                 <Phone className="h-3 w-3 mr-2 text-muted-foreground" />
                                 <span className="text-muted-foreground text-xs" data-testid={`text-student-phone-${transaction.id}`}>
-                                  {transaction.user.phone}
+                                  {(transaction.user as any).phone || "Not provided"}
                                 </span>
                               </div>
                             </div>
