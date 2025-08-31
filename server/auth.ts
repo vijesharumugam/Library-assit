@@ -31,10 +31,27 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  if (!stored || typeof stored !== 'string') {
+    return false;
+  }
+  
+  const parts = stored.split(".");
+  if (parts.length !== 2) {
+    return false;
+  }
+  
+  const [hashed, salt] = parts;
+  if (!hashed || !salt) {
+    return false;
+  }
+  
+  try {
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    return timingSafeEqual(hashedBuf, suppliedBuf);
+  } catch (error) {
+    return false;
+  }
 }
 
 export function setupAuth(app: Express) {
@@ -52,13 +69,17 @@ export function setupAuth(app: Express) {
 
   passport.use(
     new LocalStrategy(
-      { usernameField: 'registerNumber' },
-      async (registerNumber, password, done) => {
-        const user = await storage.getUserByRegisterNumber(registerNumber);
-        if (!user || !(await comparePasswords(password, user.password))) {
-          return done(null, false);
-        } else {
-          return done(null, user);
+      { usernameField: 'username' },
+      async (username, password, done) => {
+        try {
+          const user = await storage.getUserByUsername(username);
+          if (!user || !user.password || !(await comparePasswords(password, user.password))) {
+            return done(null, false);
+          } else {
+            return done(null, user);
+          }
+        } catch (error) {
+          return done(error);
         }
       }
     ),
