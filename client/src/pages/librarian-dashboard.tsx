@@ -224,7 +224,11 @@ export default function LibrarianDashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card 
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => setLocation("/librarian/overdue-books")}
+                data-testid="card-overdue-books"
+              >
                 <CardContent className="p-6">
                   <div className="flex items-center">
                     <div className="p-2 bg-orange-100 rounded-lg">

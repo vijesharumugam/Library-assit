@@ -13,6 +13,7 @@ import StudentDashboard from "@/pages/student-dashboard";
 import LibrarianDashboard from "@/pages/librarian-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
 import BorrowedBooksPage from "@/pages/borrowed-books-page";
+import OverdueBooksPage from "@/pages/overdue-books-page";
 
 function Router() {
   return (
@@ -20,6 +21,7 @@ function Router() {
       <ProtectedRoute path="/" component={StudentDashboard} allowedRoles={["STUDENT"]} />
       <ProtectedRoute path="/librarian" component={LibrarianDashboard} allowedRoles={["LIBRARIAN", "ADMIN"]} />
       <ProtectedRoute path="/librarian/borrowed-books" component={BorrowedBooksPage} allowedRoles={["LIBRARIAN", "ADMIN"]} />
+      <ProtectedRoute path="/librarian/overdue-books" component={OverdueBooksPage} allowedRoles={["LIBRARIAN", "ADMIN"]} />
       <ProtectedRoute path="/admin" component={AdminDashboard} allowedRoles={["ADMIN"]} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
