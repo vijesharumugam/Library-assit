@@ -7,13 +7,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { BookOpen, Users, Clock, TrendingUp, LogOut, Plus, Edit, Trash2 } from "lucide-react";
+import { BookOpen, Users, Clock, TrendingUp, LogOut, Plus, Edit, Trash2, Upload } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Book, Transaction, User, BookRequest, TransactionStatus, BookRequestStatus, Role } from "@shared/schema";
 import { AddBookModal } from "@/components/add-book-modal";
+import { BorrowModal } from "@/components/borrow-modal";
+import { ExcelUploadModal } from "@/components/excel-upload-modal";
 import { FloatingLibraryElements } from "@/components/FloatingLibraryElements";
 
 export default function LibrarianDashboard() {
@@ -21,6 +23,8 @@ export default function LibrarianDashboard() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [showAddBookModal, setShowAddBookModal] = useState(false);
+  const [showBorrowModal, setShowBorrowModal] = useState(false);
+  const [showExcelUploadModal, setShowExcelUploadModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
 
@@ -504,13 +508,31 @@ export default function LibrarianDashboard() {
                 <h2 className="text-2xl font-bold text-foreground">Book Management</h2>
                 <p className="text-muted-foreground">Add, edit, and organize the library collection</p>
               </div>
-              <Button
-                onClick={() => setShowAddBookModal(true)}
-                data-testid="button-add-new-book"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add New Book
-              </Button>
+              <div className="flex space-x-2">
+                <Button
+                  onClick={() => setShowBorrowModal(true)}
+                  variant="outline"
+                  data-testid="button-borrow-book"
+                >
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Borrow Book
+                </Button>
+                <Button
+                  onClick={() => setShowExcelUploadModal(true)}
+                  variant="outline"
+                  data-testid="button-upload-excel"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Excel
+                </Button>
+                <Button
+                  onClick={() => setShowAddBookModal(true)}
+                  data-testid="button-add-new-book"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add New Book
+                </Button>
+              </div>
             </div>
 
             {/* Search and Filter */}
@@ -728,6 +750,16 @@ export default function LibrarianDashboard() {
         <AddBookModal 
           open={showAddBookModal} 
           onOpenChange={setShowAddBookModal}
+        />
+        
+        <BorrowModal 
+          open={showBorrowModal} 
+          onOpenChange={setShowBorrowModal}
+        />
+        
+        <ExcelUploadModal 
+          open={showExcelUploadModal} 
+          onOpenChange={setShowExcelUploadModal}
         />
       </div>
     </div>

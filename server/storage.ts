@@ -29,6 +29,7 @@ export interface IStorage {
   updateUserRole(userId: string, role: Role): Promise<User | null>;
   deleteUser(userId: string): Promise<boolean>;
   getAllUsers(): Promise<User[]>;
+  getStudents(): Promise<User[]>;
   
   // Book methods
   getBook(id: string): Promise<Book | null>;
@@ -126,6 +127,13 @@ export class DatabaseStorage implements IStorage {
   async getAllUsers(): Promise<User[]> {
     return await prisma.user.findMany({
       orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  async getStudents(): Promise<User[]> {
+    return await prisma.user.findMany({
+      where: { role: Role.STUDENT },
+      orderBy: { fullName: 'asc' }
     });
   }
 

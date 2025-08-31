@@ -5,6 +5,8 @@ import { storage } from "./storage";
 import { insertBookSchema, insertTransactionSchema, insertBookRequestSchema, TransactionStatus, BookRequestStatus } from "@shared/schema";
 import { z } from "zod";
 import { prisma } from "./db";
+import multer from "multer";
+import * as XLSX from "xlsx";
 
 function requireAuth(req: any, res: any, next: any) {
   if (!req.isAuthenticated()) {
@@ -27,6 +29,26 @@ function requireRole(roles: string[]) {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
+
+  // Configure multer for file uploads
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel',
+        'text/csv'
+      ];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only Excel files (.xlsx, .xls) and CSV files are allowed'));
+      }
+    },
+    limits: {
+      fileSize: 5 * 1024 * 1024 // 5MB limit
+    }
+  });
 
   // Book routes
   app.get("/api/books", requireAuth, async (req, res) => {
@@ -85,6 +107,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to delete book" });
+    }
+  });
+
+  // Bulk upload books from Excel
+  app.post("/api/books/bulk-upload", requireRole(["LIBRARIAN", "ADMIN"]), upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+      if (jsonData.length === 0) {
+        return res.status(400).json({ message: "Excel file is empty" });
+      }
+
+      const books = [];
+      const errors = [];
+
+      for (let i = 0; i < jsonData.length; i++) {
+        const row: any = jsonData[i];
+        try {
+          // Map Excel columns to book schema (flexible column naming)
+          const bookData = {
+            title: row.Title || row.title || row.TITLE || row['Book Title'] || '',
+            author: row.Author || row.author || row.AUTHOR || '',
+            isbn: row.ISBN || row.isbn || row.Isbn || row['ISBN Number'] || '',
+            category: row.Category || row.category || row.CATEGORY || '',
+            description: row.Description || row.description || row.DESCRIPTION || '',
+            publisher: row.Publisher || row.publisher || row.PUBLISHER || '',
+            totalCopies: parseInt(row['Total Copies'] || row.TotalCopies || row.totalCopies || row.Copies || row.copies || '1')
+          };
+
+          // Validate using schema
+          const validatedBook = insertBookSchema.parse(bookData);
+          books.push(validatedBook);
+        } catch (error) {
+          errors.push(`Row ${i + 1}: ${error instanceof z.ZodError ? error.errors.map(e => e.message).join(', ') : 'Invalid data'}`);
+        }
+      }
+
+      if (errors.length > 0 && books.length === 0) {
+        return res.status(400).json({ 
+          message: "No valid books found in Excel file", 
+          errors: errors.slice(0, 10) // Limit to first 10 errors
+        });
+      }
+
+      // Bulk create books
+      const createdBooks = [];
+      const createErrors = [];
+
+      for (const book of books) {
+        try {
+          const createdBook = await storage.createBook(book);
+          createdBooks.push(createdBook);
+        } catch (error) {
+          createErrors.push(`Failed to create book "${book.title}": ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+
+      res.json({
+        message: `Successfully imported ${createdBooks.length} books`,
+        imported: createdBooks.length,
+        errors: errors.concat(createErrors),
+        books: createdBooks
+      });
+
+    } catch (error) {
+      console.error('Excel upload error:', error);
+      res.status(500).json({ 
+        message: "Failed to process Excel file",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
@@ -259,6 +358,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(users);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  // Get all students (for librarians to borrow books)
+  app.get("/api/students", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const students = await storage.getStudents();
+      res.json(students);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch students" });
+    }
+  });
+
+  // Direct borrow transaction (librarian creates borrow for student)
+  app.post("/api/transactions/borrow", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const transactionData = insertTransactionSchema.parse({
+        ...req.body,
+        dueDate: new Date(req.body.dueDate)
+      });
+      
+      const transaction = await storage.createTransaction(transactionData);
+      if (!transaction) {
+        return res.status(400).json({ message: "Failed to create transaction - book may not be available" });
+      }
+      
+      res.status(201).json(transaction);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid transaction data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create borrow transaction" });
     }
   });
 
