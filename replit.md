@@ -28,10 +28,10 @@ Preferred communication style: Simple, everyday language.
 - **Error Handling**: Centralized error handling with proper HTTP status codes
 
 ### Database Layer
-- **Database**: PostgreSQL with Neon serverless driver
-- **ORM**: Drizzle ORM for type-safe database operations
-- **Schema Management**: Drizzle Kit for migrations and schema management
-- **Connection**: Connection pooling with @neondatabase/serverless
+- **Database**: MongoDB Atlas cloud database
+- **ORM**: Prisma ORM for type-safe database operations
+- **Schema Management**: Prisma schema management and migrations
+- **Connection**: Direct connection to MongoDB Atlas cluster
 
 ### Data Models
 - **Users**: Contains authentication data, roles (student/librarian/admin), and profile information
@@ -39,10 +39,11 @@ Preferred communication style: Simple, everyday language.
 - **Transactions**: Borrowing records linking users and books with status tracking
 
 ### Authentication & Authorization
-- **Session-based Authentication**: Using express-session with PostgreSQL store
+- **Session-based Authentication**: Using express-session with MongoDB store
 - **Role-based Access Control**: Three-tier system (student, librarian, admin)
 - **Protected Routes**: Frontend route protection based on user roles
 - **Password Security**: Salted hashing using Node.js scrypt implementation
+- **Default Accounts**: Librarian (Lib123/Libpass123), Admin (admin123/admin@123)
 
 ### Security Features
 - **CSRF Protection**: Trust proxy configuration for secure sessions

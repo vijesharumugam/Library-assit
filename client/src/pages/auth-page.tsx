@@ -68,15 +68,6 @@ export default function AuthPage() {
     registerMutation.mutate(userData);
   };
 
-  const loginAsDemo = (role: "student" | "librarian" | "admin") => {
-    const demoCredentials = {
-      student: { registerNumber: "STU001", password: "student123" },
-      librarian: { registerNumber: "LIB001", password: "librarian123" },
-      admin: { registerNumber: "ADM001", password: "admin123" },
-    };
-    
-    loginMutation.mutate(demoCredentials[role]);
-  };
 
   return (
     <div className="min-h-screen flex">
@@ -281,50 +272,6 @@ export default function AuthPage() {
             </TabsContent>
           </Tabs>
 
-          {/* Demo Access Section */}
-          <Card className="bg-muted/50">
-            <CardHeader>
-              <CardTitle className="text-lg">Demo Access</CardTitle>
-              <CardDescription>Try different user roles</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => loginAsDemo("student")}
-                  disabled={loginMutation.isPending}
-                  data-testid="button-demo-student"
-                  className="flex flex-col items-center p-3 h-auto"
-                >
-                  <Users className="h-4 w-4 mb-1" />
-                  <span className="text-xs">Student</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => loginAsDemo("librarian")}
-                  disabled={loginMutation.isPending}
-                  data-testid="button-demo-librarian"
-                  className="flex flex-col items-center p-3 h-auto"
-                >
-                  <BookOpen className="h-4 w-4 mb-1" />
-                  <span className="text-xs">Librarian</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => loginAsDemo("admin")}
-                  disabled={loginMutation.isPending}
-                  data-testid="button-demo-admin"
-                  className="flex flex-col items-center p-3 h-auto"
-                >
-                  <Shield className="h-4 w-4 mb-1" />
-                  <span className="text-xs">Admin</span>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
 
