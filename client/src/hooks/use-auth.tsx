@@ -18,7 +18,7 @@ type AuthContextType = {
 };
 
 type LoginData = {
-  registerNumber: string;
+  username: string;
   password: string;
 };
 

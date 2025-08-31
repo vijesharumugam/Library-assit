@@ -14,7 +14,7 @@ import { z } from "zod";
 import { Redirect } from "wouter";
 
 const loginSchema = z.object({
-  registerNumber: z.string().min(1, "Register number is required"),
+  username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -35,7 +35,7 @@ export default function AuthPage() {
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      registerNumber: "",
+      username: "",
       password: "",
     },
   });
@@ -101,17 +101,17 @@ export default function AuthPage() {
                 <CardContent>
                   <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="login-register-number">Register Number</Label>
+                      <Label htmlFor="login-username">Username</Label>
                       <Input
-                        id="login-register-number"
+                        id="login-username"
                         type="text"
-                        placeholder="Enter your register number"
-                        data-testid="input-login-register-number"
-                        {...loginForm.register("registerNumber")}
+                        placeholder="Enter your username"
+                        data-testid="input-login-username"
+                        {...loginForm.register("username")}
                       />
-                      {loginForm.formState.errors.registerNumber && (
+                      {loginForm.formState.errors.username && (
                         <p className="text-sm text-destructive">
-                          {loginForm.formState.errors.registerNumber.message}
+                          {loginForm.formState.errors.username.message}
                         </p>
                       )}
                     </div>
