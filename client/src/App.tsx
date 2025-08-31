@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
+import { Role } from "@shared/schema";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import StudentDashboard from "@/pages/student-dashboard";
@@ -14,9 +15,9 @@ import AdminDashboard from "@/pages/admin-dashboard";
 function Router() {
   return (
     <Switch>
-      <ProtectedRoute path="/" component={StudentDashboard} allowedRoles={["student"]} />
-      <ProtectedRoute path="/librarian" component={LibrarianDashboard} allowedRoles={["librarian", "admin"]} />
-      <ProtectedRoute path="/admin" component={AdminDashboard} allowedRoles={["admin"]} />
+      <ProtectedRoute path="/" component={StudentDashboard} allowedRoles={["STUDENT"]} />
+      <ProtectedRoute path="/librarian" component={LibrarianDashboard} allowedRoles={["LIBRARIAN", "ADMIN"]} />
+      <ProtectedRoute path="/admin" component={AdminDashboard} allowedRoles={["ADMIN"]} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

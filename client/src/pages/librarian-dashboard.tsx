@@ -10,7 +10,7 @@ import { BookOpen, Users, Clock, TrendingUp, LogOut, Plus, Edit, Trash2 } from "
 import { useState } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Book, Transaction, User } from "@shared/schema";
+import { Book, Transaction, User, TransactionStatus, Role } from "@shared/schema";
 import { AddBookModal } from "@/components/add-book-modal";
 
 export default function LibrarianDashboard() {
@@ -57,14 +57,14 @@ export default function LibrarianDashboard() {
   });
 
   const totalBooks = books.length;
-  const borrowedBooks = allTransactions.filter(t => t.status === "borrowed").length;
+  const borrowedBooks = allTransactions.filter(t => t.status === "BORROWED").length;
   const overdueBooks = allTransactions.filter(t => {
-    if (t.status !== "borrowed") return false;
+    if (t.status !== "BORROWED") return false;
     const dueDate = new Date(t.dueDate);
     const today = new Date();
     return dueDate < today;
   }).length;
-  const activeUsers = new Set(allTransactions.filter(t => t.status === "borrowed").map(t => t.userId)).size;
+  const activeUsers = new Set(allTransactions.filter(t => t.status === "BORROWED").map(t => t.userId)).size;
 
   return (
     <div className="min-h-screen bg-background">
@@ -192,13 +192,13 @@ export default function LibrarianDashboard() {
                             <span className="font-medium" data-testid={`text-activity-user-${transaction.id}`}>
                               {transaction.user.fullName}
                             </span>{" "}
-                            {transaction.status === "borrowed" ? "borrowed" : "returned"}{" "}
+                            {transaction.status === "BORROWED" ? "borrowed" : "returned"}{" "}
                             <span className="font-medium" data-testid={`text-activity-book-${transaction.id}`}>
                               "{transaction.book.title}"
                             </span>
                           </p>
                           <p className="text-xs text-muted-foreground" data-testid={`text-activity-time-${transaction.id}`}>
-                            {new Date(transaction.borrowedDate).toLocaleString()}
+                            {transaction.borrowedDate ? new Date(transaction.borrowedDate).toLocaleString() : 'N/A'}
                           </p>
                         </div>
                       </div>
@@ -377,7 +377,7 @@ export default function LibrarianDashboard() {
                         {allTransactions.map((transaction) => {
                           const dueDate = new Date(transaction.dueDate);
                           const today = new Date();
-                          const isOverdue = transaction.status === "borrowed" && dueDate < today;
+                          const isOverdue = transaction.status === "BORROWED" && dueDate < today;
 
                           return (
                             <tr key={transaction.id} className="hover:bg-muted/50" data-testid={`row-transaction-${transaction.id}`}>

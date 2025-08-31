@@ -10,7 +10,7 @@ import { BookOpen, Users, Shield, TrendingUp, LogOut, UserPlus, Edit, Trash2, Ch
 import { useState } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Book, Transaction, User } from "@shared/schema";
+import { Book, Transaction, User, TransactionStatus, Role } from "@shared/schema";
 import { AddBookModal } from "@/components/add-book-modal";
 
 export default function AdminDashboard() {
@@ -83,11 +83,11 @@ export default function AdminDashboard() {
 
   const totalUsers = users.length;
   const totalBooks = books.length;
-  const activeLoans = allTransactions.filter(t => t.status === "borrowed").length;
-  const librarians = users.filter(u => u.role === "librarian").length;
+  const activeLoans = allTransactions.filter(t => t.status === "BORROWED").length;
+  const librarians = users.filter(u => u.role === "LIBRARIAN").length;
 
-  const handlePromoteUser = (userId: string, currentRole: string) => {
-    const nextRole = currentRole === "student" ? "librarian" : "admin";
+  const handlePromoteUser = (userId: string, currentRole: Role) => {
+    const nextRole = currentRole === "STUDENT" ? "LIBRARIAN" : "ADMIN";
     promoteUserMutation.mutate({ userId, role: nextRole });
   };
 
@@ -209,11 +209,11 @@ export default function AdminDashboard() {
                         <div className="flex items-center space-x-3">
                           <div className="w-2 h-2 bg-accent rounded-full"></div>
                           <span className="text-sm text-foreground">
-                            {transaction.status === "borrowed" ? "New borrowing" : "Book returned"} by {transaction.user.fullName}
+                            {transaction.status === "BORROWED" ? "New borrowing" : "Book returned"} by {transaction.user.fullName}
                           </span>
                         </div>
                         <span className="text-xs text-muted-foreground">
-                          {new Date(transaction.borrowedDate).toLocaleDateString()}
+                          {transaction.borrowedDate ? new Date(transaction.borrowedDate).toLocaleDateString() : 'N/A'}
                         </span>
                       </div>
                     ))}
@@ -275,9 +275,9 @@ export default function AdminDashboard() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">All Roles</SelectItem>
-                      <SelectItem value="student">Students</SelectItem>
-                      <SelectItem value="librarian">Librarians</SelectItem>
-                      <SelectItem value="admin">Administrators</SelectItem>
+                      <SelectItem value="STUDENT">Students</SelectItem>
+                      <SelectItem value="LIBRARIAN">Librarians</SelectItem>
+                      <SelectItem value="ADMIN">Administrators</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -306,7 +306,7 @@ export default function AdminDashboard() {
                       </thead>
                       <tbody className="bg-card divide-y divide-border">
                         {filteredUsers.map((u) => {
-                          const userTransactions = allTransactions.filter(t => t.userId === u.id && t.status === "borrowed");
+                          const userTransactions = allTransactions.filter(t => t.userId === u.id && t.status === "BORROWED");
                           
                           return (
                             <tr key={u.id} className="hover:bg-muted/50" data-testid={`row-user-${u.id}`}>
@@ -330,8 +330,8 @@ export default function AdminDashboard() {
                               <td className="px-6 py-4">
                                 <Badge 
                                   variant={
-                                    u.role === "admin" ? "destructive" :
-                                    u.role === "librarian" ? "default" : "secondary"
+                                    u.role === "ADMIN" ? "destructive" :
+                                    u.role === "LIBRARIAN" ? "default" : "secondary"
                                   }
                                   data-testid={`badge-user-role-${u.id}`}
                                 >
@@ -349,7 +349,7 @@ export default function AdminDashboard() {
                               </td>
                               <td className="px-6 py-4">
                                 <div className="flex space-x-2">
-                                  {u.role !== "admin" && (
+                                  {u.role !== "ADMIN" && (
                                     <Button
                                       variant="ghost"
                                       size="sm"
@@ -444,7 +444,7 @@ export default function AdminDashboard() {
                         {allTransactions.map((transaction) => {
                           const dueDate = new Date(transaction.dueDate);
                           const today = new Date();
-                          const isOverdue = transaction.status === "borrowed" && dueDate < today;
+                          const isOverdue = transaction.status === "BORROWED" && dueDate < today;
 
                           return (
                             <tr key={transaction.id} className="hover:bg-muted/50" data-testid={`row-transaction-${transaction.id}`}>
@@ -474,7 +474,7 @@ export default function AdminDashboard() {
                                 </div>
                               </td>
                               <td className="px-6 py-4 text-sm text-foreground" data-testid={`text-borrowed-date-${transaction.id}`}>
-                                {new Date(transaction.borrowedDate).toLocaleDateString()}
+                                {transaction.borrowedDate ? new Date(transaction.borrowedDate).toLocaleDateString() : 'N/A'}
                               </td>
                               <td className="px-6 py-4 text-sm text-foreground" data-testid={`text-due-date-${transaction.id}`}>
                                 {dueDate.toLocaleDateString()}
@@ -482,12 +482,12 @@ export default function AdminDashboard() {
                               <td className="px-6 py-4">
                                 <Badge 
                                   variant={
-                                    transaction.status === "returned" ? "default" :
+                                    transaction.status === "RETURNED" ? "default" :
                                     isOverdue ? "destructive" : "secondary"
                                   }
                                   data-testid={`badge-status-${transaction.id}`}
                                 >
-                                  {transaction.status === "returned" ? "Returned" :
+                                  {transaction.status === "RETURNED" ? "Returned" :
                                    isOverdue ? "Overdue" : "Borrowed"}
                                 </Badge>
                               </td>

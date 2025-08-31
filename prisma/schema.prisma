@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGODB_URI")
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  username  String   @unique
+  email     String   @unique
+  fullName  String
+  studentId String?
+  password  String
+  role      Role     @default(STUDENT)
+  createdAt DateTime @default(now())
+
+  // Relations
+  transactions Transaction[]
+
+  @@map("users")
+}
+
+model Book {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  author          String
+  isbn            String?
+  category        String
+  description     String?
+  publisher       String?
+  totalCopies     Int
+  availableCopies Int
+  createdAt       DateTime @default(now())
+
+  // Relations
+  transactions Transaction[]
+
+  @@map("books")
+}
+
+model Transaction {
+  id           String            @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String            @db.ObjectId
+  bookId       String            @db.ObjectId
+  borrowedDate DateTime          @default(now())
+  dueDate      DateTime
+  returnedDate DateTime?
+  status       TransactionStatus @default(BORROWED)
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+  book Book @relation(fields: [bookId], references: [id])
+
+  @@map("transactions")
+}
+
+enum Role {
+  STUDENT
+  LIBRARIAN
+  ADMIN
+}
+
+enum TransactionStatus {
+  BORROWED
+  RETURNED
+  OVERDUE
+}

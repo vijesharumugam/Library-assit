@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { BookOpen, Users, Shield } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertUserSchema } from "@shared/schema";
+import { insertUserSchema, Role } from "@shared/schema";
 import { z } from "zod";
 import { Redirect } from "wouter";
 
@@ -34,8 +34,8 @@ export default function AuthPage() {
 
   // Redirect if already logged in
   if (user) {
-    const redirectPath = user.role === "admin" ? "/admin" : 
-                        user.role === "librarian" ? "/librarian" : "/";
+    const redirectPath = user.role === "ADMIN" ? "/admin" : 
+                        user.role === "LIBRARIAN" ? "/librarian" : "/";
     return <Redirect to={redirectPath} />;
   }
 
@@ -145,7 +145,7 @@ export default function AuthPage() {
                       <Checkbox
                         id="remember-me"
                         checked={rememberMe}
-                        onCheckedChange={setRememberMe}
+                        onCheckedChange={(checked) => setRememberMe(checked === true)}
                         data-testid="checkbox-remember-me"
                       />
                       <Label htmlFor="remember-me" className="text-sm">

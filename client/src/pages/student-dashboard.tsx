@@ -328,7 +328,7 @@ export default function StudentDashboard() {
                             </div>
                           </td>
                           <td className="px-6 py-4 text-sm text-foreground" data-testid={`text-transaction-borrowed-date-${transaction.id}`}>
-                            {new Date(transaction.borrowedDate).toLocaleDateString()}
+                {transaction.borrowedDate ? new Date(transaction.borrowedDate).toLocaleDateString() : 'N/A'}
                           </td>
                           <td className="px-6 py-4 text-sm text-foreground" data-testid={`text-transaction-due-date-${transaction.id}`}>
                             {dueDate.toLocaleDateString()}
