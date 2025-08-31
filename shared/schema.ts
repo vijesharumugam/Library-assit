@@ -4,16 +4,17 @@ import { User, Book, Transaction, BookRequest, Role, TransactionStatus, BookRequ
 // Prisma-generated types
 export type { User, Book, Transaction, BookRequest };
 
-// Export enums both as types and runtime values
+// Export enums both as types and runtime values  
 export { Role, TransactionStatus, BookRequestStatus } from "@prisma/client";
 
-// Input validation schemas
+// Input validation schemas for creating new records
 export const insertUserSchema = z.object({
   username: z.string().min(1, "Username is required"),
   email: z.string().email("Invalid email address"),
   fullName: z.string().min(1, "Full name is required"),
   studentId: z.string().optional(),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  role: z.nativeEnum(Role).optional(),
 });
 
 export const insertBookSchema = z.object({
@@ -27,27 +28,34 @@ export const insertBookSchema = z.object({
 });
 
 export const insertTransactionSchema = z.object({
-  userId: z.string(),
-  bookId: z.string(),
+  userId: z.string().min(1, "User ID is required"),
+  bookId: z.string().min(1, "Book ID is required"),
   dueDate: z.date(),
-  status: z.enum(["BORROWED", "RETURNED", "OVERDUE"]).optional(),
+  status: z.nativeEnum(TransactionStatus).optional(),
 });
 
 export const insertBookRequestSchema = z.object({
-  userId: z.string(),
-  bookId: z.string(),
-  requestedBy: z.string(),
+  userId: z.string().min(1, "User ID is required"),
+  bookId: z.string().min(1, "Book ID is required"),
+  requestedBy: z.string().min(1, "Requested by field is required"),
   notes: z.string().optional(),
-  status: z.enum(["PENDING", "APPROVED", "REJECTED", "FULFILLED"]).optional(),
+  status: z.nativeEnum(BookRequestStatus).optional(),
 });
 
-// Inferred types
+// Login schema
+export const loginSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
+// Inferred types for creating new records
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertBook = z.infer<typeof insertBookSchema>;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type InsertBookRequest = z.infer<typeof insertBookRequestSchema>;
+export type LoginCredentials = z.infer<typeof loginSchema>;
 
-// Extended types for queries with relations
+// Extended types for queries with relations (as returned by Prisma)
 export type TransactionWithBook = Transaction & {
   book: Book;
 };
@@ -65,3 +73,6 @@ export type BookRequestWithUserAndBook = BookRequest & {
   user: User;
   book: Book;
 };
+
+// User without sensitive fields for frontend
+export type SafeUser = Omit<User, 'password'>;
