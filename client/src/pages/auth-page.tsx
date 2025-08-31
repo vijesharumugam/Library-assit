@@ -47,6 +47,7 @@ export default function AuthPage() {
       email: "",
       fullName: "",
       studentId: "",
+      phone: "",
       password: "",
       confirmPassword: "",
     },
@@ -216,7 +217,7 @@ export default function AuthPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="register-studentId">Student ID (Optional)</Label>
+                      <Label htmlFor="register-studentId">Student ID</Label>
                       <Input
                         id="register-studentId"
                         type="text"
@@ -224,6 +225,27 @@ export default function AuthPage() {
                         data-testid="input-register-student-id"
                         {...registerForm.register("studentId")}
                       />
+                      {registerForm.formState.errors.studentId && (
+                        <p className="text-sm text-destructive">
+                          {registerForm.formState.errors.studentId.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="register-phone">Phone Number</Label>
+                      <Input
+                        id="register-phone"
+                        type="tel"
+                        placeholder="Enter your phone number"
+                        data-testid="input-register-phone"
+                        {...registerForm.register("phone")}
+                      />
+                      {registerForm.formState.errors.phone && (
+                        <p className="text-sm text-destructive">
+                          {registerForm.formState.errors.phone.message}
+                        </p>
+                      )}
                     </div>
 
                     <div className="space-y-2">

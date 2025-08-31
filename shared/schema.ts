@@ -12,7 +12,8 @@ export const insertUserSchema = z.object({
   username: z.string().min(1, "Username is required"),
   email: z.string().email("Invalid email address"),
   fullName: z.string().min(1, "Full name is required"),
-  studentId: z.string().optional(),
+  studentId: z.string().min(1, "Student ID is required"),
+  phone: z.string().min(10, "Phone number must be at least 10 digits").regex(/^[0-9+\-\s()]+$/, "Please enter a valid phone number"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   role: z.nativeEnum(Role).optional(),
 });

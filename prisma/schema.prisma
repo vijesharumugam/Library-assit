@@ -15,7 +15,8 @@ model User {
   username  String   @unique
   email     String   @unique
   fullName  String
-  studentId String?
+  studentId String   @default("TBD")
+  phone     String   @default("000-000-0000")
   password  String
   role      Role     @default(STUDENT)
   createdAt DateTime @default(now())
