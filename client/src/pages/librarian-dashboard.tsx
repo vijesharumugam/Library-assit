@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { BookOpen, Users, Clock, TrendingUp, LogOut, Plus, Edit, Trash2 } from "lucide-react";
+import { useLocation } from "wouter";
 import { useState } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +18,7 @@ import { AddBookModal } from "@/components/add-book-modal";
 export default function LibrarianDashboard() {
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [showAddBookModal, setShowAddBookModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -202,7 +204,11 @@ export default function LibrarianDashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card 
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => setLocation("/librarian/borrowed-books")}
+                data-testid="card-borrowed-books"
+              >
                 <CardContent className="p-6">
                   <div className="flex items-center">
                     <div className="p-2 bg-accent/10 rounded-lg">
