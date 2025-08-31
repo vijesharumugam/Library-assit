@@ -1,11 +1,14 @@
-import { drizzle } from "drizzle-orm/neon-http";
-import { neon } from "@neondatabase/serverless";
+import { PrismaClient } from '@prisma/client';
 
-if (!process.env.DATABASE_URL) {
+if (!process.env.MONGODB_URI) {
   throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
+    "MONGODB_URI must be set. Did you forget to provision a database?",
   );
 }
 
-const sql = neon(process.env.DATABASE_URL);
-export const db = drizzle(sql);
+export const prisma = new PrismaClient();
+
+// Gracefully close the connection when the process exits
+process.on('beforeExit', async () => {
+  await prisma.$disconnect();
+});

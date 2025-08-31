@@ -74,7 +74,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByRegisterNumber(registerNumber: string): Promise<User | null> {
-    return await prisma.user.findUnique({
+    return await prisma.user.findFirst({
       where: { studentId: registerNumber }
     });
   }
