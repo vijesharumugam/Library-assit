@@ -77,7 +77,7 @@ export default function AdminDashboard() {
     const matchesSearch = userSearchQuery === "" || 
       u.fullName.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
       u.email.toLowerCase().includes(userSearchQuery.toLowerCase());
-    const matchesRole = roleFilter === "" || u.role === roleFilter;
+    const matchesRole = roleFilter === "" || roleFilter === "all" || u.role === roleFilter;
     return matchesSearch && matchesRole;
   });
 
@@ -274,7 +274,7 @@ export default function AdminDashboard() {
                       <SelectValue placeholder="All Roles" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Roles</SelectItem>
+                      <SelectItem value="all">All Roles</SelectItem>
                       <SelectItem value="STUDENT">Students</SelectItem>
                       <SelectItem value="LIBRARIAN">Librarians</SelectItem>
                       <SelectItem value="ADMIN">Administrators</SelectItem>

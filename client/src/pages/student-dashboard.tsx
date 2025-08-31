@@ -73,7 +73,7 @@ export default function StudentDashboard() {
     const matchesSearch = searchQuery === "" || 
       book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       book.author.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === "" || book.category === categoryFilter;
+    const matchesCategory = categoryFilter === "" || categoryFilter === "all" || book.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
 
@@ -184,7 +184,7 @@ export default function StudentDashboard() {
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   <SelectItem value="fiction">Fiction</SelectItem>
                   <SelectItem value="science">Science</SelectItem>
                   <SelectItem value="history">History</SelectItem>
