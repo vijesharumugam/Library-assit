@@ -14,7 +14,7 @@ import { z } from "zod";
 import { Redirect } from "wouter";
 
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  registerNumber: z.string().min(1, "Register number is required"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -42,7 +42,7 @@ export default function AuthPage() {
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      registerNumber: "",
       password: "",
     },
   });
@@ -70,9 +70,9 @@ export default function AuthPage() {
 
   const loginAsDemo = (role: "student" | "librarian" | "admin") => {
     const demoCredentials = {
-      student: { username: "student", password: "student123" },
-      librarian: { username: "librarian", password: "librarian123" },
-      admin: { username: "admin", password: "admin123" },
+      student: { registerNumber: "STU001", password: "student123" },
+      librarian: { registerNumber: "LIB001", password: "librarian123" },
+      admin: { registerNumber: "ADM001", password: "admin123" },
     };
     
     loginMutation.mutate(demoCredentials[role]);
@@ -110,17 +110,17 @@ export default function AuthPage() {
                 <CardContent>
                   <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="login-username">Username</Label>
+                      <Label htmlFor="login-register-number">Register Number</Label>
                       <Input
-                        id="login-username"
+                        id="login-register-number"
                         type="text"
-                        placeholder="Enter your username"
-                        data-testid="input-login-username"
-                        {...loginForm.register("username")}
+                        placeholder="Enter your register number"
+                        data-testid="input-login-register-number"
+                        {...loginForm.register("registerNumber")}
                       />
-                      {loginForm.formState.errors.username && (
+                      {loginForm.formState.errors.registerNumber && (
                         <p className="text-sm text-destructive">
-                          {loginForm.formState.errors.username.message}
+                          {loginForm.formState.errors.registerNumber.message}
                         </p>
                       )}
                     </div>

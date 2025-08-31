@@ -19,6 +19,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | null>;
   getUserByUsername(username: string): Promise<User | null>;
   getUserByEmail(email: string): Promise<User | null>;
+  getUserByRegisterNumber(registerNumber: string): Promise<User | null>;
   createUser(user: InsertUser): Promise<User>;
   updateUserRole(userId: string, role: Role): Promise<User | null>;
   deleteUser(userId: string): Promise<boolean>;
@@ -72,9 +73,18 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
+  async getUserByRegisterNumber(registerNumber: string): Promise<User | null> {
+    return await prisma.user.findUnique({
+      where: { studentId: registerNumber }
+    });
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     return await prisma.user.create({
-      data: insertUser
+      data: {
+        ...insertUser,
+        password: insertUser.password // Map password correctly
+      }
     });
   }
 
