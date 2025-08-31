@@ -415,12 +415,12 @@ export default function LibrarianDashboard() {
                               <td className="px-6 py-4">
                                 <Badge 
                                   variant={
-                                    transaction.status === "returned" ? "default" :
+                                    transaction.status === "RETURNED" ? "default" :
                                     isOverdue ? "destructive" : "secondary"
                                   }
                                   data-testid={`badge-status-${transaction.id}`}
                                 >
-                                  {transaction.status === "returned" ? "Returned" :
+                                  {transaction.status === "RETURNED" ? "Returned" :
                                    isOverdue ? "Overdue" : "Borrowed"}
                                 </Badge>
                               </td>

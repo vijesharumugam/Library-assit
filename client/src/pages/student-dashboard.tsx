@@ -77,7 +77,7 @@ export default function StudentDashboard() {
     return matchesSearch && matchesCategory;
   });
 
-  const activeBorrowings = myTransactions.filter(t => t.status === "borrowed");
+  const activeBorrowings = myTransactions.filter(t => t.status === "BORROWED");
   const dueSoon = activeBorrowings.filter(t => {
     const dueDate = new Date(t.dueDate);
     const today = new Date();
