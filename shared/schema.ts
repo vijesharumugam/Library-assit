@@ -1,8 +1,27 @@
 import { z } from "zod";
-import { User, Book, Transaction, BookRequest, Role, TransactionStatus, BookRequestStatus } from "@prisma/client";
+import { User, Book, Transaction, BookRequest, Role, TransactionStatus, BookRequestStatus, Prisma } from "@prisma/client";
 
 // Prisma-generated types
 export type { User, Book, Transaction, BookRequest };
+
+// Define Notification types manually to avoid import issues
+export type Notification = {
+  id: string;
+  userId: string;
+  type: "BOOK_BORROWED" | "BOOK_RETURNED" | "BOOK_DUE_SOON" | "BOOK_OVERDUE";
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: Date;
+  user?: User;
+};
+
+export enum NotificationType {
+  BOOK_BORROWED = "BOOK_BORROWED",
+  BOOK_RETURNED = "BOOK_RETURNED", 
+  BOOK_DUE_SOON = "BOOK_DUE_SOON",
+  BOOK_OVERDUE = "BOOK_OVERDUE"
+}
 
 // Export enums both as types and runtime values  
 export { Role, TransactionStatus, BookRequestStatus } from "@prisma/client";
@@ -43,6 +62,14 @@ export const insertBookRequestSchema = z.object({
   status: z.nativeEnum(BookRequestStatus).optional(),
 });
 
+export const insertNotificationSchema = z.object({
+  userId: z.string().min(1, "User ID is required"),
+  type: z.nativeEnum(NotificationType),
+  title: z.string().min(1, "Title is required"),
+  message: z.string().min(1, "Message is required"),
+  isRead: z.boolean().optional(),
+});
+
 // Login schema
 export const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -54,6 +81,7 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertBook = z.infer<typeof insertBookSchema>;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type InsertBookRequest = z.infer<typeof insertBookRequestSchema>;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type LoginCredentials = z.infer<typeof loginSchema>;
 
 // Extended types for queries with relations (as returned by Prisma)
@@ -73,6 +101,10 @@ export type BookRequestWithBook = BookRequest & {
 export type BookRequestWithUserAndBook = BookRequest & {
   user: User;
   book: Book;
+};
+
+export type NotificationWithUser = Notification & {
+  user: User;
 };
 
 // User without sensitive fields for frontend

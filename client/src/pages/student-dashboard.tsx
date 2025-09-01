@@ -13,6 +13,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Book, Transaction, BookRequest } from "@shared/schema";
 import { FloatingLibraryElements } from "@/components/FloatingLibraryElements";
+import { NotificationBell } from "@/components/notification-bell";
 
 export default function StudentDashboard() {
   const { user, logoutMutation } = useAuth();
@@ -109,6 +110,7 @@ export default function StudentDashboard() {
                 Welcome, <span className="font-medium text-foreground" data-testid="text-user-name">{user?.fullName}</span>
               </span>
               <Badge variant="secondary" data-testid="badge-user-role" className="text-xs">Student</Badge>
+              <NotificationBell />
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button

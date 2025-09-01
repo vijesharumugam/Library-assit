@@ -3,13 +3,16 @@ import {
   Book, 
   Transaction, 
   BookRequest,
+  Notification,
   Role, 
   TransactionStatus,
   BookRequestStatus,
+  NotificationType,
   InsertUser, 
   InsertBook, 
   InsertTransaction, 
   InsertBookRequest,
+  InsertNotification,
   TransactionWithBook, 
   TransactionWithUserAndBook,
   BookRequestWithBook,
@@ -54,6 +57,12 @@ export interface IStorage {
   getPendingBookRequests(): Promise<BookRequestWithUserAndBook[]>;
   updateBookRequestStatus(id: string, status: BookRequestStatus): Promise<BookRequest | null>;
   approveBookRequest(requestId: string, librarianId: string): Promise<Transaction | null>;
+  
+  // Notification methods
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  getUserNotifications(userId: string): Promise<Notification[]>;
+  markNotificationAsRead(id: string): Promise<Notification | null>;
+  markAllNotificationsAsRead(userId: string): Promise<boolean>;
   
   sessionStore: session.Store;
 }
@@ -208,9 +217,20 @@ export class DatabaseStorage implements IStorage {
 
   // Transaction methods
   async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {
-    return await prisma.transaction.create({
-      data: insertTransaction
+    const transaction = await prisma.transaction.create({
+      data: insertTransaction,
+      include: { book: true, user: true }
     });
+
+    // Create notification for book borrowed
+    await this.createNotification({
+      userId: transaction.userId,
+      type: NotificationType.BOOK_BORROWED,
+      title: "Book Borrowed Successfully",
+      message: `You have successfully borrowed "${transaction.book.title}" by ${transaction.book.author}. Due date: ${new Date(transaction.dueDate).toLocaleDateString()}`
+    });
+
+    return transaction;
   }
 
   async getUserTransactions(userId: string): Promise<TransactionWithBook[]> {
@@ -238,10 +258,23 @@ export class DatabaseStorage implements IStorage {
         updateData.returnedDate = returnedDate;
       }
       
-      return await prisma.transaction.update({
+      const transaction = await prisma.transaction.update({
         where: { id },
-        data: updateData
+        data: updateData,
+        include: { book: true, user: true }
       });
+
+      // Create notification for book returned
+      if (status === TransactionStatus.RETURNED) {
+        await this.createNotification({
+          userId: transaction.userId,
+          type: NotificationType.BOOK_RETURNED,
+          title: "Book Returned Successfully",
+          message: `You have successfully returned "${transaction.book.title}" by ${transaction.book.author}. Thank you for returning on time!`
+        });
+      }
+
+      return transaction;
     } catch (error) {
       return null;
     }
@@ -344,9 +377,54 @@ export class DatabaseStorage implements IStorage {
       // Update request status
       await this.updateBookRequestStatus(requestId, BookRequestStatus.FULFILLED);
 
+      // Create notification for book borrowed via request approval
+      await this.createNotification({
+        userId: transaction.userId,
+        type: NotificationType.BOOK_BORROWED,
+        title: "Book Request Approved",
+        message: `Your request for "${request.book.title}" by ${request.book.author} has been approved. Due date: ${dueDate.toLocaleDateString()}`
+      });
+
       return transaction;
     } catch (error) {
       return null;
+    }
+  }
+
+  // Notification methods
+  async createNotification(insertNotification: InsertNotification): Promise<Notification> {
+    return await prisma.notification.create({
+      data: insertNotification
+    });
+  }
+
+  async getUserNotifications(userId: string): Promise<Notification[]> {
+    return await prisma.notification.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  async markNotificationAsRead(id: string): Promise<Notification | null> {
+    try {
+      return await prisma.notification.update({
+        where: { id },
+        data: { isRead: true }
+      });
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<boolean> {
+    try {
+      await prisma.notification.updateMany({
+        where: { userId, isRead: false },
+        data: { isRead: true }
+      });
+      return true;
+    } catch (error) {
+      return false;
     }
   }
 }
