@@ -14,6 +14,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Book, Transaction, User, BookRequest, TransactionStatus, BookRequestStatus, Role } from "@shared/schema";
 import { AddBookModal } from "@/components/add-book-modal";
+import { EditBookModal } from "@/components/edit-book-modal";
 import { BorrowModal } from "@/components/borrow-modal";
 import { ExcelUploadModal } from "@/components/excel-upload-modal";
 import { FloatingLibraryElements } from "@/components/FloatingLibraryElements";
@@ -23,6 +24,8 @@ export default function LibrarianDashboard() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [showAddBookModal, setShowAddBookModal] = useState(false);
+  const [showEditBookModal, setShowEditBookModal] = useState(false);
+  const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [showBorrowModal, setShowBorrowModal] = useState(false);
   const [showExcelUploadModal, setShowExcelUploadModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -109,6 +112,11 @@ export default function LibrarianDashboard() {
       });
     },
   });
+
+  const handleEditBook = (book: Book) => {
+    setEditingBook(book);
+    setShowEditBookModal(true);
+  };
 
   const filteredBooks = books.filter(book => {
     const matchesSearch = searchQuery === "" || 
@@ -635,6 +643,7 @@ export default function LibrarianDashboard() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
+                                  onClick={() => handleEditBook(book)}
                                   data-testid={`button-edit-book-${book.id}`}
                                 >
                                   <Edit className="h-4 w-4" />
@@ -750,6 +759,12 @@ export default function LibrarianDashboard() {
         <AddBookModal 
           open={showAddBookModal} 
           onOpenChange={setShowAddBookModal}
+        />
+        
+        <EditBookModal 
+          open={showEditBookModal} 
+          onOpenChange={setShowEditBookModal}
+          book={editingBook}
         />
         
         <BorrowModal 
