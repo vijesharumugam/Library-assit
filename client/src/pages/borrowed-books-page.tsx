@@ -78,9 +78,6 @@ export default function BorrowedBooksPage() {
                     return (
                       <div key={transaction.id} className="border border-border rounded-lg p-4" data-testid={`card-borrowed-book-${transaction.id}`}>
                         <div className="flex items-start space-x-3 mb-3">
-                          <div className="h-12 w-8 bg-gradient-to-b from-blue-600 to-blue-800 rounded shadow-sm flex items-center justify-center">
-                            <BookOpen className="h-3 w-3 text-white" />
-                          </div>
                           <div className="flex-1">
                             <h3 className="font-semibold text-foreground text-sm" data-testid={`text-book-title-${transaction.id}`}>
                               {transaction.book.title}
@@ -164,9 +161,6 @@ export default function BorrowedBooksPage() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center">
-                              <div className="h-12 w-8 bg-gradient-to-b from-blue-600 to-blue-800 rounded shadow-sm mr-4 flex items-center justify-center">
-                                <BookOpen className="h-3 w-3 text-white" />
-                              </div>
                               <div>
                                 <div className="text-sm font-medium text-foreground" data-testid={`text-book-title-${transaction.id}`}>
                                   {transaction.book.title}
