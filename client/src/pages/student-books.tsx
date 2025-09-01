@@ -83,34 +83,31 @@ function StudentBooks() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-3">
+            <div className="flex gap-2">
               <Input
                 type="text"
                 placeholder="Search by title, author, or ISBN..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 data-testid="books-search-input"
-                className="text-base"
+                className="text-base flex-1"
               />
               
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger data-testid="books-category-filter" className="flex-1">
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="fiction">Fiction</SelectItem>
-                    <SelectItem value="science">Science</SelectItem>
-                    <SelectItem value="history">History</SelectItem>
-                    <SelectItem value="technology">Technology</SelectItem>
-                    <SelectItem value="non-fiction">Non-Fiction</SelectItem>
-                    <SelectItem value="mystery">Mystery</SelectItem>
-                    <SelectItem value="self-help">Self-Help</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger data-testid="books-category-filter" className="w-40">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="fiction">Fiction</SelectItem>
+                  <SelectItem value="science">Science</SelectItem>
+                  <SelectItem value="history">History</SelectItem>
+                  <SelectItem value="technology">Technology</SelectItem>
+                  <SelectItem value="non-fiction">Non-Fiction</SelectItem>
+                  <SelectItem value="mystery">Mystery</SelectItem>
+                  <SelectItem value="self-help">Self-Help</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             {(searchQuery || categoryFilter) && (
