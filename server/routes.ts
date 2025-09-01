@@ -307,7 +307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/book-requests/:id/reject", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
     try {
-      const request = await storage.updateBookRequestStatus(req.params.id, BookRequestStatus.REJECTED);
+      const request = await storage.rejectBookRequest(req.params.id);
       
       if (!request) {
         return res.status(404).json({ message: "Request not found" });

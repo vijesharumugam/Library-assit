@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { BookOpen, Clock, CheckCircle, Send, LogOut } from "lucide-react";
 import { useState, useMemo, memo } from "react";
+import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Book, Transaction, BookRequest } from "@shared/schema";
@@ -141,37 +142,41 @@ function StudentDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Overview */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8 fade-in-float">
-          <Card className="library-card">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center">
-                <div className="p-1.5 sm:p-2 gold-accent rounded-lg">
-                  <BookOpen className="h-4 w-4 sm:h-6 sm:w-6 text-primary-foreground" />
+          <Link href="/student/borrowed-books">
+            <Card className="library-card cursor-pointer hover:bg-muted/50 transition-colors">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex items-center">
+                  <div className="p-1.5 sm:p-2 gold-accent rounded-lg">
+                    <BookOpen className="h-4 w-4 sm:h-6 sm:w-6 text-primary-foreground" />
+                  </div>
+                  <div className="ml-2 sm:ml-4">
+                    <p className="text-xs sm:text-sm font-medium text-muted-foreground library-subheading">Currently Borrowed</p>
+                    <p className="text-lg sm:text-2xl font-semibold text-foreground" data-testid="stat-borrowed-count">
+                      {activeBorrowings.length}
+                    </p>
+                  </div>
                 </div>
-                <div className="ml-2 sm:ml-4">
-                  <p className="text-xs sm:text-sm font-medium text-muted-foreground library-subheading">Currently Borrowed</p>
-                  <p className="text-lg sm:text-2xl font-semibold text-foreground" data-testid="stat-borrowed-count">
-                    {activeBorrowings.length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="library-card">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center">
-                <div className="p-1.5 sm:p-2 bg-chart-5/20 rounded-lg">
-                  <Send className="h-4 w-4 sm:h-6 sm:w-6 text-chart-5" />
+          <Link href="/student/pending-requests">
+            <Card className="library-card cursor-pointer hover:bg-muted/50 transition-colors">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex items-center">
+                  <div className="p-1.5 sm:p-2 bg-chart-5/20 rounded-lg">
+                    <Send className="h-4 w-4 sm:h-6 sm:w-6 text-chart-5" />
+                  </div>
+                  <div className="ml-2 sm:ml-4">
+                    <p className="text-xs sm:text-sm font-medium text-muted-foreground library-subheading">Pending Requests</p>
+                    <p className="text-lg sm:text-2xl font-semibold text-foreground" data-testid="stat-pending-requests">
+                      {pendingRequests.length}
+                    </p>
+                  </div>
                 </div>
-                <div className="ml-2 sm:ml-4">
-                  <p className="text-xs sm:text-sm font-medium text-muted-foreground library-subheading">Pending Requests</p>
-                  <p className="text-lg sm:text-2xl font-semibold text-foreground" data-testid="stat-pending-requests">
-                    {pendingRequests.length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
 
           <Card className="library-card">
             <CardContent className="p-4 sm:p-6">
@@ -366,150 +371,6 @@ function StudentDashboard() {
           </CardContent>
         </Card>
 
-        {/* My Book Requests */}
-        <Card className="mb-8 library-card">
-          <CardHeader>
-            <CardTitle data-testid="title-my-book-requests" className="library-heading">My Book Requests</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {requestsLoading ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">Loading your requests...</p>
-              </div>
-            ) : myRequests.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">You haven't requested any books yet</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-muted/50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Book</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Request Date</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Notes</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-card divide-y divide-border">
-                    {myRequests.map((request) => (
-                      <tr key={request.id} className="hover:bg-muted/50" data-testid={`row-request-${request.id}`}>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center">
-                            <div className="h-12 w-8 bg-gradient-to-b from-blue-600 to-blue-800 rounded shadow-sm mr-4 flex items-center justify-center">
-                              <BookOpen className="h-3 w-3 text-white" />
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium text-foreground" data-testid={`text-request-book-title-${request.id}`}>
-                                {request.book.title}
-                              </div>
-                              <div className="text-sm text-muted-foreground" data-testid={`text-request-book-author-${request.id}`}>
-                                {request.book.author}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-foreground" data-testid={`text-request-date-${request.id}`}>
-                          {new Date(request.requestDate).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4">
-                          <Badge 
-                            variant={
-                              request.status === "FULFILLED" ? "default" :
-                              request.status === "REJECTED" ? "destructive" :
-                              request.status === "APPROVED" ? "secondary" : "outline"
-                            }
-                            data-testid={`badge-request-status-${request.id}`}
-                          >
-                            {request.status}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-muted-foreground" data-testid={`text-request-notes-${request.id}`}>
-                          {request.notes || "—"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* My Borrowed Books */}
-        <Card className="library-card">
-          <CardHeader>
-            <CardTitle data-testid="title-my-borrowed-books" className="library-heading">My Borrowed Books</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {transactionsLoading ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">Loading your transactions...</p>
-              </div>
-            ) : activeBorrowings.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">You haven't borrowed any books yet</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-muted/50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Book</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Borrowed Date</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Due Date</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-card divide-y divide-border">
-                    {activeBorrowings.map((transaction) => {
-                      const dueDate = new Date(transaction.dueDate);
-                      const today = new Date();
-                      const diffTime = dueDate.getTime() - today.getTime();
-                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                      const isDueSoon = diffDays <= 3;
-                      const isOverdue = diffDays < 0;
-
-                      return (
-                        <tr key={transaction.id} className="hover:bg-muted/50" data-testid={`row-transaction-${transaction.id}`}>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center">
-                              <div className="h-12 w-8 bg-gradient-to-b from-red-600 to-red-800 rounded shadow-sm mr-4 flex items-center justify-center">
-                                <BookOpen className="h-3 w-3 text-white" />
-                              </div>
-                              <div>
-                                <div className="text-sm font-medium text-foreground" data-testid={`text-transaction-book-title-${transaction.id}`}>
-                                  {transaction.book.title}
-                                </div>
-                                <div className="text-sm text-muted-foreground" data-testid={`text-transaction-book-author-${transaction.id}`}>
-                                  {transaction.book.author}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-foreground" data-testid={`text-transaction-borrowed-date-${transaction.id}`}>
-                {transaction.borrowedDate ? new Date(transaction.borrowedDate).toLocaleDateString() : 'N/A'}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-foreground" data-testid={`text-transaction-due-date-${transaction.id}`}>
-                            {dueDate.toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4">
-                            <Badge 
-                              variant={isOverdue ? "destructive" : isDueSoon ? "secondary" : "default"}
-                              data-testid={`badge-transaction-status-${transaction.id}`}
-                            >
-                              {isOverdue ? "Overdue" : isDueSoon ? "Due Soon" : "Active"}
-                            </Badge>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

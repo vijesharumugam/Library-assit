@@ -8,7 +8,7 @@ export type { User, Book, Transaction, BookRequest };
 export type Notification = {
   id: string;
   userId: string;
-  type: "BOOK_BORROWED" | "BOOK_RETURNED" | "BOOK_DUE_SOON" | "BOOK_OVERDUE";
+  type: "BOOK_BORROWED" | "BOOK_RETURNED" | "BOOK_DUE_SOON" | "BOOK_OVERDUE" | "BOOK_REQUEST_REJECTED";
   title: string;
   message: string;
   isRead: boolean;
@@ -20,7 +20,8 @@ export enum NotificationType {
   BOOK_BORROWED = "BOOK_BORROWED",
   BOOK_RETURNED = "BOOK_RETURNED", 
   BOOK_DUE_SOON = "BOOK_DUE_SOON",
-  BOOK_OVERDUE = "BOOK_OVERDUE"
+  BOOK_OVERDUE = "BOOK_OVERDUE",
+  BOOK_REQUEST_REJECTED = "BOOK_REQUEST_REJECTED"
 }
 
 // Export enums both as types and runtime values  

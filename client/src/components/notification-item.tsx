@@ -1,4 +1,4 @@
-import { BookOpen, CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { BookOpen, CheckCircle, Clock, AlertTriangle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -14,6 +14,7 @@ const notificationIcons: Record<NotificationType, any> = {
   BOOK_RETURNED: CheckCircle,
   BOOK_DUE_SOON: Clock,
   BOOK_OVERDUE: AlertTriangle,
+  BOOK_REQUEST_REJECTED: X,
 };
 
 const notificationColors: Record<NotificationType, string> = {
@@ -21,6 +22,7 @@ const notificationColors: Record<NotificationType, string> = {
   BOOK_RETURNED: "text-green-600", 
   BOOK_DUE_SOON: "text-amber-600",
   BOOK_OVERDUE: "text-red-600",
+  BOOK_REQUEST_REJECTED: "text-red-600",
 };
 
 export function NotificationItem({ notification }: NotificationItemProps) {

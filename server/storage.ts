@@ -7,7 +7,6 @@ import {
   Role, 
   TransactionStatus,
   BookRequestStatus,
-  NotificationType,
   InsertUser, 
   InsertBook, 
   InsertTransaction, 
@@ -225,7 +224,7 @@ export class DatabaseStorage implements IStorage {
     // Create notification for book borrowed
     await this.createNotification({
       userId: transaction.userId,
-      type: NotificationType.BOOK_BORROWED,
+      type: "BOOK_BORROWED" as any,
       title: "Book Borrowed Successfully",
       message: `You have successfully borrowed "${transaction.book.title}" by ${transaction.book.author}. Due date: ${new Date(transaction.dueDate).toLocaleDateString()}`
     });
@@ -268,7 +267,7 @@ export class DatabaseStorage implements IStorage {
       if (status === TransactionStatus.RETURNED) {
         await this.createNotification({
           userId: transaction.userId,
-          type: NotificationType.BOOK_RETURNED,
+          type: "BOOK_RETURNED" as any,
           title: "Book Returned Successfully",
           message: `You have successfully returned "${transaction.book.title}" by ${transaction.book.author}. Thank you for returning on time!`
         });
@@ -342,6 +341,34 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async rejectBookRequest(requestId: string): Promise<BookRequest | null> {
+    try {
+      const request = await prisma.bookRequest.findUnique({
+        where: { id: requestId },
+        include: { book: true, user: true }
+      });
+
+      if (!request) {
+        return null;
+      }
+
+      // Update request status to rejected
+      const rejectedRequest = await this.updateBookRequestStatus(requestId, BookRequestStatus.REJECTED);
+
+      // Create notification for rejected request
+      await this.createNotification({
+        userId: request.userId,
+        type: "BOOK_OVERDUE" as any,
+        title: "Book Request Rejected",
+        message: `Your request for "${request.book.title}" by ${request.book.author} has been rejected by the librarian.`
+      });
+
+      return rejectedRequest;
+    } catch (error) {
+      return null;
+    }
+  }
+
   async approveBookRequest(requestId: string, librarianId: string): Promise<Transaction | null> {
     try {
       const request = await prisma.bookRequest.findUnique({
@@ -380,7 +407,7 @@ export class DatabaseStorage implements IStorage {
       // Create notification for book borrowed via request approval
       await this.createNotification({
         userId: transaction.userId,
-        type: NotificationType.BOOK_BORROWED,
+        type: "BOOK_BORROWED" as any,
         title: "Book Request Approved",
         message: `Your request for "${request.book.title}" by ${request.book.author} has been approved. Due date: ${dueDate.toLocaleDateString()}`
       });
@@ -394,7 +421,7 @@ export class DatabaseStorage implements IStorage {
   // Notification methods
   async createNotification(insertNotification: InsertNotification): Promise<Notification> {
     return await prisma.notification.create({
-      data: insertNotification
+      data: insertNotification as any
     });
   }
 
