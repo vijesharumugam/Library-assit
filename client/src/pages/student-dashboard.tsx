@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { BookOpen, Clock, CheckCircle, Send, LogOut } from "lucide-react";
+import { BookOpen, Clock, CheckCircle, Send, LogOut, Search, TrendingUp, Heart } from "lucide-react";
 import { useState, useMemo, memo } from "react";
 import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -15,12 +15,16 @@ import { useToast } from "@/hooks/use-toast";
 import { Book, Transaction, BookRequest } from "@shared/schema";
 import FloatingLibraryElements from "@/components/FloatingLibraryElements";
 import { NotificationBell } from "@/components/notification-bell";
+import { BottomNavigation } from "@/components/bottom-navigation";
+import { MobileBookCard } from "@/components/mobile-book-card";
 
 function StudentDashboard() {
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<'all' | 'recent' | 'favorites'>('all');
 
   const { data: availableBooks = [], isLoading: booksLoading } = useQuery<Book[]>({
     queryKey: ["/api/books/available"],
@@ -85,11 +89,81 @@ function StudentDashboard() {
     };
   }, [myTransactions, myRequests]);
 
+  const handleToggleFavorite = (bookId: string) => {
+    setFavorites(prev => 
+      prev.includes(bookId) 
+        ? prev.filter(id => id !== bookId)
+        : [...prev, bookId]
+    );
+  };
+
+  const recentBooks = useMemo(() => {
+    return availableBooks.slice(0, 5);
+  }, [availableBooks]);
+
+  const favoriteBooks = useMemo(() => {
+    return availableBooks.filter(book => favorites.includes(book.id));
+  }, [availableBooks, favorites]);
+
+  const displayBooks = useMemo(() => {
+    switch (activeTab) {
+      case 'recent':
+        return recentBooks;
+      case 'favorites':
+        return favoriteBooks;
+      default:
+        return filteredBooks;
+    }
+  }, [activeTab, recentBooks, favoriteBooks, filteredBooks]);
+
   return (
-    <div className="min-h-screen bg-background library-pattern relative">
+    <div className="min-h-screen bg-background relative pb-20 md:pb-0">
       <FloatingLibraryElements />
-      {/* Header */}
-      <header className="bg-card border-b border-border elegant-shadow relative z-10">
+      {/* Mobile Header */}
+      <header className="bg-card border-b border-border sticky top-0 z-40 block md:hidden">
+        <div className="px-4 py-3">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <h1 className="text-lg font-semibold text-foreground" data-testid="mobile-header-title">Student</h1>
+              <Badge variant="secondary" className="text-xs">Library</Badge>
+            </div>
+            <div className="flex items-center space-x-2">
+              <NotificationBell />
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="sm" data-testid="button-mobile-logout">
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent data-testid="dialog-logout-confirmation">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle data-testid="title-logout-confirmation">
+                      Are you sure you want to logout?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription data-testid="description-logout-confirmation">
+                      You will be logged out of your account and redirected to the login page.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel data-testid="button-cancel-logout">
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => logoutMutation.mutate()}
+                      data-testid="button-confirm-logout"
+                    >
+                      Logout
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Desktop Header */}
+      <header className="bg-card border-b border-border elegant-shadow relative z-10 hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -139,7 +213,152 @@ function StudentDashboard() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Mobile Layout */}
+      <div className="block md:hidden px-4 py-4 space-y-6">
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 gap-3">
+          <Link href="/student/borrowed-books">
+            <Card className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">Borrowed</p>
+                    <p className="text-xl font-bold text-blue-700 dark:text-blue-300" data-testid="mobile-stat-borrowed">
+                      {activeBorrowings.length}
+                    </p>
+                  </div>
+                  <BookOpen className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+          
+          <Link href="/student/pending-requests">
+            <Card className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-orange-600 dark:text-orange-400 font-medium">Pending</p>
+                    <p className="text-xl font-bold text-orange-700 dark:text-orange-300" data-testid="mobile-stat-pending">
+                      {pendingRequests.length}
+                    </p>
+                  </div>
+                  <Clock className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+
+        {/* Search Section */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2" data-testid="mobile-search-title">
+              <Search className="h-4 w-4" />
+              Search Books
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Input
+              type="text"
+              placeholder="Search by title or author..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              data-testid="mobile-search-input"
+              className="text-base"
+            />
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger data-testid="mobile-category-filter">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="fiction">Fiction</SelectItem>
+                <SelectItem value="science">Science</SelectItem>
+                <SelectItem value="history">History</SelectItem>
+                <SelectItem value="technology">Technology</SelectItem>
+                <SelectItem value="non-fiction">Non-Fiction</SelectItem>
+                <SelectItem value="mystery">Mystery</SelectItem>
+                <SelectItem value="self-help">Self-Help</SelectItem>
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+
+        {/* Book Tabs */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base" data-testid="mobile-books-title">
+                Available Books (10 samples)
+              </CardTitle>
+              <Badge variant="outline" className="text-xs">
+                {displayBooks.length} books
+              </Badge>
+            </div>
+            <div className="flex gap-2 mt-3">
+              <Button
+                variant={activeTab === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveTab('all')}
+                data-testid="tab-all-books"
+                className="text-xs"
+              >
+                All
+              </Button>
+              <Button
+                variant={activeTab === 'recent' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveTab('recent')}
+                data-testid="tab-recent-books"
+                className="text-xs flex items-center gap-1"
+              >
+                <TrendingUp className="h-3 w-3" />
+                Recent
+              </Button>
+              <Button
+                variant={activeTab === 'favorites' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveTab('favorites')}
+                data-testid="tab-favorite-books"
+                className="text-xs flex items-center gap-1"
+              >
+                <Heart className="h-3 w-3" />
+                Favorites ({favorites.length})
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {booksLoading ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground text-sm">Loading books...</p>
+              </div>
+            ) : displayBooks.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground text-sm">
+                  {activeTab === 'favorites' ? 'No favorite books yet' : 'No books found'}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {displayBooks.map((book) => (
+                  <MobileBookCard
+                    key={book.id}
+                    book={book}
+                    onRequest={(bookId) => requestMutation.mutate({ bookId })}
+                    onToggleFavorite={handleToggleFavorite}
+                    isFavorite={favorites.includes(book.id)}
+                    isRequesting={requestMutation.isPending}
+                  />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Desktop Layout */}
+      <div className="hidden md:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Overview */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8 fade-in-float">
           <Link href="/student/borrowed-books">
@@ -247,7 +466,7 @@ function StudentDashboard() {
         {/* Available Books */}
         <Card className="mb-8 library-card">
           <CardHeader>
-            <CardTitle data-testid="title-available-books" className="library-heading">Available Books</CardTitle>
+            <CardTitle data-testid="title-available-books" className="library-heading">Available Books (Sample 10)</CardTitle>
           </CardHeader>
           <CardContent>
             {booksLoading ? (
@@ -259,119 +478,72 @@ function StudentDashboard() {
                 <p className="text-muted-foreground">No books found matching your criteria</p>
               </div>
             ) : (
-              <>
-                {/* Mobile Card Layout */}
-                <div className="block sm:hidden space-y-4">
-                  {filteredBooks.map((book) => (
-                    <div key={book.id} className="border border-border rounded-lg p-4" data-testid={`card-book-${book.id}`}>
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start space-x-3 flex-1">
-                          <div className="h-16 w-10 book-spine-gradient rounded shadow-sm flex items-center justify-center gentle-float">
-                            <BookOpen className="h-4 w-4 text-white" />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-foreground text-sm" data-testid={`text-book-title-${book.id}`}>
-                              {book.title}
-                            </h3>
-                            <p className="text-sm text-muted-foreground" data-testid={`text-book-author-${book.id}`}>
-                              by {book.author}
-                            </p>
-                            {book.isbn && (
-                              <p className="text-xs text-muted-foreground mt-1" data-testid={`text-book-isbn-${book.id}`}>
-                                ISBN: {book.isbn}
-                              </p>
-                            )}
-                            <div className="flex items-center justify-between mt-2">
-                              <Badge variant="outline" data-testid={`badge-book-category-${book.id}`} className="text-xs">
-                                {book.category}
-                              </Badge>
-                              <span className="text-xs text-muted-foreground" data-testid={`text-book-available-${book.id}`}>
-                                {book.availableCopies}/{book.totalCopies} available
-                              </span>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Book Details</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Author</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Category</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Available</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-card divide-y divide-border">
+                    {filteredBooks.map((book) => (
+                      <tr key={book.id} className="hover:bg-muted/50" data-testid={`row-book-${book.id}`}>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center">
+                            <div className="h-12 w-8 bg-gradient-to-b from-blue-600 to-blue-800 rounded shadow-sm mr-4 flex items-center justify-center">
+                              <BookOpen className="h-3 w-3 text-white" />
                             </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-3 flex justify-end">
-                        <Button
-                          size="sm"
-                          onClick={() => requestMutation.mutate({ bookId: book.id })}
-                          disabled={requestMutation.isPending || book.availableCopies === 0}
-                          data-testid={`button-request-${book.id}`}
-                          className="w-full sm:w-auto"
-                        >
-                          {book.availableCopies === 0 ? "Unavailable" : "Request Book"}
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Desktop Table Layout */}
-                <div className="hidden sm:block overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-muted/50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Book Details</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Author</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Category</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Available</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-card divide-y divide-border">
-                      {filteredBooks.map((book) => (
-                        <tr key={book.id} className="hover:bg-muted/50" data-testid={`row-book-${book.id}`}>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center">
-                              <div className="h-12 w-8 bg-gradient-to-b from-blue-600 to-blue-800 rounded shadow-sm mr-4 flex items-center justify-center">
-                                <BookOpen className="h-3 w-3 text-white" />
+                            <div>
+                              <div className="text-sm font-medium text-foreground" data-testid={`text-book-title-${book.id}`}>
+                                {book.title}
                               </div>
-                              <div>
-                                <div className="text-sm font-medium text-foreground" data-testid={`text-book-title-${book.id}`}>
-                                  {book.title}
+                              {book.isbn && (
+                                <div className="text-sm text-muted-foreground" data-testid={`text-book-isbn-${book.id}`}>
+                                  ISBN: {book.isbn}
                                 </div>
-                                {book.isbn && (
-                                  <div className="text-sm text-muted-foreground" data-testid={`text-book-isbn-${book.id}`}>
-                                    ISBN: {book.isbn}
-                                  </div>
-                                )}
-                              </div>
+                              )}
                             </div>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-foreground" data-testid={`text-book-author-${book.id}`}>
-                            {book.author}
-                          </td>
-                          <td className="px-6 py-4">
-                            <Badge variant="outline" data-testid={`badge-book-category-${book.id}`}>
-                              {book.category}
-                            </Badge>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-foreground">
-                            <span className="font-medium" data-testid={`text-book-available-${book.id}`}>
-                              {book.availableCopies}
-                            </span> / {book.totalCopies}
-                          </td>
-                          <td className="px-6 py-4">
-                            <Button
-                              onClick={() => requestMutation.mutate({ bookId: book.id })}
-                              disabled={requestMutation.isPending || book.availableCopies === 0}
-                              data-testid={`button-request-${book.id}`}
-                            >
-                              {book.availableCopies === 0 ? "Unavailable" : "Request Book"}
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-foreground" data-testid={`text-book-author-${book.id}`}>
+                          {book.author}
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge variant="outline" data-testid={`badge-book-category-${book.id}`}>
+                            {book.category}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-foreground">
+                          <span className="font-medium" data-testid={`text-book-available-${book.id}`}>
+                            {book.availableCopies}
+                          </span> / {book.totalCopies}
+                        </td>
+                        <td className="px-6 py-4">
+                          <Button
+                            onClick={() => requestMutation.mutate({ bookId: book.id })}
+                            disabled={requestMutation.isPending || book.availableCopies === 0}
+                            data-testid={`button-request-${book.id}`}
+                          >
+                            {book.availableCopies === 0 ? "Unavailable" : "Request Book"}
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </CardContent>
         </Card>
-
       </div>
+
+      {/* Bottom Navigation for Mobile */}
+      <BottomNavigation userRole="student" />
+
     </div>
   );
 }
