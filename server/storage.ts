@@ -62,6 +62,7 @@ export interface IStorage {
   getUserNotifications(userId: string): Promise<Notification[]>;
   markNotificationAsRead(id: string): Promise<Notification | null>;
   markAllNotificationsAsRead(userId: string): Promise<boolean>;
+  clearAllNotifications(userId: string): Promise<boolean>;
   
   sessionStore: session.Store;
 }
@@ -448,6 +449,17 @@ export class DatabaseStorage implements IStorage {
       await prisma.notification.updateMany({
         where: { userId, isRead: false },
         data: { isRead: true }
+      });
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async clearAllNotifications(userId: string): Promise<boolean> {
+    try {
+      await prisma.notification.deleteMany({
+        where: { userId }
       });
       return true;
     } catch (error) {

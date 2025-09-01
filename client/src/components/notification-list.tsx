@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { Trash2 } from "lucide-react";
 import type { Notification } from "@shared/schema";
 
 interface NotificationListProps {
@@ -15,6 +16,13 @@ export function NotificationList({ notifications, isLoading }: NotificationListP
 
   const markAllAsReadMutation = useMutation({
     mutationFn: () => apiRequest("PUT", "/api/notifications/read-all"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+    },
+  });
+
+  const clearAllNotificationsMutation = useMutation({
+    mutationFn: () => apiRequest("DELETE", "/api/notifications/clear-all"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
     },
@@ -40,20 +48,37 @@ export function NotificationList({ notifications, isLoading }: NotificationListP
   }
 
   return (
-    <div className="max-h-96 overflow-y-auto">
-      <div className="p-3 border-b flex items-center justify-between">
-        <h3 className="font-semibold text-sm">Notifications</h3>
-        {unreadNotifications.length > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => markAllAsReadMutation.mutate()}
-            disabled={markAllAsReadMutation.isPending}
-            data-testid="button-mark-all-read"
-          >
-            Mark all read
-          </Button>
-        )}
+    <div>
+      <div className="p-3 border-b">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-sm">Notifications</h3>
+          <div className="flex items-center space-x-2">
+            {unreadNotifications.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => markAllAsReadMutation.mutate()}
+                disabled={markAllAsReadMutation.isPending}
+                data-testid="button-mark-all-read"
+              >
+                Mark all read
+              </Button>
+            )}
+            {notifications.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => clearAllNotificationsMutation.mutate()}
+                disabled={clearAllNotificationsMutation.isPending}
+                data-testid="button-clear-all"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <Trash2 className="h-3 w-3 mr-1" />
+                Clear All
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
 
       {unreadNotifications.length > 0 && (

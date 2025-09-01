@@ -471,6 +471,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/notifications/clear-all", requireAuth, async (req, res) => {
+    try {
+      const success = await storage.clearAllNotifications(req.user!.id);
+      if (!success) {
+        return res.status(500).json({ message: "Failed to clear all notifications" });
+      }
+      res.json({ message: "All notifications cleared" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to clear all notifications" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
