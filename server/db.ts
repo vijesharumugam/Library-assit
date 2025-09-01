@@ -6,9 +6,22 @@ if (!process.env.MONGODB_URI) {
   );
 }
 
-export const prisma = new PrismaClient();
+// Create Prisma client with optimized settings for deployment
+export const prisma = new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+});
 
 // Gracefully close the connection when the process exits
 process.on('beforeExit', async () => {
   await prisma.$disconnect();
+});
+
+process.on('SIGINT', async () => {
+  await prisma.$disconnect();
+  process.exit();
+});
+
+process.on('SIGTERM', async () => {
+  await prisma.$disconnect();
+  process.exit();
 });

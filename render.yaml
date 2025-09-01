@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: library-management-system
+    env: node
+    buildCommand: |
+      npm ci
+      npx prisma generate
+      npm run check
+      npx vite build
+      npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
