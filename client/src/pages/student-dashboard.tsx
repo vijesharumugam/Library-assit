@@ -17,6 +17,7 @@ import FloatingLibraryElements from "@/components/FloatingLibraryElements";
 import { NotificationBell } from "@/components/notification-bell";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { MobileBookCard } from "@/components/mobile-book-card";
+import { ProfileDropdown } from "@/components/profile-dropdown";
 
 function StudentDashboard() {
   const { user, logoutMutation } = useAuth();
@@ -171,43 +172,8 @@ function StudentDashboard() {
               <h1 className="text-lg sm:text-xl library-heading">Library Sanctum</h1>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
-              <span className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
-                Welcome, <span className="font-medium text-foreground" data-testid="text-user-name">{user?.fullName}</span>
-              </span>
-              <Badge variant="secondary" data-testid="badge-user-role" className="text-xs">Student</Badge>
               <NotificationBell />
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    data-testid="button-logout"
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent data-testid="dialog-logout-confirmation">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle data-testid="title-logout-confirmation">
-                      Are you sure you want to logout?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription data-testid="description-logout-confirmation">
-                      You will be logged out of your account and redirected to the login page.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel data-testid="button-cancel-logout">
-                      Cancel
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => logoutMutation.mutate()}
-                      data-testid="button-confirm-logout"
-                    >
-                      Logout
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <ProfileDropdown />
             </div>
           </div>
         </div>
