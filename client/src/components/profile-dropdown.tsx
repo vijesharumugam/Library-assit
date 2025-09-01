@@ -50,7 +50,7 @@ export function ProfileDropdown() {
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="flex items-center gap-2 h-auto p-2 hover:bg-muted/50"
+            className="flex items-center h-auto p-2 hover:bg-muted/50"
             data-testid="profile-dropdown-trigger"
           >
             <Avatar className="h-8 w-8">
@@ -58,14 +58,6 @@ export function ProfileDropdown() {
                 {getInitials(user.fullName)}
               </AvatarFallback>
             </Avatar>
-            <div className="flex flex-col items-start hidden sm:block">
-              <span className="text-sm font-medium text-foreground" data-testid="profile-user-name">
-                {user.fullName}
-              </span>
-              <Badge variant="secondary" className="text-xs h-4 px-1" data-testid="profile-user-role">
-                {getRoleDisplay(user.role)}
-              </Badge>
-            </div>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
