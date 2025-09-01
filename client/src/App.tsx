@@ -1,4 +1,5 @@
 import { Switch, Route } from "wouter";
+import { Suspense, lazy } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -6,40 +7,86 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Role } from "@shared/schema";
-import NotFound from "@/pages/not-found";
-import AuthPage from "@/pages/auth-page";
-import StudentDashboard from "@/pages/student-dashboard";
-import LibrarianDashboard from "@/pages/librarian-dashboard";
-import AdminDashboard from "@/pages/admin-dashboard";
-import BorrowedBooksPage from "@/pages/borrowed-books-page";
-import OverdueBooksPage from "@/pages/overdue-books-page";
+import { Card, CardContent } from "@/components/ui/card";
+import { BookOpen } from "lucide-react";
+
+// Lazy load all page components for better bundle splitting
+const NotFound = lazy(() => import("@/pages/not-found"));
+const AuthPage = lazy(() => import("@/pages/auth-page"));
+const StudentDashboard = lazy(() => import("@/pages/student-dashboard"));
+const LibrarianDashboard = lazy(() => import("@/pages/librarian-dashboard"));
+const AdminDashboard = lazy(() => import("@/pages/admin-dashboard"));
+const BorrowedBooksPage = lazy(() => import("@/pages/borrowed-books-page"));
+const OverdueBooksPage = lazy(() => import("@/pages/overdue-books-page"));
+
+// Loading component with library theme
+function LoadingSpinner() {
+  return (
+    <div className="min-h-screen bg-background library-pattern flex items-center justify-center">
+      <Card className="p-8">
+        <CardContent className="flex flex-col items-center space-y-4">
+          <div className="relative">
+            <BookOpen className="h-8 w-8 text-primary animate-pulse" />
+            <div className="absolute inset-0 animate-spin">
+              <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full"></div>
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground">Loading Library Sanctum...</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 function Router() {
   return (
     <Switch>
-      <ProtectedRoute path="/" component={StudentDashboard} allowedRoles={["STUDENT"]} />
-      <ProtectedRoute path="/librarian" component={LibrarianDashboard} allowedRoles={["LIBRARIAN", "ADMIN"]} />
-      <ProtectedRoute path="/librarian/borrowed-books" component={BorrowedBooksPage} allowedRoles={["LIBRARIAN", "ADMIN"]} />
-      <ProtectedRoute path="/librarian/overdue-books" component={OverdueBooksPage} allowedRoles={["LIBRARIAN", "ADMIN"]} />
-      <ProtectedRoute path="/admin" component={AdminDashboard} allowedRoles={["ADMIN"]} />
-      <Route path="/auth" component={AuthPage} />
-      <Route component={NotFound} />
+      <ProtectedRoute 
+        path="/" 
+        component={() => <Suspense fallback={<LoadingSpinner />}><StudentDashboard /></Suspense>} 
+        allowedRoles={["STUDENT"]} 
+      />
+      <ProtectedRoute 
+        path="/librarian" 
+        component={() => <Suspense fallback={<LoadingSpinner />}><LibrarianDashboard /></Suspense>} 
+        allowedRoles={["LIBRARIAN", "ADMIN"]} 
+      />
+      <ProtectedRoute 
+        path="/librarian/borrowed-books" 
+        component={() => <Suspense fallback={<LoadingSpinner />}><BorrowedBooksPage /></Suspense>} 
+        allowedRoles={["LIBRARIAN", "ADMIN"]} 
+      />
+      <ProtectedRoute 
+        path="/librarian/overdue-books" 
+        component={() => <Suspense fallback={<LoadingSpinner />}><OverdueBooksPage /></Suspense>} 
+        allowedRoles={["LIBRARIAN", "ADMIN"]} 
+      />
+      <ProtectedRoute 
+        path="/admin" 
+        component={() => <Suspense fallback={<LoadingSpinner />}><AdminDashboard /></Suspense>} 
+        allowedRoles={["ADMIN"]} 
+      />
+      <Route path="/auth" component={() => <Suspense fallback={<LoadingSpinner />}><AuthPage /></Suspense>} />
+      <Route component={() => <Suspense fallback={<LoadingSpinner />}><NotFound /></Suspense>} />
     </Switch>
   );
 }
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <InstallPrompt />
-          <Router />
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <InstallPrompt />
+            <Router />
+          </TooltipProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

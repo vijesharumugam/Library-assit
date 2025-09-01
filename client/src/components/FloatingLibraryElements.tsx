@@ -1,6 +1,7 @@
 import { BookOpen, Scroll, Feather, GraduationCap } from "lucide-react";
+import { memo } from "react";
 
-export function FloatingLibraryElements() {
+function FloatingLibraryElements() {
   return (
     <>
       {/* Floating Books */}
@@ -32,3 +33,5 @@ export function FloatingLibraryElements() {
     </>
   );
 }
+
+export default memo(FloatingLibraryElements);

@@ -6,7 +6,13 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Optimized request logging middleware for production
 app.use((req, res, next) => {
+  // Skip logging for static assets and non-API routes in production
+  if (process.env.NODE_ENV === "production" && !req.path.startsWith("/api")) {
+    return next();
+  }
+  
   const start = Date.now();
   const path = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
@@ -21,8 +27,12 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+      
+      // Only log response body in development or for errors
+      if (process.env.NODE_ENV === "development" || res.statusCode >= 400) {
+        if (capturedJsonResponse) {
+          logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+        }
       }
 
       if (logLine.length > 80) {

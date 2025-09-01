@@ -55,17 +55,42 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  // Ensure session secret is available
+  const sessionSecret = process.env.SESSION_SECRET;
+  if (!sessionSecret) {
+    throw new Error("SESSION_SECRET environment variable is required for production");
+  }
+
+  const isProduction = process.env.NODE_ENV === "production";
+  
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "default-secret-change-in-production",
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
+    name: "librarySessionId", // Change default session name for security
     cookie: {
-      secure: false, // Set to true in production with HTTPS
+      secure: isProduction, // True in production with HTTPS
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
+      maxAge: isProduction ? 2 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000, // 2 hours in prod, 24 hours in dev
+      sameSite: isProduction ? "strict" : "lax", // Enhanced CSRF protection
+      ...(isProduction && { domain: process.env.COOKIE_DOMAIN })
+    },
+    rolling: true, // Reset expiration on activity
+    proxy: isProduction // Trust proxy headers in production
   };
+
+  // Security headers middleware
+  app.use((req, res, next) => {
+    if (process.env.NODE_ENV === "production") {
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      res.setHeader("X-Frame-Options", "DENY");
+      res.setHeader("X-XSS-Protection", "1; mode=block");
+      res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+      res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+    }
+    next();
+  });
 
   app.set("trust proxy", 1);
   app.use(session(sessionSettings));
@@ -77,12 +102,20 @@ export function setupAuth(app: Express) {
       { usernameField: 'username' },
       async (username, password, done) => {
         try {
+          // Rate limiting could be added here
+          if (!username || !password) {
+            return done(null, false, { message: "Username and password are required" });
+          }
+          
           const user = await storage.getUserByUsername(username);
           if (!user || !user.password || !(await comparePasswords(password, user.password))) {
-            return done(null, false);
-          } else {
-            return done(null, user);
+            // Add small delay to prevent timing attacks
+            await new Promise(resolve => setTimeout(resolve, 100));
+            return done(null, false, { message: "Invalid credentials" });
           }
+          
+          // Return user (password will be excluded in serialization)
+          return done(null, user);
         } catch (error) {
           return done(error);
         }

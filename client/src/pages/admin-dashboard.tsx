@@ -8,14 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { BookOpen, Users, Shield, TrendingUp, LogOut, UserPlus, Edit, Trash2, ChevronUp } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo, memo } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Book, Transaction, User, TransactionStatus, Role } from "@shared/schema";
 import { AddBookModal } from "@/components/add-book-modal";
-import { FloatingLibraryElements } from "@/components/FloatingLibraryElements";
+import FloatingLibraryElements from "@/components/FloatingLibraryElements";
 
-export default function AdminDashboard() {
+function AdminDashboard() {
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
   const [showAddBookModal, setShowAddBookModal] = useState(false);
@@ -75,18 +75,24 @@ export default function AdminDashboard() {
     },
   });
 
-  const filteredUsers = users.filter(u => {
-    const matchesSearch = userSearchQuery === "" || 
-      u.fullName.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
-      u.email.toLowerCase().includes(userSearchQuery.toLowerCase());
-    const matchesRole = roleFilter === "" || roleFilter === "all" || u.role === roleFilter;
-    return matchesSearch && matchesRole;
-  });
+  const filteredUsers = useMemo(() => {
+    return users.filter(u => {
+      const matchesSearch = userSearchQuery === "" || 
+        u.fullName.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+        u.email.toLowerCase().includes(userSearchQuery.toLowerCase());
+      const matchesRole = roleFilter === "" || roleFilter === "all" || u.role === roleFilter;
+      return matchesSearch && matchesRole;
+    });
+  }, [users, userSearchQuery, roleFilter]);
 
-  const totalUsers = users.length;
-  const totalBooks = books.length;
-  const activeLoans = allTransactions.filter(t => t.status === "BORROWED").length;
-  const librarians = users.filter(u => u.role === "LIBRARIAN").length;
+  const { totalUsers, totalBooks, activeLoans, librarians } = useMemo(() => {
+    return {
+      totalUsers: users.length,
+      totalBooks: books.length,
+      activeLoans: allTransactions.filter(t => t.status === "BORROWED").length,
+      librarians: users.filter(u => u.role === "LIBRARIAN").length
+    };
+  }, [users, books, allTransactions]);
 
   const handlePromoteUser = (userId: string, currentRole: Role) => {
     const nextRole = currentRole === "STUDENT" ? "LIBRARIAN" : "ADMIN";
@@ -538,3 +544,5 @@ export default function AdminDashboard() {
     </div>
   );
 }
+
+export default memo(AdminDashboard);

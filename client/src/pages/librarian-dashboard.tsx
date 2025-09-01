@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { BookOpen, Users, Clock, TrendingUp, LogOut, Plus, Edit, Trash2, Upload } from "lucide-react";
 import { useLocation } from "wouter";
-import { useState } from "react";
+import { useState, useMemo, memo } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Book, Transaction, User, BookRequest, TransactionStatus, BookRequestStatus, Role } from "@shared/schema";
@@ -17,9 +17,9 @@ import { AddBookModal } from "@/components/add-book-modal";
 import { EditBookModal } from "@/components/edit-book-modal";
 import { BorrowModal } from "@/components/borrow-modal";
 import { ExcelUploadModal } from "@/components/excel-upload-modal";
-import { FloatingLibraryElements } from "@/components/FloatingLibraryElements";
+import FloatingLibraryElements from "@/components/FloatingLibraryElements";
 
-export default function LibrarianDashboard() {
+function LibrarianDashboard() {
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -118,24 +118,31 @@ export default function LibrarianDashboard() {
     setShowEditBookModal(true);
   };
 
-  const filteredBooks = books.filter(book => {
-    const matchesSearch = searchQuery === "" || 
-      book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      book.author.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === "" || categoryFilter === "all" || book.category === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredBooks = useMemo(() => {
+    return books.filter(book => {
+      const matchesSearch = searchQuery === "" || 
+        book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        book.author.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = categoryFilter === "" || categoryFilter === "all" || book.category === categoryFilter;
+      return matchesSearch && matchesCategory;
+    });
+  }, [books, searchQuery, categoryFilter]);
 
-  const totalBooks = books.length;
-  const borrowedBooks = allTransactions.filter(t => t.status === "BORROWED").length;
-  const overdueBooks = allTransactions.filter(t => {
-    if (t.status !== "BORROWED") return false;
-    const dueDate = new Date(t.dueDate);
+  const { totalBooks, borrowedBooks, overdueBooks, activeUsers, totalPendingRequests } = useMemo(() => {
+    const borrowedTransactions = allTransactions.filter(t => t.status === "BORROWED");
     const today = new Date();
-    return dueDate < today;
-  }).length;
-  const activeUsers = new Set(allTransactions.filter(t => t.status === "BORROWED").map(t => t.userId)).size;
-  const totalPendingRequests = pendingRequests.length;
+    
+    return {
+      totalBooks: books.length,
+      borrowedBooks: borrowedTransactions.length,
+      overdueBooks: borrowedTransactions.filter(t => {
+        const dueDate = new Date(t.dueDate);
+        return dueDate < today;
+      }).length,
+      activeUsers: new Set(borrowedTransactions.map(t => t.userId)).size,
+      totalPendingRequests: pendingRequests.length
+    };
+  }, [books, allTransactions, pendingRequests]);
 
   return (
     <div className="min-h-screen bg-background library-pattern relative">
@@ -780,3 +787,5 @@ export default function LibrarianDashboard() {
     </div>
   );
 }
+
+export default memo(LibrarianDashboard);

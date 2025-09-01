@@ -8,14 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { BookOpen, Clock, CheckCircle, Send, LogOut } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo, memo } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Book, Transaction, BookRequest } from "@shared/schema";
-import { FloatingLibraryElements } from "@/components/FloatingLibraryElements";
+import FloatingLibraryElements from "@/components/FloatingLibraryElements";
 import { NotificationBell } from "@/components/notification-bell";
 
-export default function StudentDashboard() {
+function StudentDashboard() {
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,23 +76,34 @@ export default function StudentDashboard() {
     },
   });
 
-  const filteredBooks = availableBooks.filter(book => {
-    const matchesSearch = searchQuery === "" || 
-      book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      book.author.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === "" || categoryFilter === "all" || book.category === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredBooks = useMemo(() => {
+    return availableBooks.filter(book => {
+      const matchesSearch = searchQuery === "" || 
+        book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        book.author.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = categoryFilter === "" || categoryFilter === "all" || book.category === categoryFilter;
+      return matchesSearch && matchesCategory;
+    });
+  }, [availableBooks, searchQuery, categoryFilter]);
 
-  const activeBorrowings = myTransactions.filter(t => t.status === "BORROWED");
-  const pendingRequests = myRequests.filter(r => r.status === "PENDING");
-  const dueSoon = activeBorrowings.filter(t => {
-    const dueDate = new Date(t.dueDate);
+  const { activeBorrowings, pendingRequests, dueSoon } = useMemo(() => {
+    const active = myTransactions.filter(t => t.status === "BORROWED");
+    const pending = myRequests.filter(r => r.status === "PENDING");
     const today = new Date();
-    const diffTime = dueDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 3;
-  });
+    
+    const dueSoonBooks = active.filter(t => {
+      const dueDate = new Date(t.dueDate);
+      const diffTime = dueDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays <= 3;
+    });
+    
+    return {
+      activeBorrowings: active,
+      pendingRequests: pending,
+      dueSoon: dueSoonBooks
+    };
+  }, [myTransactions, myRequests]);
 
   return (
     <div className="min-h-screen bg-background library-pattern relative">
@@ -534,3 +545,5 @@ export default function StudentDashboard() {
     </div>
   );
 }
+
+export default memo(StudentDashboard);

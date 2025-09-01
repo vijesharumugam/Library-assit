@@ -1,30 +1,36 @@
-const CACHE_NAME = 'library-app-v1';
+const CACHE_NAME = 'library-app-v2';
+const STATIC_CACHE = 'library-static-v2';
+const API_CACHE = 'library-api-v2';
+
+// Essential files that should be cached immediately
 const urlsToCache = [
   '/',
   '/auth',
-  '/admin',
-  '/librarian',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
-  '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  '/manifest.json'
 ];
 
-// Install event - cache resources
+// API endpoints that can be cached for short periods
+const API_CACHE_PATTERNS = [
+  '/api/user',
+  '/api/books',
+  '/api/books/available'
+];
+
+// Install event - cache essential resources
 self.addEventListener('install', (event) => {
   console.log('Service worker installing...');
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Opened cache');
+    Promise.all([
+      caches.open(CACHE_NAME).then((cache) => {
         return cache.addAll(urlsToCache.map(url => new Request(url, {
           credentials: 'same-origin'
         })));
-      })
-      .catch((error) => {
-        console.log('Failed to cache resources:', error);
-      })
+      }),
+      caches.open(STATIC_CACHE),
+      caches.open(API_CACHE)
+    ]).catch((error) => {
+      console.log('Failed to initialize caches:', error);
+    })
   );
   self.skipWaiting();
 });
@@ -32,11 +38,12 @@ self.addEventListener('install', (event) => {
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
   console.log('Service worker activating...');
+  const expectedCaches = [CACHE_NAME, STATIC_CACHE, API_CACHE];
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
+          if (!expectedCaches.includes(cacheName)) {
             console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
@@ -47,7 +54,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch event - serve from cache when offline
+// Fetch event - intelligent caching strategy
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') {
@@ -59,42 +66,100 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Return cached version or fetch from network
-        if (response) {
-          console.log('Serving from cache:', event.request.url);
-          return response;
-        }
+  const url = new URL(event.request.url);
+  
+  // Handle API requests with network-first strategy
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(handleAPIRequest(event.request));
+    return;
+  }
 
-        return fetch(event.request).then((response) => {
-          // Check if we received a valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
+  // Handle static assets with cache-first strategy
+  if (isStaticAsset(url.pathname)) {
+    event.respondWith(handleStaticAsset(event.request));
+    return;
+  }
 
-          // Clone the response as it can only be consumed once
-          const responseToCache = response.clone();
-
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              // Only cache GET requests for same origin
-              if (event.request.method === 'GET' && event.request.url.startsWith(self.location.origin)) {
-                cache.put(event.request, responseToCache);
-              }
-            });
-
-          return response;
-        }).catch(() => {
-          // If both cache and network fail, show offline page for navigation requests
-          if (event.request.mode === 'navigate') {
-            return caches.match('/');
-          }
-        });
-      })
-  );
+  // Handle navigation requests with network-first, fallback to cache
+  if (event.request.mode === 'navigate') {
+    event.respondWith(handleNavigation(event.request));
+    return;
+  }
 });
+
+// Network-first strategy for API requests
+async function handleAPIRequest(request) {
+  const url = new URL(request.url);
+  const isCacheableAPI = API_CACHE_PATTERNS.some(pattern => url.pathname.startsWith(pattern));
+  
+  try {
+    const response = await fetch(request);
+    
+    // Cache successful API responses for cacheable endpoints
+    if (response.ok && isCacheableAPI) {
+      const cache = await caches.open(API_CACHE);
+      cache.put(request, response.clone());
+    }
+    
+    return response;
+  } catch (error) {
+    // Fallback to cache for cacheable APIs
+    if (isCacheableAPI) {
+      const cached = await caches.match(request);
+      if (cached) {
+        return cached;
+      }
+    }
+    throw error;
+  }
+}
+
+// Cache-first strategy for static assets
+async function handleStaticAsset(request) {
+  const cached = await caches.match(request);
+  if (cached) {
+    return cached;
+  }
+
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(STATIC_CACHE);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    throw error;
+  }
+}
+
+// Network-first strategy for navigation
+async function handleNavigation(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cached = await caches.match(request);
+    if (cached) {
+      return cached;
+    }
+    // Fallback to root for navigation requests
+    return caches.match('/');
+  }
+}
+
+// Check if the request is for a static asset
+function isStaticAsset(pathname) {
+  const staticExtensions = ['.js', '.css', '.png', '.jpg', '.jpeg', '.svg', '.ico', '.woff', '.woff2', '.ttf'];
+  return staticExtensions.some(ext => pathname.endsWith(ext)) || 
+         pathname.startsWith('/assets/') || 
+         pathname.includes('@vite') ||
+         pathname.includes('node_modules');
+}
 
 // Background sync for when connection is restored
 self.addEventListener('sync', (event) => {
