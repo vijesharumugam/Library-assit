@@ -256,7 +256,7 @@ function StudentDashboard() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base" data-testid="mobile-books-title">
-                Available Books (10 samples)
+                Available Books
               </CardTitle>
               <Badge variant="outline" className="text-xs">
                 {displayBooks.length} books
@@ -432,7 +432,7 @@ function StudentDashboard() {
         {/* Available Books */}
         <Card className="mb-8 library-card">
           <CardHeader>
-            <CardTitle data-testid="title-available-books" className="library-heading">Available Books (Sample 10)</CardTitle>
+            <CardTitle data-testid="title-available-books" className="library-heading">Available Books</CardTitle>
           </CardHeader>
           <CardContent>
             {booksLoading ? (
