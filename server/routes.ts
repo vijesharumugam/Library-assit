@@ -329,9 +329,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Transaction not found" });
       }
 
-      // Check if user owns this transaction or has librarian/admin privileges
-      if (transaction.userId !== req.user!.id && !["LIBRARIAN", "ADMIN"].includes(req.user!.role)) {
-        return res.status(403).json({ message: "Access denied" });
+      // Only librarians and admins can return books
+      if (!["LIBRARIAN", "ADMIN"].includes(req.user!.role)) {
+        return res.status(403).json({ message: "Access denied. Only librarians and administrators can process book returns." });
       }
 
       const updatedTransaction = await storage.updateTransactionStatus(

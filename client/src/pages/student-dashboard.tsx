@@ -54,27 +54,6 @@ function StudentDashboard() {
     },
   });
 
-  const returnMutation = useMutation({
-    mutationFn: async (transactionId: string) => {
-      const res = await apiRequest("POST", `/api/transactions/${transactionId}/return`);
-      return await res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/books/available"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions/my"] });
-      toast({
-        title: "Book returned successfully",
-        description: "Thank you for returning the book on time",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to return book",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
 
   const filteredBooks = useMemo(() => {
     return availableBooks.filter(book => {
@@ -480,7 +459,6 @@ function StudentDashboard() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Borrowed Date</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Due Date</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Action</th>
                     </tr>
                   </thead>
                   <tbody className="bg-card divide-y divide-border">
@@ -522,15 +500,6 @@ function StudentDashboard() {
                             >
                               {isOverdue ? "Overdue" : isDueSoon ? "Due Soon" : "Active"}
                             </Badge>
-                          </td>
-                          <td className="px-6 py-4">
-                            <Button
-                              onClick={() => returnMutation.mutate(transaction.id)}
-                              disabled={returnMutation.isPending}
-                              data-testid={`button-return-${transaction.id}`}
-                            >
-                              Return
-                            </Button>
                           </td>
                         </tr>
                       );
