@@ -12,6 +12,6 @@ npm run check
 npx vite build
 
 echo "📦 Building backend for production..."
-npx esbuild server/production.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --outfile=dist/server.js
+npx esbuild server/production.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/server.js
 
 echo "✅ Build completed successfully!"

@@ -7,7 +7,7 @@ chmod +x render-build.sh && ./render-build.sh
 
 ## Start Command (Use this in Render dashboard):
 ```bash
-node start-production.js
+node start-render.js
 ```
 
 ## Environment Variables to Add in Render:
