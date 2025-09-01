@@ -1,14 +1,17 @@
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, ArrowLeft, Calendar, User, Clock } from "lucide-react";
+import { BookOpen, ArrowLeft, Calendar, User, Clock, CheckCircle } from "lucide-react";
 import { Link } from "wouter";
 import { Transaction, User as UserType, Book } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function BorrowedBooksPage() {
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const { data: allTransactions = [], isLoading: transactionsLoading } = useQuery<(Transaction & { user: UserType; book: Book })[]>({
     queryKey: ["/api/transactions"],
@@ -16,6 +19,29 @@ export default function BorrowedBooksPage() {
 
   // Filter for currently borrowed books only
   const borrowedTransactions = allTransactions.filter(t => t.status === "BORROWED");
+
+  const returnBookMutation = useMutation({
+    mutationFn: async (transactionId: string) => {
+      const res = await apiRequest("POST", `/api/transactions/${transactionId}/return`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/books"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/books/available"] });
+      toast({
+        title: "Book returned successfully",
+        description: "The book has been returned to the library",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to return book",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -116,6 +142,18 @@ export default function BorrowedBooksPage() {
                               {isOverdue ? "Overdue" : "Active"}
                             </Badge>
                           </div>
+                          <div className="mt-3 pt-3 border-t border-border">
+                            <Button
+                              size="sm"
+                              onClick={() => returnBookMutation.mutate(transaction.id)}
+                              disabled={returnBookMutation.isPending}
+                              data-testid={`button-return-book-${transaction.id}`}
+                              className="w-full"
+                            >
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              {returnBookMutation.isPending ? "Returning..." : "Return Book"}
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     );
@@ -133,6 +171,7 @@ export default function BorrowedBooksPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Due Date</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Student ID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-card divide-y divide-border">
@@ -207,6 +246,17 @@ export default function BorrowedBooksPage() {
                           </td>
                           <td className="px-6 py-4 text-sm text-muted-foreground" data-testid={`text-student-id-${transaction.id}`}>
                             {transaction.user.studentId || "—"}
+                          </td>
+                          <td className="px-6 py-4">
+                            <Button
+                              size="sm"
+                              onClick={() => returnBookMutation.mutate(transaction.id)}
+                              disabled={returnBookMutation.isPending}
+                              data-testid={`button-return-book-${transaction.id}`}
+                            >
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              {returnBookMutation.isPending ? "Returning..." : "Return Book"}
+                            </Button>
                           </td>
                         </tr>
                       );
