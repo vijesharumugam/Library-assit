@@ -14,12 +14,36 @@ node start-render.js
 - `MONGODB_URI` = your MongoDB Atlas connection string
 - `NODE_ENV` = production
 
-## Alternative Build Command (if the script doesn't work):
+## 🔥 SIMPLIFIED APPROACH (Try this first):
+
+### Build Command:
 ```bash
-npm ci && npx prisma generate && npm run check && npx vite build && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+npm install && npx prisma generate && npm run build
 ```
 
-## Alternative Start Command:
+### Start Command:
 ```bash
-npx prisma generate && npm start
+npm start
+```
+
+## 🛠️ Alternative Commands:
+
+### Build Command Option 2:
+```bash
+chmod +x render-simple-build.sh && ./render-simple-build.sh
+```
+
+### Start Command Option 2:
+```bash
+node simple-start.js
+```
+
+### Build Command Option 3:
+```bash
+chmod +x render-build.sh && ./render-build.sh
+```
+
+### Start Command Option 3:
+```bash
+node start-render.js
 ```
