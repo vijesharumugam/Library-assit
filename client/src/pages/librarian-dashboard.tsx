@@ -18,6 +18,7 @@ import { EditBookModal } from "@/components/edit-book-modal";
 import { BorrowModal } from "@/components/borrow-modal";
 import { ExcelUploadModal } from "@/components/excel-upload-modal";
 import FloatingLibraryElements from "@/components/FloatingLibraryElements";
+import { ProfileDropdown } from "@/components/profile-dropdown";
 
 function LibrarianDashboard() {
   const { user, logoutMutation } = useAuth();
@@ -145,10 +146,30 @@ function LibrarianDashboard() {
   }, [books, allTransactions, pendingRequests]);
 
   return (
-    <div className="min-h-screen bg-background library-pattern relative">
+    <div className="min-h-screen bg-background library-pattern relative pb-20 md:pb-0">
       <FloatingLibraryElements />
-      {/* Header */}
-      <header className="bg-card border-b border-border elegant-shadow relative z-10">
+      {/* Mobile Header */}
+      <header className="bg-card/95 backdrop-blur-sm border-b border-border sticky top-0 z-40 block md:hidden shadow-sm">
+        <div className="px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                <BookOpen className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-foreground" data-testid="mobile-header-title">Library</h1>
+                <p className="text-xs text-muted-foreground -mt-1">Librarian Portal</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <ProfileDropdown />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Desktop Header */}
+      <header className="bg-card border-b border-border elegant-shadow relative z-10 hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -156,54 +177,22 @@ function LibrarianDashboard() {
               <h1 className="text-base sm:text-xl library-heading">Library Sanctum - Librarian</h1>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
-              <span className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
+              <span className="text-xs sm:text-sm text-muted-foreground hidden lg:block">
                 Welcome, <span className="font-medium text-foreground" data-testid="text-user-name">{user?.fullName}</span>
               </span>
-              <Badge variant="default" data-testid="badge-user-role" className="text-xs">Librarian</Badge>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    data-testid="button-logout"
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent data-testid="dialog-logout-confirmation">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle data-testid="title-logout-confirmation">
-                      Are you sure you want to logout?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription data-testid="description-logout-confirmation">
-                      You will be logged out of your account and redirected to the login page.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel data-testid="button-cancel-logout">
-                      Cancel
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => logoutMutation.mutate()}
-                      data-testid="button-confirm-logout"
-                    >
-                      Logout
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <ProfileDropdown />
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
-            <TabsTrigger value="dashboard" data-testid="tab-dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="requests" data-testid="tab-requests">Book Requests</TabsTrigger>
-            <TabsTrigger value="books" data-testid="tab-books">Manage Books</TabsTrigger>
-            <TabsTrigger value="transactions" data-testid="tab-transactions">Transactions</TabsTrigger>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+        <Tabs defaultValue="dashboard" className="space-y-4 md:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-11 bg-muted p-1 rounded-lg">
+            <TabsTrigger value="dashboard" data-testid="tab-dashboard" className="text-xs sm:text-sm font-medium">Dashboard</TabsTrigger>
+            <TabsTrigger value="requests" data-testid="tab-requests" className="text-xs sm:text-sm font-medium">Requests</TabsTrigger>
+            <TabsTrigger value="books" data-testid="tab-books" className="text-xs sm:text-sm font-medium">Books</TabsTrigger>
+            <TabsTrigger value="transactions" data-testid="tab-transactions" className="text-xs sm:text-sm font-medium">Transactions</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
@@ -585,8 +574,22 @@ function LibrarianDashboard() {
             <Card>
               <CardContent className="p-0">
                 {booksLoading ? (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">Loading books...</p>
+                  <div className="space-y-4 py-6">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="flex items-center space-x-4 animate-pulse">
+                        <div className="h-12 w-8 bg-muted rounded"></div>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-muted rounded w-3/4"></div>
+                          <div className="h-3 bg-muted rounded w-1/2"></div>
+                        </div>
+                        <div className="h-6 bg-muted rounded w-16"></div>
+                        <div className="h-6 bg-muted rounded w-20"></div>
+                        <div className="flex space-x-2">
+                          <div className="h-8 w-8 bg-muted rounded"></div>
+                          <div className="h-8 w-8 bg-muted rounded"></div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="overflow-x-auto">

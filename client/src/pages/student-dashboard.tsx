@@ -121,43 +121,21 @@ function StudentDashboard() {
     <div className="min-h-screen bg-background relative pb-20 md:pb-0">
       <FloatingLibraryElements />
       {/* Mobile Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-40 block md:hidden">
-        <div className="px-4 py-3">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2">
-              <h1 className="text-lg font-semibold text-foreground" data-testid="mobile-header-title">Student</h1>
-              <Badge variant="secondary" className="text-xs">Library</Badge>
+      <header className="bg-card/95 backdrop-blur-sm border-b border-border sticky top-0 z-40 block md:hidden shadow-sm">
+        <div className="px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <BookOpen className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-foreground" data-testid="mobile-header-title">Library</h1>
+                <p className="text-xs text-muted-foreground -mt-1">Student Portal</p>
+              </div>
             </div>
             <div className="flex items-center space-x-2">
               <NotificationBell />
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="sm" data-testid="button-mobile-logout">
-                    <LogOut className="h-4 w-4" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent data-testid="dialog-logout-confirmation">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle data-testid="title-logout-confirmation">
-                      Are you sure you want to logout?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription data-testid="description-logout-confirmation">
-                      You will be logged out of your account and redirected to the login page.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel data-testid="button-cancel-logout">
-                      Cancel
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => logoutMutation.mutate()}
-                      data-testid="button-confirm-logout"
-                    >
-                      Logout
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <ProfileDropdown />
             </div>
           </div>
         </div>
@@ -296,8 +274,20 @@ function StudentDashboard() {
           </CardHeader>
           <CardContent>
             {booksLoading ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground text-sm">Loading books...</p>
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="bg-card border border-border rounded-lg p-4 shadow-sm animate-pulse">
+                    <div className="flex gap-3">
+                      <div className="w-16 h-20 bg-muted rounded"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-muted rounded w-3/4"></div>
+                        <div className="h-3 bg-muted rounded w-1/2"></div>
+                        <div className="h-5 bg-muted rounded w-16"></div>
+                        <div className="h-8 bg-muted rounded w-20"></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : displayBooks.length === 0 ? (
               <div className="text-center py-8">
@@ -328,7 +318,7 @@ function StudentDashboard() {
         {/* Stats Overview */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8 fade-in-float">
           <Link href="/student/borrowed-books">
-            <Card className="library-card cursor-pointer hover:bg-muted/50 transition-colors">
+            <Card className="library-card cursor-pointer hover:bg-muted/50 transition-all duration-200 hover:scale-[1.02] hover:shadow-md">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center">
                   <div className="p-1.5 sm:p-2 gold-accent rounded-lg">
@@ -346,7 +336,7 @@ function StudentDashboard() {
           </Link>
 
           <Link href="/student/pending-requests">
-            <Card className="library-card cursor-pointer hover:bg-muted/50 transition-colors">
+            <Card className="library-card cursor-pointer hover:bg-muted/50 transition-all duration-200 hover:scale-[1.02] hover:shadow-md">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center">
                   <div className="p-1.5 sm:p-2 bg-chart-5/20 rounded-lg">
@@ -436,8 +426,18 @@ function StudentDashboard() {
           </CardHeader>
           <CardContent>
             {booksLoading ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">Loading books...</p>
+              <div className="space-y-4 py-6">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center space-x-4 animate-pulse">
+                    <div className="h-12 w-8 bg-muted rounded"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-muted rounded w-3/4"></div>
+                      <div className="h-3 bg-muted rounded w-1/2"></div>
+                    </div>
+                    <div className="h-4 bg-muted rounded w-16"></div>
+                    <div className="h-9 bg-muted rounded w-24"></div>
+                  </div>
+                ))}
               </div>
             ) : filteredBooks.length === 0 ? (
               <div className="text-center py-8">
@@ -493,8 +493,18 @@ function StudentDashboard() {
                             onClick={() => requestMutation.mutate({ bookId: book.id })}
                             disabled={requestMutation.isPending || book.availableCopies === 0}
                             data-testid={`button-request-${book.id}`}
+                            className="transition-all duration-200 hover:scale-105 active:scale-95"
                           >
-                            {book.availableCopies === 0 ? "Unavailable" : "Request Book"}
+                            {requestMutation.isPending ? (
+                              <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Requesting...
+                              </div>
+                            ) : book.availableCopies === 0 ? (
+                              "Unavailable"
+                            ) : (
+                              "Request Book"
+                            )}
                           </Button>
                         </td>
                       </tr>

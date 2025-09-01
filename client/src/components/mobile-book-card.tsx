@@ -23,7 +23,7 @@ export function MobileBookCard({
   const [imageError, setImageError] = useState(false);
 
   return (
-    <div className="bg-card border border-border rounded-lg p-4 shadow-sm" data-testid={`mobile-book-card-${book.id}`}>
+    <div className="bg-card border border-border rounded-lg p-4 shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.01]" data-testid={`mobile-book-card-${book.id}`}>
       <div className="flex gap-3">
         {/* Book Cover */}
         <div className="flex-shrink-0">
@@ -50,7 +50,7 @@ export function MobileBookCard({
             {onToggleFavorite && (
               <button
                 onClick={() => onToggleFavorite(book.id)}
-                className="flex-shrink-0 ml-2"
+                className="flex-shrink-0 ml-2 transition-transform duration-200 hover:scale-110 active:scale-95"
                 data-testid={`button-favorite-${book.id}`}
               >
                 <Heart 
@@ -88,10 +88,19 @@ export function MobileBookCard({
             size="sm"
             onClick={() => onRequest(book.id)}
             disabled={isRequesting || book.availableCopies === 0}
-            className="w-full text-xs"
+            className="w-full text-xs transition-all duration-200 hover:scale-105 active:scale-95"
             data-testid={`button-request-book-${book.id}`}
           >
-            {book.availableCopies === 0 ? "Unavailable" : "Request Book"}
+            {isRequesting ? (
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Requesting...
+              </div>
+            ) : book.availableCopies === 0 ? (
+              "Unavailable"
+            ) : (
+              "Request Book"
+            )}
           </Button>
         </div>
       </div>
