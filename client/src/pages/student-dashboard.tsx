@@ -63,7 +63,7 @@ function StudentDashboard() {
         book.author.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = categoryFilter === "" || categoryFilter === "all" || book.category === categoryFilter;
       return matchesSearch && matchesCategory;
-    });
+    }).slice(0, 10);
   }, [availableBooks, searchQuery, categoryFilter]);
 
   const { activeBorrowings, pendingRequests, dueSoon } = useMemo(() => {

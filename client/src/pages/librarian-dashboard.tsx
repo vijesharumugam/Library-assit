@@ -125,7 +125,7 @@ function LibrarianDashboard() {
         book.author.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = categoryFilter === "" || categoryFilter === "all" || book.category === categoryFilter;
       return matchesSearch && matchesCategory;
-    });
+    }).slice(0, 10);
   }, [books, searchQuery, categoryFilter]);
 
   const { totalBooks, borrowedBooks, overdueBooks, activeUsers, totalPendingRequests } = useMemo(() => {
