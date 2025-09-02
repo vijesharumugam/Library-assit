@@ -5,6 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
+import { FavoritesProvider } from "@/hooks/use-favorites";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -114,11 +115,13 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <InstallPrompt />
-            <Router />
-          </TooltipProvider>
+          <FavoritesProvider>
+            <TooltipProvider>
+              <Toaster />
+              <InstallPrompt />
+              <Router />
+            </TooltipProvider>
+          </FavoritesProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>

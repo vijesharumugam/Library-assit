@@ -6,14 +6,15 @@ import { Heart, BookOpen, Search } from "lucide-react";
 import { useState, useMemo, memo } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useFavorites } from "@/hooks/use-favorites";
 import { Book } from "@shared/schema";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { MobileBookCard } from "@/components/mobile-book-card";
 
 function StudentFavorites() {
   const { toast } = useToast();
+  const { favorites, toggleFavorite } = useFavorites();
   const [searchQuery, setSearchQuery] = useState("");
-  const [favorites, setFavorites] = useState<string[]>([]);
 
   const { data: availableBooks = [], isLoading: booksLoading } = useQuery<Book[]>({
     queryKey: ["/api/books/available"],
@@ -40,13 +41,6 @@ function StudentFavorites() {
     },
   });
 
-  const handleToggleFavorite = (bookId: string) => {
-    setFavorites(prev => 
-      prev.includes(bookId) 
-        ? prev.filter(id => id !== bookId)
-        : [...prev, bookId]
-    );
-  };
 
   const favoriteBooks = useMemo(() => {
     const filtered = availableBooks.filter(book => 
@@ -132,7 +126,7 @@ function StudentFavorites() {
                     key={book.id}
                     book={book}
                     onRequest={(bookId) => requestMutation.mutate({ bookId })}
-                    onToggleFavorite={handleToggleFavorite}
+                    onToggleFavorite={toggleFavorite}
                     isFavorite={true}
                     isRequesting={requestMutation.isPending}
                   />
