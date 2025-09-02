@@ -50,9 +50,9 @@ export function NotificationList({ notifications, isLoading }: NotificationListP
   return (
     <div>
       <div className="p-3 border-b">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-sm">Notifications</h3>
-          <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-between gap-4">
+          <h3 className="font-semibold text-sm flex-shrink-0">Notifications</h3>
+          <div className="flex items-center gap-2 flex-wrap">
             {unreadNotifications.length > 0 && (
               <Button
                 variant="ghost"
@@ -60,6 +60,7 @@ export function NotificationList({ notifications, isLoading }: NotificationListP
                 onClick={() => markAllAsReadMutation.mutate()}
                 disabled={markAllAsReadMutation.isPending}
                 data-testid="button-mark-all-read"
+                className="text-xs px-2 py-1 h-auto whitespace-nowrap"
               >
                 Mark all read
               </Button>
@@ -71,7 +72,7 @@ export function NotificationList({ notifications, isLoading }: NotificationListP
                 onClick={() => clearAllNotificationsMutation.mutate()}
                 disabled={clearAllNotificationsMutation.isPending}
                 data-testid="button-clear-all"
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                className="text-xs px-2 py-1 h-auto text-red-600 hover:text-red-700 hover:bg-red-50 whitespace-nowrap"
               >
                 <Trash2 className="h-3 w-3 mr-1" />
                 Clear All
