@@ -23,19 +23,19 @@ export function MobileBookCard({
   const [imageError, setImageError] = useState(false);
 
   return (
-    <div className="bg-card border border-border rounded-lg p-4 shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.01]" data-testid={`mobile-book-card-${book.id}`}>
+    <div className="modern-card p-4 group" data-testid={`mobile-book-card-${book.id}`}>
       <div className="flex gap-3">
         {/* Book Cover */}
         <div className="flex-shrink-0">
           {!imageError ? (
             <div 
-              className="w-16 h-20 bg-gradient-to-b from-blue-600 to-blue-800 rounded shadow-md flex items-center justify-center"
+              className="w-16 h-20 bg-gradient-to-b from-primary to-accent rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 flex items-center justify-center"
               onError={() => setImageError(true)}
             >
               <BookOpen className="h-6 w-6 text-white" />
             </div>
           ) : (
-            <div className="w-16 h-20 bg-gradient-to-b from-blue-600 to-blue-800 rounded shadow-md flex items-center justify-center">
+            <div className="w-16 h-20 bg-gradient-to-b from-primary to-accent rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 flex items-center justify-center">
               <BookOpen className="h-6 w-6 text-white" />
             </div>
           )}

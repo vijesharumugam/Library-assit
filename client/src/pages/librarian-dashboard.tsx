@@ -153,7 +153,7 @@ function LibrarianDashboard() {
         <div className="px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-chart-2 to-primary rounded-xl flex items-center justify-center shadow-lg">
                 <BookOpen className="h-4 w-4 text-white" />
               </div>
               <div>

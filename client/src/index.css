@@ -1,46 +1,46 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Source+Serif+Pro:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@300;400;500;600;700&family=Cal+Sans:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* Library-themed color palette */
-  --background: hsl(45, 30%, 96%); /* Warm cream parchment */
-  --foreground: hsl(25, 30%, 15%); /* Rich dark brown */
-  --card: hsl(45, 25%, 98%); /* Off-white with warmth */
-  --card-foreground: hsl(25, 30%, 15%);
-  --popover: hsl(45, 25%, 98%);
-  --popover-foreground: hsl(25, 30%, 15%);
-  --primary: hsl(25, 45%, 35%); /* Rich library brown */
-  --primary-foreground: hsl(45, 30%, 96%);
-  --secondary: hsl(45, 20%, 92%); /* Light parchment */
-  --secondary-foreground: hsl(25, 30%, 25%);
-  --muted: hsl(45, 15%, 90%); /* Muted parchment */
-  --muted-foreground: hsl(25, 20%, 45%); /* Warm gray-brown */
-  --accent: hsl(150, 40%, 35%); /* Deep forest green */
-  --accent-foreground: hsl(45, 30%, 96%);
-  --destructive: hsl(0, 65%, 50%); /* Muted red */
-  --destructive-foreground: hsl(45, 30%, 96%);
-  --border: hsl(45, 20%, 85%); /* Warm border */
-  --input: hsl(45, 20%, 88%); /* Input background */
-  --ring: hsl(25, 45%, 35%); /* Focus ring matches primary */
-  --chart-1: hsl(25, 45%, 35%); /* Library brown */
-  --chart-2: hsl(150, 40%, 35%); /* Forest green */
-  --chart-3: hsl(35, 55%, 45%); /* Antique gold */
-  --chart-4: hsl(15, 50%, 45%); /* Warm terracotta */
-  --chart-5: hsl(200, 30%, 45%); /* Muted blue */
-  --sidebar: hsl(45, 25%, 94%);
-  --sidebar-foreground: hsl(25, 30%, 20%);
-  --sidebar-primary: hsl(25, 45%, 35%);
-  --sidebar-primary-foreground: hsl(45, 30%, 96%);
-  --sidebar-accent: hsl(45, 20%, 88%);
-  --sidebar-accent-foreground: hsl(25, 30%, 25%);
-  --sidebar-border: hsl(45, 20%, 80%);
-  --sidebar-ring: hsl(25, 45%, 35%);
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-serif: 'Playfair Display', 'Source Serif Pro', Georgia, serif;
-  --font-mono: 'JetBrains Mono', Menlo, monospace;
-  --radius: 12px; /* Slightly more rounded for elegance */
+  /* Modern, sophisticated color palette */
+  --background: hsl(0, 0%, 99%); /* Pure white with slight warmth */
+  --foreground: hsl(240, 10%, 8%); /* Rich charcoal */
+  --card: hsl(0, 0%, 100%); /* Pure white */
+  --card-foreground: hsl(240, 10%, 8%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(240, 10%, 8%);
+  --primary: hsl(262, 83%, 58%); /* Modern vibrant purple */
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(240, 5%, 96%); /* Subtle gray */
+  --secondary-foreground: hsl(240, 6%, 10%);
+  --muted: hsl(240, 5%, 96%); /* Light neutral */
+  --muted-foreground: hsl(240, 4%, 46%); /* Medium gray */
+  --accent: hsl(262, 83%, 58%); /* Matching accent */
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 84%, 60%); /* Modern red */
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(240, 6%, 90%); /* Subtle border */
+  --input: hsl(240, 6%, 97%); /* Input background */
+  --ring: hsl(262, 83%, 58%); /* Focus ring matches primary */
+  --chart-1: hsl(262, 83%, 58%); /* Primary purple */
+  --chart-2: hsl(142, 76%, 36%); /* Modern green */
+  --chart-3: hsl(38, 92%, 50%); /* Vibrant orange */
+  --chart-4: hsl(205, 100%, 50%); /* Bright blue */
+  --chart-5: hsl(340, 82%, 52%); /* Modern pink */
+  --sidebar: hsl(240, 5%, 96%);
+  --sidebar-foreground: hsl(240, 6%, 10%);
+  --sidebar-primary: hsl(262, 83%, 58%);
+  --sidebar-primary-foreground: hsl(0, 0%, 100%);
+  --sidebar-accent: hsl(240, 5%, 94%);
+  --sidebar-accent-foreground: hsl(240, 6%, 10%);
+  --sidebar-border: hsl(240, 6%, 90%);
+  --sidebar-ring: hsl(262, 83%, 58%);
+  --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-serif: 'Cal Sans', 'Playfair Display', Georgia, serif;
+  --font-mono: 'Geist Mono', 'JetBrains Mono', Menlo, monospace;
+  --radius: 16px; /* More rounded for modern look */
   --shadow-2xs: 0px 2px 0px 0px hsl(202.8169, 89.1213%, 53.1373%, 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(202.8169, 89.1213%, 53.1373%, 0.00);
   --shadow-sm: 0px 2px 0px 0px hsl(202.8169, 89.1213%, 53.1373%, 0.00), 0px 1px 2px -1px hsl(202.8169, 89.1213%, 53.1373%, 0.00);
@@ -54,34 +54,34 @@
 }
 
 .dark {
-  /* Dark library theme - like a candlelit library */
-  --background: hsl(25, 20%, 8%); /* Deep warm black */
-  --foreground: hsl(45, 25%, 85%); /* Warm off-white */
-  --card: hsl(25, 15%, 12%); /* Dark warm brown */
-  --card-foreground: hsl(45, 25%, 85%);
-  --popover: hsl(25, 15%, 12%);
-  --popover-foreground: hsl(45, 25%, 85%);
-  --primary: hsl(35, 55%, 55%); /* Warm gold */
-  --primary-foreground: hsl(25, 20%, 8%);
-  --secondary: hsl(25, 15%, 18%); /* Dark brown-gray */
-  --secondary-foreground: hsl(45, 25%, 85%);
-  --muted: hsl(25, 15%, 15%); /* Muted dark */
-  --muted-foreground: hsl(45, 15%, 60%); /* Warm mid-tone */
-  --accent: hsl(150, 30%, 45%); /* Muted forest green */
-  --accent-foreground: hsl(45, 25%, 85%);
-  --destructive: hsl(0, 55%, 55%); /* Muted red */
-  --destructive-foreground: hsl(45, 25%, 85%);
-  --border: hsl(25, 15%, 22%); /* Dark warm border */
-  --input: hsl(25, 15%, 18%); /* Input background */
-  --ring: hsl(35, 55%, 55%); /* Golden focus ring */
-  --sidebar: hsl(25, 20%, 10%);
-  --sidebar-foreground: hsl(45, 20%, 80%);
-  --sidebar-primary: hsl(35, 55%, 55%);
-  --sidebar-primary-foreground: hsl(25, 20%, 8%);
-  --sidebar-accent: hsl(25, 15%, 20%);
-  --sidebar-accent-foreground: hsl(45, 25%, 75%);
-  --sidebar-border: hsl(25, 15%, 25%);
-  --sidebar-ring: hsl(35, 55%, 55%);
+  /* Modern dark theme */
+  --background: hsl(240, 10%, 4%); /* Deep modern black */
+  --foreground: hsl(0, 0%, 98%); /* Pure white */
+  --card: hsl(240, 10%, 6%); /* Dark card */
+  --card-foreground: hsl(0, 0%, 98%);
+  --popover: hsl(240, 10%, 6%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --primary: hsl(262, 83%, 58%); /* Same vibrant purple */
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(240, 4%, 16%); /* Dark gray */
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 4%, 16%); /* Muted dark */
+  --muted-foreground: hsl(240, 5%, 65%); /* Light gray */
+  --accent: hsl(262, 83%, 58%); /* Matching accent */
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 84%, 60%); /* Modern red */
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(240, 6%, 20%); /* Dark border */
+  --input: hsl(240, 6%, 16%); /* Input background */
+  --ring: hsl(262, 83%, 58%); /* Purple focus ring */
+  --sidebar: hsl(240, 10%, 6%);
+  --sidebar-foreground: hsl(0, 0%, 95%);
+  --sidebar-primary: hsl(262, 83%, 58%);
+  --sidebar-primary-foreground: hsl(0, 0%, 100%);
+  --sidebar-accent: hsl(240, 4%, 20%);
+  --sidebar-accent-foreground: hsl(0, 0%, 90%);
+  --sidebar-border: hsl(240, 6%, 25%);
+  --sidebar-ring: hsl(262, 83%, 58%);
 }
 
 @layer base {
@@ -183,68 +183,124 @@
 
   .library-pattern {
     background-image: 
-      radial-gradient(circle at 20% 80%, hsl(25, 45%, 35%, 0.03) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, hsl(150, 40%, 35%, 0.03) 0%, transparent 50%),
-      radial-gradient(circle at 40% 40%, hsl(35, 55%, 45%, 0.02) 0%, transparent 50%);
+      radial-gradient(circle at 20% 80%, hsl(262, 83%, 58%, 0.04) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, hsl(142, 76%, 36%, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, hsl(38, 92%, 50%, 0.02) 0%, transparent 50%);
   }
 
   .book-spine-gradient {
     background: linear-gradient(
       90deg,
-      hsl(25, 45%, 35%) 0%,
-      hsl(25, 45%, 40%) 10%,
-      hsl(25, 45%, 35%) 20%,
-      hsl(25, 45%, 30%) 100%
+      hsl(262, 83%, 58%) 0%,
+      hsl(262, 83%, 65%) 10%,
+      hsl(262, 83%, 58%) 20%,
+      hsl(262, 83%, 50%) 100%
     );
   }
 
-  .gold-accent {
+  .modern-accent {
     background: linear-gradient(
       135deg,
-      hsl(35, 55%, 45%) 0%,
-      hsl(35, 55%, 55%) 50%,
-      hsl(35, 55%, 45%) 100%
+      hsl(262, 83%, 58%) 0%,
+      hsl(262, 83%, 65%) 50%,
+      hsl(262, 83%, 58%) 100%
     );
+  }
+
+  .gradient-accent {
+    background: linear-gradient(
+      135deg,
+      hsl(262, 83%, 58%) 0%,
+      hsl(205, 100%, 50%) 100%
+    );
+  }
+
+  .modern-shadow {
+    box-shadow: 
+      0 1px 3px 0 hsl(0, 0%, 0%, 0.1),
+      0 1px 2px -1px hsl(0, 0%, 0%, 0.1);
   }
 
   .elegant-shadow {
     box-shadow: 
-      0 4px 6px -1px hsl(25, 45%, 35%, 0.1),
-      0 2px 4px -1px hsl(25, 45%, 35%, 0.06),
-      0 0 0 1px hsl(25, 45%, 35%, 0.05);
+      0 4px 16px -2px hsl(262, 83%, 58%, 0.08),
+      0 2px 8px -2px hsl(262, 83%, 58%, 0.04),
+      0 0 0 1px hsl(240, 6%, 90%);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .dark .glass-card {
+    background: rgba(15, 15, 23, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .library-card {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid hsl(45, 20%, 85%);
-    background: linear-gradient(
-      145deg,
-      hsl(45, 25%, 98%) 0%,
-      hsl(45, 20%, 96%) 100%
-    );
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border: 1px solid hsl(240, 6%, 90%);
+    background: hsl(0, 0%, 100%);
+    box-shadow: 0 1px 3px 0 hsl(0, 0%, 0%, 0.1), 0 1px 2px -1px hsl(0, 0%, 0%, 0.1);
   }
 
   .library-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-4px) scale(1.02);
     box-shadow: 
-      0 10px 25px -3px hsl(25, 45%, 35%, 0.1),
-      0 4px 6px -2px hsl(25, 45%, 35%, 0.05);
-    border-color: hsl(25, 45%, 35%, 0.2);
+      0 20px 25px -5px hsl(262, 83%, 58%, 0.1),
+      0 8px 10px -6px hsl(262, 83%, 58%, 0.1),
+      0 0 0 1px hsl(262, 83%, 58%, 0.05);
+    border-color: hsl(262, 83%, 58%, 0.2);
   }
 
-  /* Elegant typography improvements */
+  .modern-card {
+    background: linear-gradient(
+      135deg,
+      hsl(0, 0%, 100%) 0%,
+      hsl(240, 5%, 98%) 100%
+    );
+    border: 1px solid hsl(240, 6%, 90%);
+    box-shadow: 
+      0 1px 3px 0 hsl(0, 0%, 0%, 0.1),
+      0 1px 2px -1px hsl(0, 0%, 0%, 0.1);
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .modern-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 10px 25px -3px hsl(0, 0%, 0%, 0.1),
+      0 4px 6px -2px hsl(0, 0%, 0%, 0.05);
+  }
+
+  /* Modern typography improvements */
   .library-heading {
     font-family: var(--font-serif);
     font-weight: 600;
-    letter-spacing: -0.025em;
-    color: hsl(25, 45%, 25%);
+    letter-spacing: -0.04em;
+    color: hsl(240, 10%, 8%);
+    line-height: 1.2;
   }
 
   .library-subheading {
-    font-family: var(--font-serif);
+    font-family: var(--font-sans);
     font-weight: 500;
-    letter-spacing: -0.015em;
-    color: hsl(25, 35%, 30%);
+    letter-spacing: -0.02em;
+    color: hsl(240, 4%, 46%);
+    line-height: 1.4;
+  }
+
+  .modern-heading {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    background: linear-gradient(135deg, hsl(262, 83%, 58%), hsl(205, 100%, 50%));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.1;
   }
 
   /* Floating library elements */

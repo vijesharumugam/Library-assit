@@ -125,7 +125,7 @@ function StudentDashboard() {
         <div className="px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-lg">
                 <BookOpen className="h-4 w-4 text-white" />
               </div>
               <div>
@@ -162,32 +162,32 @@ function StudentDashboard() {
         {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-3">
           <Link href="/student/borrowed-books">
-            <Card className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
+            <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 hover:from-primary/15 hover:to-accent/15 transition-all duration-300">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">Borrowed</p>
-                    <p className="text-xl font-bold text-blue-700 dark:text-blue-300" data-testid="mobile-stat-borrowed">
+                    <p className="text-xs text-primary font-semibold">Borrowed</p>
+                    <p className="text-2xl font-bold text-primary" data-testid="mobile-stat-borrowed">
                       {activeBorrowings.length}
                     </p>
                   </div>
-                  <BookOpen className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  <BookOpen className="h-6 w-6 text-primary" />
                 </div>
               </CardContent>
             </Card>
           </Link>
           
           <Link href="/student/pending-requests">
-            <Card className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800">
+            <Card className="bg-gradient-to-r from-chart-3/10 to-chart-4/10 border-chart-3/20 hover:from-chart-3/15 hover:to-chart-4/15 transition-all duration-300">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-orange-600 dark:text-orange-400 font-medium">Pending</p>
-                    <p className="text-xl font-bold text-orange-700 dark:text-orange-300" data-testid="mobile-stat-pending">
+                    <p className="text-xs text-chart-3 font-semibold">Pending</p>
+                    <p className="text-2xl font-bold text-chart-3" data-testid="mobile-stat-pending">
                       {pendingRequests.length}
                     </p>
                   </div>
-                  <Clock className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                  <Clock className="h-6 w-6 text-chart-3" />
                 </div>
               </CardContent>
             </Card>
@@ -387,7 +387,7 @@ function StudentDashboard() {
         </div>
 
         {/* Search and Filter */}
-        <Card className="mb-6 sm:mb-8 library-card">
+        <Card className="mb-6 sm:mb-8 modern-card">
           <CardContent className="p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">

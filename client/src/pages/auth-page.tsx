@@ -77,11 +77,11 @@ export default function AuthPage() {
         <div className="w-full max-w-md space-y-6 sm:space-y-8">
           <div className="text-center">
             <div className="flex justify-center mb-4 sm:mb-6">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary rounded-lg flex items-center justify-center">
-                <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-xl">
+                <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
               </div>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Library Assist</h2>
+            <h2 className="text-2xl sm:text-3xl modern-heading">Library Assist</h2>
             <p className="mt-2 text-sm sm:text-base text-muted-foreground">Comprehensive Library Management System</p>
           </div>
 
@@ -148,6 +148,8 @@ export default function AuthPage() {
                     <Button
                       type="submit"
                       className="w-full"
+                      variant="gradient"
+                      size="lg"
                       disabled={loginMutation.isPending}
                       data-testid="button-login-submit"
                     >
@@ -283,6 +285,8 @@ export default function AuthPage() {
                     <Button
                       type="submit"
                       className="w-full"
+                      variant="gradient"
+                      size="lg"
                       disabled={registerMutation.isPending}
                       data-testid="button-register-submit"
                     >
