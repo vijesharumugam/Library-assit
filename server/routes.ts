@@ -388,21 +388,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/profile/picture", requireAuth, profileUpload.single('picture'), async (req, res) => {
     try {
-      console.log('File upload request received');
-      console.log('req.file:', req.file);
-      console.log('req.body:', req.body);
-      console.log('req.headers:', req.headers);
-      
       if (!req.file) {
-        console.log('No file found in request');
         return res.status(400).json({ message: "No image file uploaded" });
       }
-
-      console.log('File details:', {
-        originalname: req.file.originalname,
-        mimetype: req.file.mimetype,
-        size: req.file.size
-      });
 
       // Convert image to base64 for storage
       const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
@@ -417,7 +405,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ profilePicture: user.profilePicture });
     } catch (error) {
-      console.error('Profile picture upload error:', error);
       res.status(500).json({ message: "Failed to upload profile picture" });
     }
   });
