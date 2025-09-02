@@ -57,8 +57,20 @@ function StudentProfile() {
 
   const uploadImageMutation = useMutation({
     mutationFn: async (file: File) => {
+      console.log('Uploading file:', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      });
+      
       const formData = new FormData();
       formData.append('picture', file);
+      
+      console.log('FormData entries:');
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
+      
       const res = await apiRequest("POST", "/api/profile/picture", formData);
       return await res.json();
     },
