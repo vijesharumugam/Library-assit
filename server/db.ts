@@ -8,7 +8,7 @@ if (!process.env.MONGODB_URI) {
 
 // Create Prisma client with optimized settings for deployment
 export const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
 });
 
 // Gracefully close the connection when the process exits

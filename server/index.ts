@@ -28,8 +28,8 @@ app.use((req, res, next) => {
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       
-      // Only log response body in development or for errors
-      if (process.env.NODE_ENV === "development" || res.statusCode >= 400) {
+      // Only log response body for errors (not in development to reduce clutter)
+      if (res.statusCode >= 400) {
         if (capturedJsonResponse) {
           logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
         }
