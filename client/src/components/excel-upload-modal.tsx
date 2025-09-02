@@ -36,7 +36,8 @@ export function ExcelUploadModal({ open, onOpenChange }: ExcelUploadModalProps) 
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await fetch('/api/books/bulk-upload', {
+      const baseUrl = import.meta.env.PROD ? window.location.origin : '';
+      const response = await fetch(`${baseUrl}/api/books/bulk-upload`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
