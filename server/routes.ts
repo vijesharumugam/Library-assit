@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertBookSchema, insertTransactionSchema, insertBookRequestSchema, insertNotificationSchema, TransactionStatus, BookRequestStatus, NotificationType } from "@shared/schema";
+import { insertBookSchema, insertTransactionSchema, insertBookRequestSchema, insertNotificationSchema, updateProfileSchema, TransactionStatus, BookRequestStatus, NotificationType } from "@shared/schema";
 import { z } from "zod";
 import { prisma } from "./db";
 import multer from "multer";
@@ -30,7 +30,7 @@ function requireRole(roles: string[]) {
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
-  // Configure multer for file uploads
+  // Configure multer for file uploads (for Excel files)
   const upload = multer({
     storage: multer.memoryStorage(),
     fileFilter: (req, file, cb) => {
@@ -47,6 +47,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
     limits: {
       fileSize: 5 * 1024 * 1024 // 5MB limit
+    }
+  });
+
+  // Configure multer for profile picture uploads
+  const profileUpload = multer({
+    storage: multer.memoryStorage(),
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files (JPEG, PNG, GIF, WebP) are allowed'));
+      }
+    },
+    limits: {
+      fileSize: 2 * 1024 * 1024 // 2MB limit
     }
   });
 
@@ -348,6 +364,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedTransaction);
     } catch (error) {
       res.status(500).json({ message: "Failed to return book" });
+    }
+  });
+
+  // Profile routes
+  app.put("/api/profile", requireAuth, async (req, res) => {
+    try {
+      const profileData = updateProfileSchema.parse(req.body);
+      const user = await storage.updateProfile(req.user!.id, profileData);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(user);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid profile data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  app.post("/api/profile/picture", requireAuth, profileUpload.single('picture'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No image file uploaded" });
+      }
+
+      // Convert image to base64 for storage
+      const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+      
+      const user = await storage.updateProfile(req.user!.id, { 
+        profilePicture: base64Image 
+      });
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({ profilePicture: user.profilePicture });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to upload profile picture" });
     }
   });
 

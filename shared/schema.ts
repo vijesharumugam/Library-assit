@@ -10,6 +10,7 @@ export type User = {
   phone: string;
   password: string;
   role: Role;
+  profilePicture?: string | null;
   createdAt: Date;
   transactions?: Transaction[];
   bookRequests?: BookRequest[];
@@ -104,6 +105,17 @@ export const insertUserSchema = z.object({
   phone: z.string().min(10, "Phone number must be at least 10 digits").regex(/^[0-9+\-\s()]+$/, "Please enter a valid phone number"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   role: z.nativeEnum(Role).optional(),
+  profilePicture: z.string().optional(),
+});
+
+// Profile update schema (excludes password and role)
+export const updateProfileSchema = z.object({
+  username: z.string().min(1, "Username is required").optional(),
+  email: z.string().email("Invalid email address").optional(),
+  fullName: z.string().min(1, "Full name is required").optional(),
+  studentId: z.string().min(1, "Student ID is required").optional(),
+  phone: z.string().min(10, "Phone number must be at least 10 digits").regex(/^[0-9+\-\s()]+$/, "Please enter a valid phone number").optional(),
+  profilePicture: z.string().optional(),
 });
 
 export const insertBookSchema = z.object({
@@ -147,6 +159,7 @@ export const loginSchema = z.object({
 
 // Inferred types for creating new records
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UpdateProfile = z.infer<typeof updateProfileSchema>;
 export type InsertBook = z.infer<typeof insertBookSchema>;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type InsertBookRequest = z.infer<typeof insertBookRequestSchema>;

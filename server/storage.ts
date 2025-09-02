@@ -12,6 +12,7 @@ import {
   InsertTransaction, 
   InsertBookRequest,
   InsertNotification,
+  UpdateProfile,
   TransactionWithBook, 
   TransactionWithUserAndBook,
   BookRequestWithBook,
@@ -30,6 +31,7 @@ export interface IStorage {
   getUserByRegisterNumber(registerNumber: string): Promise<User | null>;
   createUser(user: InsertUser): Promise<User>;
   updateUserRole(userId: string, role: Role): Promise<User | null>;
+  updateProfile(userId: string, profile: UpdateProfile): Promise<User | null>;
   deleteUser(userId: string): Promise<boolean>;
   getAllUsers(): Promise<User[]>;
   getStudents(): Promise<User[]>;
@@ -122,6 +124,18 @@ export class DatabaseStorage implements IStorage {
       const user = await prisma.user.update({
         where: { id: userId },
         data: { role: role as any }
+      });
+      return convertPrismaUser(user);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async updateProfile(userId: string, profile: UpdateProfile): Promise<User | null> {
+    try {
+      const user = await prisma.user.update({
+        where: { id: userId },
+        data: profile
       });
       return convertPrismaUser(user);
     } catch (error) {
