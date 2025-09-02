@@ -392,6 +392,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No image file uploaded" });
       }
 
+      console.log('File received:', req.file.originalname, req.file.size, 'bytes');
+
       // Convert image to base64 for storage
       const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
       
@@ -403,8 +405,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
+      console.log('Profile picture updated successfully for user:', req.user!.id);
       res.json({ profilePicture: user.profilePicture });
     } catch (error) {
+      console.error('Profile picture upload error:', error);
       res.status(500).json({ message: "Failed to upload profile picture" });
     }
   });

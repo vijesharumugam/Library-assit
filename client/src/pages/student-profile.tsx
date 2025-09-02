@@ -63,14 +63,18 @@ function StudentProfile() {
       return await res.json();
     },
     onSuccess: (data) => {
+      console.log('Upload success, received data:', data);
       const updatedUser = { ...user, profilePicture: data.profilePicture };
+      console.log('Updated user:', updatedUser);
       queryClient.setQueryData(["/api/user"], updatedUser);
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Profile picture updated",
         description: "Your profile picture has been successfully updated",
       });
     },
     onError: (error: Error) => {
+      console.error('Upload error:', error);
       toast({
         title: "Failed to upload image",
         description: error.message,
