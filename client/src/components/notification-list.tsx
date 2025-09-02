@@ -49,36 +49,38 @@ export function NotificationList({ notifications, isLoading }: NotificationListP
 
   return (
     <div>
-      <div className="p-3 border-b">
-        <div className="flex items-center justify-between gap-4">
-          <h3 className="font-semibold text-sm flex-shrink-0">Notifications</h3>
-          <div className="flex items-center gap-2 flex-wrap">
-            {unreadNotifications.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => markAllAsReadMutation.mutate()}
-                disabled={markAllAsReadMutation.isPending}
-                data-testid="button-mark-all-read"
-                className="text-xs px-2 py-1 h-auto whitespace-nowrap"
-              >
-                Mark all read
-              </Button>
-            )}
-            {notifications.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => clearAllNotificationsMutation.mutate()}
-                disabled={clearAllNotificationsMutation.isPending}
-                data-testid="button-clear-all"
-                className="text-xs px-2 py-1 h-auto text-red-600 hover:text-red-700 hover:bg-red-50 whitespace-nowrap"
-              >
-                <Trash2 className="h-3 w-3 mr-1" />
-                Clear All
-              </Button>
-            )}
-          </div>
+      <div className="p-4 border-b bg-muted/30">
+        <div className="space-y-3">
+          <h3 className="font-semibold text-base">Notifications</h3>
+          {(unreadNotifications.length > 0 || notifications.length > 0) && (
+            <div className="flex gap-2">
+              {unreadNotifications.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => markAllAsReadMutation.mutate()}
+                  disabled={markAllAsReadMutation.isPending}
+                  data-testid="button-mark-all-read"
+                  className="text-xs h-7 flex-1"
+                >
+                  Mark all read
+                </Button>
+              )}
+              {notifications.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => clearAllNotificationsMutation.mutate()}
+                  disabled={clearAllNotificationsMutation.isPending}
+                  data-testid="button-clear-all"
+                  className="text-xs h-7 flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                >
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Clear All
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
