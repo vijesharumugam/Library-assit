@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, BookOpen, Heart, LogOut, Settings } from "lucide-react";
 import { useLocation } from "wouter";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -54,6 +54,13 @@ export function ProfileDropdown() {
             data-testid="profile-dropdown-trigger"
           >
             <Avatar className="h-8 w-8">
+              {user.profilePicture && (
+                <AvatarImage 
+                  src={user.profilePicture} 
+                  alt={user.fullName}
+                  className="object-cover"
+                />
+              )}
               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs font-medium">
                 {getInitials(user.fullName)}
               </AvatarFallback>
