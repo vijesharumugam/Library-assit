@@ -18,6 +18,7 @@ import {
   BookRequestWithUserAndBook
 } from "@shared/schema";
 import { prisma } from "./db";
+import { convertPrismaUser, convertPrismaBook, convertPrismaTransaction, convertPrismaBookRequest } from "./types";
 import session from "express-session";
 import MongoStore from "connect-mongo";
 
@@ -79,44 +80,50 @@ export class DatabaseStorage implements IStorage {
 
   // User methods
   async getUser(id: string): Promise<User | null> {
-    return await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id }
     });
+    return user ? convertPrismaUser(user) : null;
   }
 
   async getUserByUsername(username: string): Promise<User | null> {
-    return await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { username }
     });
+    return user ? convertPrismaUser(user) : null;
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
-    return await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email }
     });
+    return user ? convertPrismaUser(user) : null;
   }
 
   async getUserByRegisterNumber(registerNumber: string): Promise<User | null> {
-    return await prisma.user.findFirst({
+    const user = await prisma.user.findFirst({
       where: { studentId: registerNumber }
     });
+    return user ? convertPrismaUser(user) : null;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    return await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         ...insertUser,
         password: insertUser.password // Map password correctly
       }
     });
+    return convertPrismaUser(user);
   }
 
   async updateUserRole(userId: string, role: Role): Promise<User | null> {
     try {
-      return await prisma.user.update({
+      const user = await prisma.user.update({
         where: { id: userId },
-        data: { role }
+        data: { role: role as any }
       });
+      return convertPrismaUser(user);
     } catch (error) {
       return null;
     }

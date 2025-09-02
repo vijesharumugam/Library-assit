@@ -1,8 +1,59 @@
 import { z } from "zod";
-import { User, Book, Transaction, BookRequest, Role, TransactionStatus, BookRequestStatus, Prisma } from "@prisma/client";
 
-// Prisma-generated types
-export type { User, Book, Transaction, BookRequest };
+// Manual type definitions to avoid importing Prisma client in frontend
+export type User = {
+  id: string;
+  username: string;
+  email: string;
+  fullName: string;
+  studentId: string;
+  phone: string;
+  password: string;
+  role: Role;
+  createdAt: Date;
+  transactions?: Transaction[];
+  bookRequests?: BookRequest[];
+  notifications?: Notification[];
+};
+
+export type Book = {
+  id: string;
+  title: string;
+  author: string;
+  isbn?: string | null;
+  category: string;
+  description?: string | null;
+  publisher?: string | null;
+  totalCopies: number;
+  availableCopies: number;
+  createdAt: Date;
+  transactions?: Transaction[];
+  bookRequests?: BookRequest[];
+};
+
+export type Transaction = {
+  id: string;
+  userId: string;
+  bookId: string;
+  borrowedDate: Date;
+  dueDate: Date;
+  returnedDate?: Date | null;
+  status: TransactionStatus;
+  user?: User;
+  book?: Book;
+};
+
+export type BookRequest = {
+  id: string;
+  userId: string;
+  bookId: string;
+  requestDate: Date;
+  status: BookRequestStatus;
+  requestedBy: string;
+  notes?: string | null;
+  user?: User;
+  book?: Book;
+};
 
 // Define Notification types manually to avoid import issues
 export type Notification = {
@@ -24,8 +75,25 @@ export enum NotificationType {
   BOOK_REQUEST_REJECTED = "BOOK_REQUEST_REJECTED"
 }
 
-// Export enums both as types and runtime values  
-export { Role, TransactionStatus, BookRequestStatus } from "@prisma/client";
+// Define enums manually to avoid Prisma imports
+export enum Role {
+  STUDENT = "STUDENT",
+  LIBRARIAN = "LIBRARIAN", 
+  ADMIN = "ADMIN"
+}
+
+export enum TransactionStatus {
+  BORROWED = "BORROWED",
+  RETURNED = "RETURNED",
+  OVERDUE = "OVERDUE"
+}
+
+export enum BookRequestStatus {
+  PENDING = "PENDING",
+  APPROVED = "APPROVED", 
+  REJECTED = "REJECTED",
+  FULFILLED = "FULFILLED"
+}
 
 // Input validation schemas for creating new records
 export const insertUserSchema = z.object({
