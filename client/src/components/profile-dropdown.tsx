@@ -81,30 +81,6 @@ export function ProfileDropdown() {
             <span>Profile</span>
           </DropdownMenuItem>
           
-          <DropdownMenuItem 
-            onClick={() => setLocation('/student/borrowed-books')}
-            data-testid="dropdown-borrowed-books"
-          >
-            <BookOpen className="mr-2 h-4 w-4" />
-            <span>My Books</span>
-          </DropdownMenuItem>
-          
-          <DropdownMenuItem 
-            onClick={() => setLocation('/student/favorites')}
-            data-testid="dropdown-favorites"
-          >
-            <Heart className="mr-2 h-4 w-4" />
-            <span>Favorites</span>
-          </DropdownMenuItem>
-          
-          <DropdownMenuItem 
-            onClick={() => setLocation('/student/pending-requests')}
-            data-testid="dropdown-requests"
-          >
-            <Settings className="mr-2 h-4 w-4" />
-            <span>My Requests</span>
-          </DropdownMenuItem>
-          
           <DropdownMenuSeparator />
           
           <DropdownMenuItem 
