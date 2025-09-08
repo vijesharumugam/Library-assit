@@ -246,7 +246,7 @@ How can I assist you today?`,
         <Button
           size="lg"
           onClick={() => setIsOpen(true)}
-          className="h-12 w-12 md:h-14 md:w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-primary hover:bg-primary/90"
+          className="h-12 w-12 md:h-14 md:w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-primary hover:bg-primary/90 hover:scale-105 relative before:absolute before:-inset-1 before:bg-primary/10 before:rounded-full before:animate-ping before:duration-2000"
           data-testid="chat-open-button"
         >
           <MessageCircle className="h-5 w-5 md:h-6 md:w-6" />
