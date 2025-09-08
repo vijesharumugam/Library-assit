@@ -29,6 +29,7 @@ export function AIChatAssistant() {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -52,6 +53,22 @@ How can I assist you today?`,
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const isBookSearch = (message: string): boolean => {
+    const bookSearchKeywords = [
+      'download', 'find book', 'get book', 'book copy', 'e-book', 'ebook', 'pdf',
+      'read online', 'free book', 'buy book', 'purchase book', 'book link',
+      'where can i find', 'looking for book', 'need book', 'want to read',
+      'book about', 'search for', 'looking for', 'find', 'get', 'want', 'need'
+    ];
+    
+    const lowerMessage = message.toLowerCase();
+    const hasKeyword = bookSearchKeywords.some(keyword => lowerMessage.includes(keyword));
+    const hasBookTerm = /\b(book|novel|story|text|title)\b/i.test(message);
+    const looksLikeSearch = hasBookTerm && /\b(about|on|by|called|titled|named)\b/i.test(message);
+    
+    return hasKeyword || looksLikeSearch;
+  };
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -66,9 +83,13 @@ How can I assist you today?`,
       timestamp: new Date(),
     };
 
+    // Check if this looks like a book search to show appropriate loading message
+    const isBookSearchQuery = isBookSearch(inputMessage);
+    
     setMessages(prev => [...prev, userMessage]);
     setInputMessage("");
     setIsLoading(true);
+    setLoadingMessage(isBookSearchQuery ? "Finding your book..." : "Thinking...");
 
     try {
       const response = await fetch('/api/ai-chat', {
@@ -104,6 +125,7 @@ How can I assist you today?`,
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+      setLoadingMessage("");
     }
   };
 
@@ -257,10 +279,13 @@ How can I assist you today?`,
                         </AvatarFallback>
                       </Avatar>
                       <div className="bg-muted rounded-lg p-3 text-sm">
-                        <div className="flex gap-1">
-                          <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" />
-                          <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                          <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                        <div className="flex items-center gap-2">
+                          <div className="flex gap-1">
+                            <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" />
+                            <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                            <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                          </div>
+                          {loadingMessage && <span className="text-muted-foreground">{loadingMessage}</span>}
                         </div>
                       </div>
                     </div>
