@@ -165,8 +165,8 @@ How can I assist you today?`,
       {/* Floating Chat Button */}
       <div 
         className={cn(
-          "fixed bottom-6 left-6 z-50 transition-all duration-300",
-          "md:bottom-8 md:left-8",
+          "fixed bottom-4 left-4 z-50 transition-all duration-300",
+          "sm:bottom-6 sm:left-6",
           isOpen ? "scale-0 opacity-0" : "scale-100 opacity-100"
         )}
       >
@@ -185,13 +185,13 @@ How can I assist you today?`,
         <>
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
             onClick={() => setIsOpen(false)}
           />
           
           {/* Chat Modal */}
-          <div className="fixed bottom-6 left-6 right-6 md:right-auto md:w-96 md:left-8 md:bottom-8 h-[28rem] max-h-[80vh] z-50 animate-in slide-in-from-bottom-5 duration-300" data-testid="chat-window">
-            <Card className="h-full flex flex-col shadow-2xl border-2 bg-background">
+          <div className="fixed bottom-4 left-4 right-4 sm:right-auto sm:left-4 sm:bottom-4 sm:w-96 h-[32rem] max-h-[85vh] z-50 animate-in slide-in-from-bottom-5 duration-300" data-testid="chat-window">
+            <Card className="h-full flex flex-col shadow-2xl border-2 bg-background/95 backdrop-blur-md">
             <CardHeader className="pb-3 bg-primary text-primary-foreground rounded-t-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
