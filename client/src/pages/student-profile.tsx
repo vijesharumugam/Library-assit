@@ -136,6 +136,20 @@ function StudentProfile() {
       </header>
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+        {/* Desktop Back Button */}
+        <div className="hidden md:flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-foreground">Profile</h1>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => window.history.back()}
+            className="flex items-center gap-2"
+            data-testid="button-back-desktop"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+        </div>
         {/* Profile Card */}
         <Card>
           <CardHeader className="text-center">
