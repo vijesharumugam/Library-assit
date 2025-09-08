@@ -225,25 +225,33 @@ Current query: "${message}"`;
       if (match && match[1]) {
         let title = match[1].trim();
         
-        // Clean up the title by removing common non-title words
-        const wordsToRemove = ['book', 'download', 'find', 'get', 'want', 'need', 'looking', 'called', 'about', 'link', 'pdf', 'ebook', 'free', 'buy', 'purchase'];
+        // Clean up the title by removing trailing unwanted words only
+        const trailingWordsToRemove = ['book', 'download', 'link', 'pdf', 'ebook', 'free', 'buy', 'purchase'];
         
-        // Split title into words and filter out unwanted words
-        const titleWords = title.split(/\s+/).filter(word => {
-          const lowerWord = word.toLowerCase();
-          return !wordsToRemove.includes(lowerWord) && word.length > 1;
-        });
+        // Remove trailing unwanted words but preserve the core title
+        let cleanedTitle = title;
+        const words = title.split(/\s+/);
         
-        if (titleWords.length > 0) {
-          title = titleWords.join(' ');
+        // Remove trailing unwanted words
+        while (words.length > 0) {
+          const lastWord = words[words.length - 1].toLowerCase();
+          if (trailingWordsToRemove.includes(lastWord)) {
+            words.pop();
+          } else {
+            break;
+          }
+        }
+        
+        if (words.length > 0) {
+          cleanedTitle = words.join(' ');
           
           // Additional cleanup - capitalize first letter of each word
-          title = title.replace(/\b\w/g, char => char.toUpperCase());
+          cleanedTitle = cleanedTitle.replace(/\b\w/g, char => char.toUpperCase());
           
-          console.log(`Cleaned title: "${title}"`);
+          console.log(`Cleaned title: "${cleanedTitle}"`);
           
-          if (title.length > 2) {
-            return title;
+          if (cleanedTitle.length > 2) {
+            return cleanedTitle;
           }
         }
       }
