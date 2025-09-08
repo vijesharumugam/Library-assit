@@ -1,4 +1,4 @@
-import { Home, BookOpen, User, Search, Heart } from "lucide-react";
+import { Home, BookOpen, User, TrendingUp, Heart } from "lucide-react";
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 
@@ -17,10 +17,10 @@ export function BottomNavigation({ userRole }: BottomNavigationProps) {
       isActive: location === "/librarian"
     },
     {
-      icon: Search,
-      label: "Search",
-      path: "/librarian/search",
-      isActive: location === "/librarian/search"
+      icon: TrendingUp,
+      label: "Borrowed",
+      path: "/librarian/borrowed-books",
+      isActive: location === "/librarian/borrowed-books"
     },
     {
       icon: BookOpen,
