@@ -7,6 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { User, LogOut, Mail, BookOpen, Settings, Shield, Edit, Save, X, Camera, ArrowLeft } from "lucide-react";
 import { BottomNavigation } from "@/components/bottom-navigation";
+import { PushNotificationSettings } from "@/components/push-notification-settings";
 import { useState, useRef, memo } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
@@ -421,6 +422,9 @@ function StudentProfile() {
             </AlertDialog>
           </CardContent>
         </Card>
+
+        {/* Push Notifications */}
+        <PushNotificationSettings />
 
         {/* Account Security */}
         <Card>

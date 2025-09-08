@@ -6,11 +6,30 @@ import { NotificationType } from '@shared/schema';
 if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY || !process.env.VAPID_SUBJECT) {
   console.warn('VAPID keys not configured. Push notifications will not work.');
 } else {
-  webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT!,
-    process.env.VAPID_PUBLIC_KEY!,
-    process.env.VAPID_PRIVATE_KEY!
-  );
+  try {
+    // Ensure VAPID subject has mailto: prefix if it's just an email
+    let vapidSubject = process.env.VAPID_SUBJECT!;
+    if (!vapidSubject.startsWith('mailto:') && !vapidSubject.startsWith('http')) {
+      vapidSubject = `mailto:${vapidSubject}`;
+    }
+
+    // Clean up the public key to ensure it's URL-safe base64 without padding
+    let publicKey = process.env.VAPID_PUBLIC_KEY!.replace(/[=]+$/, '');
+    
+    console.log('Configuring VAPID with subject:', vapidSubject);
+    console.log('Public key length:', publicKey.length);
+    
+    webpush.setVapidDetails(
+      vapidSubject,
+      publicKey,
+      process.env.VAPID_PRIVATE_KEY!
+    );
+    
+    console.log('VAPID configuration successful');
+  } catch (error) {
+    console.error('Failed to configure VAPID keys:', error);
+    console.warn('Push notifications will not work due to VAPID configuration error');
+  }
 }
 
 interface PushNotificationData {
