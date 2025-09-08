@@ -223,62 +223,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json([]);
       }
 
-      // Check if Gemini API key is available
-      if (!process.env.GEMINI_API_KEY) {
-        console.warn('Gemini API key not available, falling back to regular search');
-        return performFallbackSearch(books, query.trim(), res);
-      }
-
-      try {
-        // Get the text embedding model
-        const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
-
-        // Generate embedding for the user's search query
-        const queryResult = await model.embedContent(query.trim());
-        const queryEmbedding = queryResult.embedding.values;
-
-        // Calculate similarity scores for each book
-        const bookScores: Array<{ book: any, score: number }> = [];
-        
-        for (const book of books) {
-          try {
-            // Create a searchable text representation of the book
-            const bookText = `${book.title} ${book.author} ${book.category} ${book.description || ''} ${book.publisher || ''}`;
-            
-            // Generate embedding for the book
-            const bookResult = await model.embedContent(bookText);
-            const bookEmbedding = bookResult.embedding.values;
-
-            // Calculate cosine similarity
-            const similarity = calculateCosineSimilarity(queryEmbedding, bookEmbedding);
-
-            bookScores.push({ book, score: similarity });
-          } catch (bookError) {
-            // If individual book embedding fails, skip this book but continue
-            console.warn(`Failed to process book "${book.title}":`, bookError);
-          }
-        }
-
-        // Sort by similarity score (descending) and return top results
-        const sortedBooks = bookScores
-          .sort((a, b) => b.score - a.score)
-          .slice(0, 20) // Return top 20 results
-          .map(item => item.book);
-
-        res.json(sortedBooks);
-      } catch (geminiError: any) {
-        // Handle specific Gemini API errors
-        if (geminiError?.status === 429) {
-          console.warn('Gemini API quota exceeded, falling back to regular search');
-          return performFallbackSearch(books, query.trim(), res);
-        } else if (geminiError?.status === 401 || geminiError?.status === 403) {
-          console.warn('Gemini API authentication failed, falling back to regular search');
-          return performFallbackSearch(books, query.trim(), res);
-        } else {
-          console.warn('Gemini API error, falling back to regular search:', geminiError.message);
-          return performFallbackSearch(books, query.trim(), res);
-        }
-      }
+      // For now, use enhanced fallback search as the main AI search is too slow
+      // TODO: Implement proper caching or batch processing for Gemini embeddings
+      console.log(`Using enhanced search for query: "${query.trim()}" (AI embeddings too slow)`);
+      return performEnhancedFallbackSearch(books, query.trim(), res);
     } catch (error) {
       console.error('Intelligent search error:', error);
       // Fallback to regular search instead of returning error
@@ -291,6 +239,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
   });
+
+  // Enhanced fallback search function with intelligent keyword matching and scoring
+  function performEnhancedFallbackSearch(books: any[], query: string, res: any) {
+    const searchTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+    
+    // Create semantic synonyms for common terms
+    const synonyms: { [key: string]: string[] } = {
+      'science': ['physics', 'chemistry', 'biology', 'scientific', 'research'],
+      'mystery': ['detective', 'crime', 'thriller', 'suspense'],
+      'history': ['historical', 'past', 'ancient', 'medieval'],
+      'technology': ['tech', 'computer', 'programming', 'software'],
+      'fiction': ['novel', 'story', 'narrative'],
+      'romance': ['love', 'romantic'],
+      'adventure': ['action', 'journey', 'expedition'],
+      'fantasy': ['magic', 'magical', 'dragons', 'wizards'],
+      'biography': ['life', 'memoir', 'autobiography'],
+      'business': ['management', 'entrepreneur', 'corporate', 'finance']
+    };
+
+    const results = books.filter(book => {
+      const searchableText = `${book.title} ${book.author} ${book.category} ${book.description || ''} ${book.publisher || ''}`.toLowerCase();
+      
+      // Check for direct matches
+      const directMatch = searchTerms.some(term => searchableText.includes(term));
+      
+      // Check for synonym matches
+      const synonymMatch = searchTerms.some(term => {
+        const termSynonyms = synonyms[term] || [];
+        return termSynonyms.some(synonym => searchableText.includes(synonym));
+      });
+      
+      return directMatch || synonymMatch;
+    });
+
+    // Advanced scoring system
+    const sortedResults = results.map(book => {
+      const searchableText = `${book.title} ${book.author} ${book.category} ${book.description || ''} ${book.publisher || ''}`.toLowerCase();
+      let score = 0;
+      
+      searchTerms.forEach(term => {
+        // Title match (highest weight)
+        if (book.title.toLowerCase().includes(term)) score += 10;
+        
+        // Author match (high weight)
+        if (book.author.toLowerCase().includes(term)) score += 8;
+        
+        // Category exact match (high weight)
+        if (book.category.toLowerCase() === term) score += 7;
+        if (book.category.toLowerCase().includes(term)) score += 5;
+        
+        // Description match (medium weight)
+        if (book.description && book.description.toLowerCase().includes(term)) score += 3;
+        
+        // Publisher match (low weight)
+        if (book.publisher && book.publisher.toLowerCase().includes(term)) score += 1;
+        
+        // Synonym matches (medium weight)
+        const termSynonyms = synonyms[term] || [];
+        termSynonyms.forEach(synonym => {
+          if (searchableText.includes(synonym)) score += 4;
+        });
+        
+        // Partial word matches (lower weight)
+        if (searchableText.includes(term.substring(0, Math.max(3, term.length - 2)))) score += 2;
+      });
+      
+      return { book, score };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 20)
+    .map(item => item.book);
+
+    console.log(`Enhanced search found ${sortedResults.length} results for "${query}"`);
+    res.json(sortedResults);
+  }
 
   // Fallback search function that performs regular text-based search
   function performFallbackSearch(books: any[], query: string, res: any) {
