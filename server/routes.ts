@@ -7,7 +7,7 @@ import { z } from "zod";
 import { prisma } from "./db";
 import multer from "multer";
 import * as XLSX from "xlsx";
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 function requireAuth(req: any, res: any, next: any) {
   if (!req.isAuthenticated()) {
@@ -31,10 +31,8 @@ function requireRole(roles: string[]) {
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
-  // Initialize OpenAI client for intelligent search
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+  // Initialize Google Gemini AI client for intelligent search
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
   // Configure multer for file uploads (for Excel files)
   const upload = multer({
@@ -225,19 +223,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json([]);
       }
 
-      // Check if OpenAI API key is available
-      if (!process.env.OPENAI_API_KEY) {
-        console.warn('OpenAI API key not available, falling back to regular search');
+      // Check if Gemini API key is available
+      if (!process.env.GEMINI_API_KEY) {
+        console.warn('Gemini API key not available, falling back to regular search');
         return performFallbackSearch(books, query.trim(), res);
       }
 
       try {
+        // Get the text embedding model
+        const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+
         // Generate embedding for the user's search query
-        const queryEmbedding = await openai.embeddings.create({
-          model: "text-embedding-3-small",
-          input: query.trim(),
-          encoding_format: "float",
-        });
+        const queryResult = await model.embedContent(query.trim());
+        const queryEmbedding = queryResult.embedding.values;
 
         // Calculate similarity scores for each book
         const bookScores: Array<{ book: any, score: number }> = [];
@@ -248,17 +246,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const bookText = `${book.title} ${book.author} ${book.category} ${book.description || ''} ${book.publisher || ''}`;
             
             // Generate embedding for the book
-            const bookEmbedding = await openai.embeddings.create({
-              model: "text-embedding-3-small",
-              input: bookText,
-              encoding_format: "float",
-            });
+            const bookResult = await model.embedContent(bookText);
+            const bookEmbedding = bookResult.embedding.values;
 
             // Calculate cosine similarity
-            const similarity = calculateCosineSimilarity(
-              queryEmbedding.data[0].embedding,
-              bookEmbedding.data[0].embedding
-            );
+            const similarity = calculateCosineSimilarity(queryEmbedding, bookEmbedding);
 
             bookScores.push({ book, score: similarity });
           } catch (bookError) {
@@ -274,16 +266,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .map(item => item.book);
 
         res.json(sortedBooks);
-      } catch (openaiError: any) {
-        // Handle specific OpenAI API errors
-        if (openaiError?.status === 429 || openaiError?.code === 'insufficient_quota') {
-          console.warn('OpenAI API quota exceeded, falling back to regular search');
+      } catch (geminiError: any) {
+        // Handle specific Gemini API errors
+        if (geminiError?.status === 429) {
+          console.warn('Gemini API quota exceeded, falling back to regular search');
           return performFallbackSearch(books, query.trim(), res);
-        } else if (openaiError?.status === 401) {
-          console.warn('OpenAI API authentication failed, falling back to regular search');
+        } else if (geminiError?.status === 401 || geminiError?.status === 403) {
+          console.warn('Gemini API authentication failed, falling back to regular search');
           return performFallbackSearch(books, query.trim(), res);
         } else {
-          console.warn('OpenAI API error, falling back to regular search:', openaiError.message);
+          console.warn('Gemini API error, falling back to regular search:', geminiError.message);
           return performFallbackSearch(books, query.trim(), res);
         }
       }
