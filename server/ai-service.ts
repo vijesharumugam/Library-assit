@@ -44,13 +44,20 @@ User's current library status:
 ${userContext}
 
 Instructions:
-1. Be helpful, friendly, and concise
+1. Be helpful, friendly, and professional
 2. Provide accurate information about the user's library account
 3. For book recommendations, suggest books from the available catalog when possible
 4. For library policies, provide general helpful information
-5. If asked about book downloads/purchases, acknowledge the request and explain you'll search for options
-6. Always maintain a professional, supportive tone
-7. Keep responses under 200 words unless detailed information is specifically requested
+5. When users ask for book downloads/purchases, provide comprehensive guidance about LEGAL ways to access books:
+   - E-book retailers (Amazon Kindle, Google Play Books, Apple Books)
+   - Library digital services (OverDrive, Libby, Hoopla)
+   - Free legal sources (Project Gutenberg for public domain books)
+   - Academic databases if relevant
+6. Structure book access information clearly with headings and bullet points
+7. Always emphasize legal and legitimate sources
+8. Mention library card benefits for digital borrowing
+9. Be thorough and informative like a professional librarian
+10. Use a format similar to: "Where to Find the Book Legally" with subsections
 
 Current query: "${message}"`;
 
@@ -250,32 +257,58 @@ Current query: "${message}"`;
     const searchResults: BookSearchResult[] = [];
     
     try {
-      // Use Gemini to search the web for specific book availability
-      const searchPrompt = `I need you to search the internet and find SPECIFIC, VERIFIED links where the book "${bookTitle}" is actually available for download or purchase right now.
+      // Use Gemini to find comprehensive book access information
+      const searchPrompt = `Find comprehensive information about how to legally access the book "${bookTitle}" for download or purchase. 
 
-IMPORTANT INSTRUCTIONS:
-1. Only return links where you can confirm the book is actually available
-2. For free sources: Check Project Gutenberg, Internet Archive, Open Library, Google Books (free), HathiTrust
-3. For purchase: Check Amazon Kindle, Google Play Books, Apple Books, Barnes & Noble, Kobo
-4. Provide DIRECT links to the book page, not search pages
-5. Verify the book title matches exactly or very closely
+I need you to research and provide:
 
-Please search and provide results in this format:
-- Title: [exact title as found]
-- URL: [direct link to book page]
-- Type: free or purchase
-- Platform: [platform name]
-- Price: [if purchase, provide actual price or "Varies"]
-- Status: [Available/Not Found]
+1. **E-book Retailers** - Where to purchase digital copies:
+   - Amazon Kindle (check if available)
+   - Google Play Books (check availability and price)
+   - Apple Books (check availability)
+   - Barnes & Noble Nook
+   - Kobo
 
-Only include results where Status is "Available". Do not include search pages or general category pages.
+2. **Library Digital Services** - Where to borrow digitally:
+   - OverDrive/Libby (library digital lending)
+   - Hoopla (library streaming service)
+   - Local library digital collections
+
+3. **Free Legal Sources** (if applicable):
+   - Project Gutenberg (for public domain books)
+   - Internet Archive (legal free access)
+   - Open Library
+   - Google Books (free/preview versions)
+
+4. **Academic Sources** (if relevant):
+   - University library databases
+   - Academic publishers with legal access
+
+For each source, provide:
+- Platform name
+- Availability status
+- Price (if purchase)
+- Direct link to the book if available
+- Brief description of access method
+
+Focus on LEGAL and LEGITIMATE sources only. Provide actual working links where the book is confirmed to be available.
 
 Search for: "${bookTitle}"`;
 
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         config: {
-          systemInstruction: "You are a specialist book finder. Search the web thoroughly and only return verified links where the specific book is actually available. Be precise and accurate. If you cannot find the book on a platform, do not include that platform in results.",
+          systemInstruction: `You are a professional librarian and book access specialist. Provide comprehensive, well-structured information about legal ways to access books. 
+
+Format your response like a professional library guide with:
+- Clear headings and sections
+- Bullet points for easy reading
+- Specific platform names and prices
+- Actual working links when available
+- Professional library terminology
+- Emphasis on legal and legitimate sources only
+
+Be thorough, accurate, and helpful. Structure information clearly with sections like "E-book Retailers", "Library Digital Services", and "Free Legal Sources".`,
         },
         contents: searchPrompt,
       });
