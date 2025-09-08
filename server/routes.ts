@@ -209,7 +209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI-powered intelligent search endpoint
+  // AI-powered intelligent search endpoint with fallback to regular search
   app.get("/api/books/search/intelligent", requireAuth, async (req, res) => {
     try {
       const { query } = req.query as { query?: string };
@@ -225,48 +225,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json([]);
       }
 
-      // Generate embedding for the user's search query
-      const queryEmbedding = await openai.embeddings.create({
-        model: "text-embedding-3-small",
-        input: query.trim(),
-        encoding_format: "float",
-      });
+      // Check if OpenAI API key is available
+      if (!process.env.OPENAI_API_KEY) {
+        console.warn('OpenAI API key not available, falling back to regular search');
+        return performFallbackSearch(books, query.trim(), res);
+      }
 
-      // Calculate similarity scores for each book
-      const bookScores: Array<{ book: any, score: number }> = [];
-      
-      for (const book of books) {
-        // Create a searchable text representation of the book
-        const bookText = `${book.title} ${book.author} ${book.category} ${book.description || ''} ${book.publisher || ''}`;
-        
-        // Generate embedding for the book
-        const bookEmbedding = await openai.embeddings.create({
+      try {
+        // Generate embedding for the user's search query
+        const queryEmbedding = await openai.embeddings.create({
           model: "text-embedding-3-small",
-          input: bookText,
+          input: query.trim(),
           encoding_format: "float",
         });
 
-        // Calculate cosine similarity
-        const similarity = calculateCosineSimilarity(
-          queryEmbedding.data[0].embedding,
-          bookEmbedding.data[0].embedding
-        );
+        // Calculate similarity scores for each book
+        const bookScores: Array<{ book: any, score: number }> = [];
+        
+        for (const book of books) {
+          try {
+            // Create a searchable text representation of the book
+            const bookText = `${book.title} ${book.author} ${book.category} ${book.description || ''} ${book.publisher || ''}`;
+            
+            // Generate embedding for the book
+            const bookEmbedding = await openai.embeddings.create({
+              model: "text-embedding-3-small",
+              input: bookText,
+              encoding_format: "float",
+            });
 
-        bookScores.push({ book, score: similarity });
+            // Calculate cosine similarity
+            const similarity = calculateCosineSimilarity(
+              queryEmbedding.data[0].embedding,
+              bookEmbedding.data[0].embedding
+            );
+
+            bookScores.push({ book, score: similarity });
+          } catch (bookError) {
+            // If individual book embedding fails, skip this book but continue
+            console.warn(`Failed to process book "${book.title}":`, bookError);
+          }
+        }
+
+        // Sort by similarity score (descending) and return top results
+        const sortedBooks = bookScores
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 20) // Return top 20 results
+          .map(item => item.book);
+
+        res.json(sortedBooks);
+      } catch (openaiError: any) {
+        // Handle specific OpenAI API errors
+        if (openaiError?.status === 429 || openaiError?.code === 'insufficient_quota') {
+          console.warn('OpenAI API quota exceeded, falling back to regular search');
+          return performFallbackSearch(books, query.trim(), res);
+        } else if (openaiError?.status === 401) {
+          console.warn('OpenAI API authentication failed, falling back to regular search');
+          return performFallbackSearch(books, query.trim(), res);
+        } else {
+          console.warn('OpenAI API error, falling back to regular search:', openaiError.message);
+          return performFallbackSearch(books, query.trim(), res);
+        }
       }
-
-      // Sort by similarity score (descending) and return top results
-      const sortedBooks = bookScores
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 20) // Return top 20 results
-        .map(item => item.book);
-
-      res.json(sortedBooks);
     } catch (error) {
       console.error('Intelligent search error:', error);
-      res.status(500).json({ message: "Failed to perform intelligent search" });
+      // Fallback to regular search instead of returning error
+      try {
+        const books = await storage.getAvailableBooks();
+        return performFallbackSearch(books, (req.query.query as string)?.trim() || '', res);
+      } catch (fallbackError) {
+        console.error('Fallback search also failed:', fallbackError);
+        res.status(500).json({ message: "Search functionality is temporarily unavailable" });
+      }
     }
   });
+
+  // Fallback search function that performs regular text-based search
+  function performFallbackSearch(books: any[], query: string, res: any) {
+    const searchTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+    
+    const results = books.filter(book => {
+      const searchableText = `${book.title} ${book.author} ${book.category} ${book.description || ''} ${book.publisher || ''}`.toLowerCase();
+      
+      // Return books that contain any of the search terms
+      return searchTerms.some(term => searchableText.includes(term));
+    });
+
+    // Sort results by relevance (number of matching terms)
+    const sortedResults = results.map(book => {
+      const searchableText = `${book.title} ${book.author} ${book.category} ${book.description || ''} ${book.publisher || ''}`.toLowerCase();
+      const matchCount = searchTerms.reduce((count, term) => {
+        return count + (searchableText.includes(term) ? 1 : 0);
+      }, 0);
+      return { book, matchCount };
+    })
+    .sort((a, b) => b.matchCount - a.matchCount)
+    .slice(0, 20)
+    .map(item => item.book);
+
+    res.json(sortedResults);
+  }
 
   // Utility function to calculate cosine similarity between two vectors
   function calculateCosineSimilarity(vecA: number[], vecB: number[]): number {
