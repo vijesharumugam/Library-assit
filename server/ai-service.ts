@@ -170,17 +170,34 @@ Current query: "${message}"`;
   }
 
   private extractBookTitle(query: string): string | null {
-    // Simple book title extraction - this could be enhanced with NLP
+    // Enhanced book title extraction with multiple patterns
     const patterns = [
-      /(?:find|get|download|buy|looking for|need|want)\s+(?:book\s+)?["']([^"']+)["']/i,
-      /(?:find|get|download|buy|looking for|need|want)\s+(?:book\s+)?(?:called\s+)?([A-Z][a-zA-Z\s]+?)(?:\s+(?:by|author|written by))/i,
-      /["']([^"']+)["']/i,  // Any quoted text
+      // Quoted titles
+      /(?:find|get|download|buy|looking for|need|want|book about|read)\s+["']([^"']+)["']/i,
+      /["']([^"']+)["']/i,
+      
+      // Titles with "by" author pattern
+      /(?:find|get|download|buy|looking for|need|want|book about|read)\s+(?:book\s+)?(?:called\s+)?([A-Z][a-zA-Z\s&:,-]+?)\s+(?:by|author|written by)/i,
+      
+      // Titles followed by common book-related words
+      /(?:find|get|download|buy|looking for|need|want|book about|read)\s+(?:book\s+)?(?:called\s+)?([A-Z][a-zA-Z\s&:,-]+?)(?:\s+(?:book|novel|story|text|pdf|ebook))?$/i,
+      
+      // Patterns for "book about X"
+      /book about\s+(.+?)(?:\s+(?:by|author)|$)/i,
+      
+      // Generic extraction for capitalized words
+      /([A-Z][a-zA-Z\s&:,-]{2,})/i,
     ];
 
     for (const pattern of patterns) {
       const match = query.match(pattern);
       if (match && match[1]) {
-        return match[1].trim();
+        const title = match[1].trim();
+        // Filter out common false positives
+        const commonWords = ['book', 'download', 'find', 'get', 'want', 'need', 'looking', 'called', 'about'];
+        if (title.length > 2 && !commonWords.includes(title.toLowerCase())) {
+          return title;
+        }
       }
     }
 
@@ -191,51 +208,98 @@ Current query: "${message}"`;
     const searchResults: BookSearchResult[] = [];
     
     try {
-      // Search multiple sources for the book
-      const sources = [
-        { name: 'Project Gutenberg', baseUrl: 'https://www.gutenberg.org', type: 'free' as const },
-        { name: 'Internet Archive', baseUrl: 'https://archive.org', type: 'free' as const },
-        { name: 'Google Books', baseUrl: 'https://books.google.com', type: 'purchase' as const },
-        { name: 'Amazon', baseUrl: 'https://amazon.com', type: 'purchase' as const }
-      ];
+      // Use Gemini to search the web for book links
+      const searchPrompt = `Search the web for the book "${bookTitle}" and find current download and purchase links. 
 
-      // For demo purposes, we'll generate some sample links
-      // In production, you would make actual API calls to these services
-      const encodedTitle = encodeURIComponent(bookTitle);
+      I need you to find REAL, working links for:
+      1. Free download sources (Project Gutenberg, Internet Archive, Open Library, etc.)
+      2. Purchase options (Amazon, Google Books, Apple Books, Barnes & Noble, etc.)
       
-      // Add free sources
-      searchResults.push({
-        title: bookTitle,
-        url: `https://www.gutenberg.org/ebooks/search/?query=${encodedTitle}`,
-        type: 'free',
-        platform: 'Project Gutenberg'
+      For each link found, provide:
+      - The exact title as found on the platform
+      - The direct URL to the book
+      - Whether it's free or paid
+      - The platform name
+      - Price if it's a paid option
+      
+      Format your response as JSON array with objects containing: title, url, type (free/purchase), platform, price (optional)
+      
+      Only return real, current links that are working. If you can't find the book on a platform, don't include it.`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        config: {
+          systemInstruction: "You are a web search assistant that finds current, real book links. Always return valid JSON format and only include working links.",
+        },
+        contents: searchPrompt,
       });
 
-      searchResults.push({
-        title: bookTitle,
-        url: `https://archive.org/search.php?query=${encodedTitle}`,
-        type: 'free',
-        platform: 'Internet Archive'
-      });
+      const responseText = response.text || '';
+      
+      if (!responseText) {
+        throw new Error('Empty response from Gemini');
+      }
+      
+      try {
+        // Try to parse JSON response from Gemini
+        const parsedResults = JSON.parse(responseText);
+        
+        if (Array.isArray(parsedResults)) {
+          for (const result of parsedResults) {
+            if (result.title && result.url && result.type && result.platform) {
+              searchResults.push({
+                title: result.title,
+                url: result.url,
+                type: result.type === 'free' ? 'free' : 'purchase',
+                platform: result.platform,
+                price: result.price
+              });
+            }
+          }
+        }
+      } catch (parseError) {
+        console.log('Could not parse Gemini response as JSON, falling back to search URLs');
+        
+        // Fallback to constructing search URLs
+        const encodedTitle = encodeURIComponent(bookTitle);
+        
+        searchResults.push(
+          {
+            title: bookTitle,
+            url: `https://www.gutenberg.org/ebooks/search/?query=${encodedTitle}`,
+            type: 'free',
+            platform: 'Project Gutenberg'
+          },
+          {
+            title: bookTitle,
+            url: `https://archive.org/search.php?query=${encodedTitle}`,
+            type: 'free',
+            platform: 'Internet Archive'
+          },
+          {
+            title: bookTitle,
+            url: `https://openlibrary.org/search?q=${encodedTitle}`,
+            type: 'free',
+            platform: 'Open Library'
+          },
+          {
+            title: bookTitle,
+            url: `https://books.google.com/books?q=${encodedTitle}`,
+            type: 'purchase',
+            platform: 'Google Books',
+            price: 'Varies'
+          },
+          {
+            title: bookTitle,
+            url: `https://amazon.com/s?k=${encodedTitle}&i=digital-text`,
+            type: 'purchase',
+            platform: 'Amazon Kindle',
+            price: 'From $0.99'
+          }
+        );
+      }
 
-      // Add purchase sources
-      searchResults.push({
-        title: bookTitle,
-        url: `https://books.google.com/books?q=${encodedTitle}`,
-        type: 'purchase',
-        platform: 'Google Books',
-        price: 'Varies'
-      });
-
-      searchResults.push({
-        title: bookTitle,
-        url: `https://amazon.com/s?k=${encodedTitle}&i=digital-text`,
-        type: 'purchase',
-        platform: 'Amazon Kindle',
-        price: 'From $0.99'
-      });
-
-      return searchResults;
+      return searchResults.slice(0, 6); // Limit to 6 results
     } catch (error) {
       console.error('Error performing book search:', error);
       return [];
