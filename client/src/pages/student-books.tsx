@@ -134,45 +134,65 @@ function StudentBooks() {
         </div>
       </header>
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+      {/* Desktop Header */}
+      <div className="hidden md:block bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600">
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          <div className="text-center text-white">
+            <div className="flex items-center justify-center mb-4">
+              <BookOpen className="h-12 w-12 mr-4" />
+            </div>
+            <h1 className="text-4xl font-bold mb-3">Library Collection</h1>
+            <p className="text-xl opacity-90 max-w-2xl mx-auto">
+              Discover and explore our complete catalog of {availableBooks.length} books
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
         {/* Search and Filter Section */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center justify-between" data-testid="books-search-title">
-              <div className="flex items-center gap-2">
-                <Search className="h-4 w-4" />
-                Search & Filter Books
+        <Card className="shadow-lg border-0 bg-white dark:bg-card">
+          <CardHeader className="pb-6 bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-blue-900 rounded-t-lg">
+            <CardTitle className="text-xl md:text-2xl flex items-center justify-between" data-testid="books-search-title">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Search className="h-5 w-5 text-primary" />
+                </div>
+                <span>Search & Discover</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 {isSearching && (
-                  <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
+                  <RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" />
                 )}
                 <button
                   onClick={toggleSearchMode}
-                  className={`p-1.5 rounded-full transition-all duration-200 hover:scale-110 ${
+                  className={`p-2.5 rounded-xl transition-all duration-300 hover:scale-105 ${
                     isIntelligentSearch 
-                      ? 'bg-primary text-primary-foreground shadow-lg' 
-                      : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                      ? 'bg-primary text-primary-foreground shadow-lg ring-2 ring-primary/20' 
+                      : 'bg-muted hover:bg-muted/80 text-muted-foreground hover:shadow-md'
                   }`}
                   data-testid="intelligent-search-toggle"
                   title={isIntelligentSearch ? "AI Search Active" : "Enable AI Search"}
                 >
-                  <Sparkles className="h-4 w-4" />
+                  <Sparkles className="h-5 w-5" />
                 </button>
               </div>
             </CardTitle>
             {isIntelligentSearch && (
-              <div className="bg-muted/50 rounded-lg p-3 mt-3">
-                <p className="text-xs text-muted-foreground">
-                  💡 AI Search enabled - Try: "mystery novels", "books about science", "programming guides"
+              <div className="bg-gradient-to-r from-primary/5 to-purple/5 rounded-xl p-4 mt-4 border border-primary/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span className="font-medium text-primary text-sm">AI-Powered Search</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Ask in natural language: "mystery novels", "books about science", "programming guides"
                 </p>
               </div>
             )}
           </CardHeader>
-          <CardContent className="space-y-4">
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
+          <CardContent className="space-y-6 p-6">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+              <div className="relative md:col-span-8">
                 <Input
                   type="text"
                   placeholder={
@@ -188,45 +208,57 @@ function StudentBooks() {
                     }
                   }}
                   data-testid="books-search-input"
-                  className="text-base pr-10"
+                  className="text-base pr-12 h-12 bg-background border-2 focus:border-primary transition-colors"
                 />
-                {isIntelligentSearch && (
-                  <Sparkles className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-primary" />
-                )}
+                <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                  {isIntelligentSearch ? (
+                    <Sparkles className="h-5 w-5 text-primary" />
+                  ) : (
+                    <Search className="h-5 w-5 text-muted-foreground" />
+                  )}
+                </div>
               </div>
               
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger data-testid="books-category-filter" className="w-full sm:w-40">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="fiction">Fiction</SelectItem>
-                  <SelectItem value="science">Science</SelectItem>
-                  <SelectItem value="history">History</SelectItem>
-                  <SelectItem value="technology">Technology</SelectItem>
-                  <SelectItem value="non-fiction">Non-Fiction</SelectItem>
-                  <SelectItem value="mystery">Mystery</SelectItem>
-                  <SelectItem value="self-help">Self-Help</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="md:col-span-4">
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger data-testid="books-category-filter" className="h-12 bg-background border-2 focus:border-primary transition-colors">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="fiction">Fiction</SelectItem>
+                    <SelectItem value="science">Science</SelectItem>
+                    <SelectItem value="history">History</SelectItem>
+                    <SelectItem value="technology">Technology</SelectItem>
+                    <SelectItem value="non-fiction">Non-Fiction</SelectItem>
+                    <SelectItem value="mystery">Mystery</SelectItem>
+                    <SelectItem value="self-help">Self-Help</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             
             {(searchQuery || categoryFilter) && (
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>Showing {filteredBooks.length} of {availableBooks.length} books</span>
+              <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <span className="text-sm font-medium">Showing {filteredBooks.length} of {availableBooks.length} books</span>
+                </div>
                 {(searchQuery || categoryFilter) && (
-                  <button
+                  <Button
                     onClick={() => {
                       setSearchQuery("");
                       setCategoryFilter("");
                       setIntelligentResults([]);
                     }}
-                    className="text-primary hover:underline"
+                    variant="ghost"
+                    size="sm"
                     data-testid="clear-filters-button"
+                    className="text-primary hover:bg-primary/10"
                   >
-                    Clear filters
-                  </button>
+                    Clear all filters
+                  </Button>
                 )}
               </div>
             )}
@@ -234,88 +266,217 @@ function StudentBooks() {
         </Card>
 
         {/* Books List */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Available Books</span>
-              <div className="text-sm font-normal text-muted-foreground">
-                {filteredBooks.length} books
+        <Card className="shadow-lg border-0 bg-white dark:bg-card">
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-purple-50 dark:from-slate-800 dark:to-purple-900 rounded-t-lg">
+            <CardTitle className="text-xl md:text-2xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                </div>
+                <span>Available Books</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium">
+                  {filteredBooks.length} books
+                </div>
               </div>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             {booksLoading ? (
-              <div className="text-center py-8">
-                <div className="flex flex-col items-center space-y-4">
+              <div className="text-center py-16">
+                <div className="flex flex-col items-center space-y-6">
                   <div className="relative">
-                    <BookOpen className="h-8 w-8 text-primary animate-pulse" />
+                    <BookOpen className="h-12 w-12 text-primary animate-pulse" />
                     <div className="absolute inset-0 animate-spin">
-                      <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full"></div>
+                      <div className="h-12 w-12 border-3 border-primary border-t-transparent rounded-full"></div>
                     </div>
                   </div>
-                  <p className="text-muted-foreground text-sm">Loading books...</p>
+                  <div className="space-y-2 text-center">
+                    <p className="text-lg font-medium text-foreground">Loading Library Collection</p>
+                    <p className="text-muted-foreground">Discovering amazing books for you...</p>
+                  </div>
                 </div>
               </div>
             ) : filteredBooks.length === 0 ? (
-              <div className="text-center py-12">
-                <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-foreground mb-2">
-                  {searchQuery || categoryFilter ? "No books found" : "No books available"}
-                </h3>
-                <p className="text-muted-foreground text-sm mb-4">
-                  {searchQuery || categoryFilter 
-                    ? "Try adjusting your search or filter criteria" 
-                    : "Check back later for new additions to the library"
-                  }
-                </p>
-                {(searchQuery || categoryFilter) && (
-                  <button
-                    onClick={() => {
-                      setSearchQuery("");
-                      setCategoryFilter("");
-                    }}
-                    className="text-primary hover:underline text-sm"
-                  >
-                    Clear all filters
-                  </button>
-                )}
+              <div className="text-center py-20">
+                <div className="max-w-md mx-auto">
+                  <div className="w-24 h-24 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <BookOpen className="h-12 w-12 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-2xl font-semibold text-foreground mb-3">
+                    {searchQuery || categoryFilter ? "No books found" : "No books available"}
+                  </h3>
+                  <p className="text-muted-foreground mb-6 leading-relaxed">
+                    {searchQuery || categoryFilter 
+                      ? "We couldn't find any books matching your criteria. Try adjusting your search terms or browse different categories." 
+                      : "Our library collection is being updated. Check back soon for new additions!"
+                    }
+                  </p>
+                  {(searchQuery || categoryFilter) && (
+                    <Button
+                      onClick={() => {
+                        setSearchQuery("");
+                        setCategoryFilter("");
+                      }}
+                      variant="outline"
+                      className="mt-4"
+                    >
+                      Clear all filters
+                    </Button>
+                  )}
+                </div>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredBooks.map((book) => (
-                  <MobileBookCard
-                    key={book.id}
-                    book={book}
-                    onRequest={(bookId) => requestMutation.mutate({ bookId })}
-                    onToggleFavorite={toggleFavorite}
-                    isFavorite={isFavorite(book.id)}
-                    isRequesting={requestMutation.isPending}
-                  />
+                  <div key={book.id} className="md:hidden">
+                    <MobileBookCard
+                      book={book}
+                      onRequest={(bookId) => requestMutation.mutate({ bookId })}
+                      onToggleFavorite={toggleFavorite}
+                      isFavorite={isFavorite(book.id)}
+                      isRequesting={requestMutation.isPending}
+                    />
+                  </div>
+                ))}
+                {/* Desktop Book Cards */}
+                {filteredBooks.map((book) => (
+                  <div key={`desktop-${book.id}`} className="hidden md:block">
+                    <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 shadow-md bg-gradient-to-br from-white to-slate-50 dark:from-card dark:to-slate-900">
+                      <CardContent className="p-6">
+                        <div className="flex flex-col h-full">
+                          {/* Book Cover & Title */}
+                          <div className="flex gap-4 mb-4">
+                            <div className="flex-shrink-0">
+                              <div className="w-16 h-20 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-600 rounded-lg shadow-lg group-hover:shadow-xl transition-all duration-300 flex items-center justify-center">
+                                <BookOpen className="h-8 w-8 text-white" />
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-lg text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors" data-testid={`text-book-title-${book.id}`}>
+                                {book.title}
+                              </h3>
+                              <p className="text-muted-foreground text-sm mb-1" data-testid={`text-book-author-${book.id}`}>
+                                by {book.author}
+                              </p>
+                              {book.isbn && (
+                                <p className="text-xs text-muted-foreground" data-testid={`text-book-isbn-${book.id}`}>
+                                  ISBN: {book.isbn}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Category & Availability */}
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium" data-testid={`badge-book-category-${book.id}`}>
+                              {book.category}
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-semibold text-foreground" data-testid={`text-book-available-${book.id}`}>
+                                {book.availableCopies} / {book.totalCopies}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                available
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex items-center justify-between mt-auto">
+                            <button
+                              onClick={() => toggleFavorite(book.id)}
+                              className="p-2 hover:bg-muted rounded-lg transition-colors group/fav"
+                              data-testid={`button-favorite-${book.id}`}
+                            >
+                              <div className={`w-5 h-5 transition-colors ${
+                                isFavorite(book.id) 
+                                  ? 'text-red-500' 
+                                  : 'text-muted-foreground group-hover/fav:text-red-500'
+                              }`}>
+                                <svg fill={isFavorite(book.id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                              </div>
+                            </button>
+                            
+                            <Button
+                              onClick={() => requestMutation.mutate({ bookId: book.id })}
+                              disabled={requestMutation.isPending || book.availableCopies === 0}
+                              data-testid={`button-request-${book.id}`}
+                              className="flex-1 ml-3 transition-all duration-200 hover:shadow-lg disabled:opacity-50"
+                              size="sm"
+                            >
+                              {requestMutation.isPending ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                  <span className="text-xs">Requesting...</span>
+                                </div>
+                              ) : book.availableCopies === 0 ? (
+                                "Unavailable"
+                              ) : (
+                                "Request Book"
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
                 ))}
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Library Info */}
+        {/* Library Stats & Info */}
         {filteredBooks.length > 0 && (
-          <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 border-blue-200 dark:border-blue-800">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <BookOpen className="h-4 w-4 text-white" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950 border-0 shadow-lg">
+              <CardContent className="p-6 text-center">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <BookOpen className="h-6 w-6 text-white" />
                 </div>
-                <div>
-                  <h4 className="font-medium text-blue-900 dark:text-blue-100 text-sm">
-                    Library Collection
-                  </h4>
-                  <p className="text-blue-700 dark:text-blue-300 text-xs mt-1">
-                    Browse our complete collection of {availableBooks.length} books. Use the heart icon to save favorites for quick access later.
-                  </p>
+                <div className="text-2xl font-bold text-blue-900 dark:text-blue-100 mb-1">
+                  {availableBooks.length}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+                <p className="text-blue-700 dark:text-blue-300 text-sm font-medium">
+                  Total Books
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 border-0 shadow-lg">
+              <CardContent className="p-6 text-center">
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Search className="h-6 w-6 text-white" />
+                </div>
+                <div className="text-2xl font-bold text-purple-900 dark:text-purple-100 mb-1">
+                  {filteredBooks.length}
+                </div>
+                <p className="text-purple-700 dark:text-purple-300 text-sm font-medium">
+                  Search Results
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950 dark:to-teal-950 border-0 shadow-lg">
+              <CardContent className="p-6 text-center">
+                <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <svg className="h-6 w-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </div>
+                <div className="text-2xl font-bold text-emerald-900 dark:text-emerald-100 mb-1">
+                  ❤️
+                </div>
+                <p className="text-emerald-700 dark:text-emerald-300 text-sm font-medium">
+                  Save Favorites
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
 
