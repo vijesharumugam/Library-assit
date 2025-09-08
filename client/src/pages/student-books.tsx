@@ -355,18 +355,18 @@ function StudentBooks() {
                 {/* Desktop Book Cards */}
                 {filteredBooks.map((book) => (
                   <div key={`desktop-${book.id}`} className="hidden md:block">
-                    <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 shadow-md bg-gradient-to-br from-white to-slate-50 dark:from-card dark:to-slate-900">
+                    <Card className="group border-0 shadow-md bg-gradient-to-br from-white to-slate-50 dark:from-card dark:to-slate-900">
                       <CardContent className="p-6">
                         <div className="flex flex-col h-full">
                           {/* Book Cover & Title */}
                           <div className="flex gap-4 mb-4">
                             <div className="flex-shrink-0">
-                              <div className="w-16 h-20 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-600 rounded-lg shadow-lg group-hover:shadow-xl transition-all duration-300 flex items-center justify-center">
+                              <div className="w-16 h-20 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-600 rounded-lg shadow-lg flex items-center justify-center">
                                 <BookOpen className="h-8 w-8 text-white" />
                               </div>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-lg text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors" data-testid={`text-book-title-${book.id}`}>
+                              <h3 className="font-semibold text-lg text-foreground line-clamp-2 mb-2" data-testid={`text-book-title-${book.id}`}>
                                 {book.title}
                               </h3>
                               <p className="text-muted-foreground text-sm mb-1" data-testid={`text-book-author-${book.id}`}>
@@ -417,7 +417,7 @@ function StudentBooks() {
                               onClick={() => requestMutation.mutate({ bookId: book.id })}
                               disabled={requestMutation.isPending || book.availableCopies === 0}
                               data-testid={`button-request-${book.id}`}
-                              className="flex-1 ml-3 transition-all duration-200 hover:shadow-lg disabled:opacity-50"
+                              className="flex-1 ml-3 disabled:opacity-50"
                               size="sm"
                             >
                               {requestMutation.isPending ? (
