@@ -145,33 +145,38 @@ function StudentBooks() {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Search Mode Toggle */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={isIntelligentSearch ? "default" : "outline"}
-                  size="sm"
-                  onClick={toggleSearchMode}
-                  className="flex items-center gap-2"
-                  data-testid="intelligent-search-toggle"
-                >
-                  <Sparkles className={`h-4 w-4 ${isIntelligentSearch ? 'text-white' : 'text-primary'}`} />
-                  {isIntelligentSearch ? "AI Search" : "Regular"}
-                </Button>
-                {isIntelligentSearch && (
-                  <span className="text-xs text-muted-foreground">
-                    Try: "mystery novels", "books about science"
-                  </span>
-                )}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant={isIntelligentSearch ? "default" : "outline"}
+                    size="sm"
+                    onClick={toggleSearchMode}
+                    className="flex items-center gap-2"
+                    data-testid="intelligent-search-toggle"
+                  >
+                    <Sparkles className={`h-4 w-4 ${isIntelligentSearch ? 'text-white' : 'text-primary'}`} />
+                    {isIntelligentSearch ? "AI Search" : "Regular"}
+                  </Button>
+                  {isSearching && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                      Searching...
+                    </div>
+                  )}
+                </div>
               </div>
-              {isSearching && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                  Searching...
+              
+              {isIntelligentSearch && (
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <p className="text-xs text-muted-foreground">
+                    💡 Try natural language: "mystery novels", "books about science", "programming guides"
+                  </p>
                 </div>
               )}
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
                 <Input
                   type="text"
@@ -196,7 +201,7 @@ function StudentBooks() {
               </div>
               
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger data-testid="books-category-filter" className="w-40">
+                <SelectTrigger data-testid="books-category-filter" className="w-full sm:w-40">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
