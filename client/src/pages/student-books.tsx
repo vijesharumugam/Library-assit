@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Search, Filter, Sparkles, RefreshCw } from "lucide-react";
+import { BookOpen, Search, Filter, Sparkles, RefreshCw, ArrowLeft } from "lucide-react";
 import { useState, useMemo, memo, useCallback, useEffect } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -137,14 +137,26 @@ function StudentBooks() {
       {/* Desktop Header */}
       <div className="hidden md:block bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600">
         <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="text-center text-white">
-            <div className="flex items-center justify-center mb-4">
-              <BookOpen className="h-12 w-12 mr-4" />
+          <div className="relative">
+            <Button
+              onClick={() => window.history.back()}
+              variant="ghost"
+              size="sm"
+              className="absolute left-0 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 transition-colors"
+              data-testid="button-back"
+            >
+              <ArrowLeft className="h-5 w-5 mr-2" />
+              Back
+            </Button>
+            <div className="text-center text-white">
+              <div className="flex items-center justify-center mb-4">
+                <BookOpen className="h-12 w-12 mr-4" />
+              </div>
+              <h1 className="text-4xl font-bold mb-3">Library Collection</h1>
+              <p className="text-xl opacity-90 max-w-2xl mx-auto">
+                Discover and explore our complete catalog of {availableBooks.length} books
+              </p>
             </div>
-            <h1 className="text-4xl font-bold mb-3">Library Collection</h1>
-            <p className="text-xl opacity-90 max-w-2xl mx-auto">
-              Discover and explore our complete catalog of {availableBooks.length} books
-            </p>
           </div>
         </div>
       </div>
