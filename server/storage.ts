@@ -3,23 +3,28 @@ import {
   Book, 
   Transaction, 
   BookRequest,
+  ExtensionRequest,
   Notification,
   Role, 
   TransactionStatus,
   BookRequestStatus,
+  ExtensionRequestStatus,
   InsertUser, 
   InsertBook, 
   InsertTransaction, 
   InsertBookRequest,
+  InsertExtensionRequest,
   InsertNotification,
   UpdateProfile,
   TransactionWithBook, 
   TransactionWithUserAndBook,
   BookRequestWithBook,
-  BookRequestWithUserAndBook
+  BookRequestWithUserAndBook,
+  ExtensionRequestWithUser,
+  ExtensionRequestWithUserAndTransaction
 } from "@shared/schema";
 import { prisma } from "./db";
-import { convertPrismaUser, convertPrismaBook, convertPrismaTransaction, convertPrismaBookRequest } from "./types";
+import { convertPrismaUser, convertPrismaBook, convertPrismaTransaction, convertPrismaBookRequest, convertPrismaExtensionRequest } from "./types";
 import session from "express-session";
 import MongoStore from "connect-mongo";
 
@@ -59,6 +64,14 @@ export interface IStorage {
   getPendingBookRequests(): Promise<BookRequestWithUserAndBook[]>;
   updateBookRequestStatus(id: string, status: BookRequestStatus): Promise<BookRequest | null>;
   approveBookRequest(requestId: string, librarianId: string): Promise<Transaction | null>;
+  
+  // Extension Request methods
+  createExtensionRequest(request: InsertExtensionRequest): Promise<ExtensionRequest>;
+  getExtensionRequestsByUser(userId: string): Promise<ExtensionRequestWithUserAndTransaction[]>;
+  getAllExtensionRequests(): Promise<ExtensionRequestWithUserAndTransaction[]>;
+  getPendingExtensionRequests(): Promise<ExtensionRequestWithUserAndTransaction[]>;
+  approveExtensionRequest(requestId: string, processedBy: string): Promise<ExtensionRequest | null>;
+  rejectExtensionRequest(requestId: string, processedBy: string): Promise<ExtensionRequest | null>;
   
   // Notification methods
   createNotification(notification: InsertNotification): Promise<Notification>;
@@ -472,6 +485,155 @@ export class DatabaseStorage implements IStorage {
       });
 
       return convertPrismaTransaction(transaction);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  // Extension Request methods
+  async createExtensionRequest(insertExtensionRequest: InsertExtensionRequest): Promise<ExtensionRequest> {
+    const extensionRequest = await prisma.extensionRequest.create({
+      data: insertExtensionRequest
+    });
+    return convertPrismaExtensionRequest(extensionRequest);
+  }
+
+  async getExtensionRequestsByUser(userId: string): Promise<ExtensionRequestWithUserAndTransaction[]> {
+    const requests = await prisma.extensionRequest.findMany({
+      where: { userId },
+      include: {
+        user: true,
+        transaction: {
+          include: { book: true }
+        }
+      },
+      orderBy: { requestDate: 'desc' }
+    });
+    
+    return requests.map(request => ({
+      ...convertPrismaExtensionRequest(request),
+      user: convertPrismaUser(request.user),
+      transaction: {
+        ...convertPrismaTransaction(request.transaction),
+        book: convertPrismaBook(request.transaction.book)
+      }
+    })) as ExtensionRequestWithUserAndTransaction[];
+  }
+
+  async getAllExtensionRequests(): Promise<ExtensionRequestWithUserAndTransaction[]> {
+    const requests = await prisma.extensionRequest.findMany({
+      include: {
+        user: true,
+        transaction: {
+          include: { book: true }
+        }
+      },
+      orderBy: { requestDate: 'desc' }
+    });
+    
+    return requests.map(request => ({
+      ...convertPrismaExtensionRequest(request),
+      user: convertPrismaUser(request.user),
+      transaction: {
+        ...convertPrismaTransaction(request.transaction),
+        book: convertPrismaBook(request.transaction.book)
+      }
+    })) as ExtensionRequestWithUserAndTransaction[];
+  }
+
+  async getPendingExtensionRequests(): Promise<ExtensionRequestWithUserAndTransaction[]> {
+    const requests = await prisma.extensionRequest.findMany({
+      where: { status: ExtensionRequestStatus.PENDING },
+      include: {
+        user: true,
+        transaction: {
+          include: { book: true }
+        }
+      },
+      orderBy: { requestDate: 'desc' }
+    });
+    
+    return requests.map(request => ({
+      ...convertPrismaExtensionRequest(request),
+      user: convertPrismaUser(request.user),
+      transaction: {
+        ...convertPrismaTransaction(request.transaction),
+        book: convertPrismaBook(request.transaction.book)
+      }
+    })) as ExtensionRequestWithUserAndTransaction[];
+  }
+
+  async approveExtensionRequest(requestId: string, processedBy: string): Promise<ExtensionRequest | null> {
+    try {
+      const request = await prisma.extensionRequest.findUnique({
+        where: { id: requestId },
+        include: { transaction: { include: { book: true } }, user: true }
+      });
+
+      if (!request || request.status !== ExtensionRequestStatus.PENDING) {
+        return null;
+      }
+
+      // Update the transaction's due date
+      await prisma.transaction.update({
+        where: { id: request.transactionId },
+        data: { dueDate: request.requestedDueDate }
+      });
+
+      // Update extension request status
+      const updatedRequest = await prisma.extensionRequest.update({
+        where: { id: requestId },
+        data: {
+          status: ExtensionRequestStatus.APPROVED,
+          processedBy,
+          processedDate: new Date()
+        }
+      });
+
+      // Create notification for approved extension
+      await this.createNotification({
+        userId: request.userId,
+        type: "EXTENSION_REQUEST_APPROVED" as any,
+        title: "Extension Request Approved",
+        message: `Your extension request for "${request.transaction.book.title}" has been approved. New due date: ${request.requestedDueDate.toLocaleDateString()}`
+      });
+
+      return convertPrismaExtensionRequest(updatedRequest);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async rejectExtensionRequest(requestId: string, processedBy: string): Promise<ExtensionRequest | null> {
+    try {
+      const request = await prisma.extensionRequest.findUnique({
+        where: { id: requestId },
+        include: { transaction: { include: { book: true } }, user: true }
+      });
+
+      if (!request || request.status !== ExtensionRequestStatus.PENDING) {
+        return null;
+      }
+
+      // Update extension request status
+      const updatedRequest = await prisma.extensionRequest.update({
+        where: { id: requestId },
+        data: {
+          status: ExtensionRequestStatus.REJECTED,
+          processedBy,
+          processedDate: new Date()
+        }
+      });
+
+      // Create notification for rejected extension
+      await this.createNotification({
+        userId: request.userId,
+        type: "EXTENSION_REQUEST_REJECTED" as any,
+        title: "Extension Request Rejected",
+        message: `Your extension request for "${request.transaction.book.title}" has been rejected by the librarian.`
+      });
+
+      return convertPrismaExtensionRequest(updatedRequest);
     } catch (error) {
       return null;
     }

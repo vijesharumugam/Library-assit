@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertBookSchema, insertTransactionSchema, insertBookRequestSchema, insertNotificationSchema, updateProfileSchema, TransactionStatus, BookRequestStatus, NotificationType } from "@shared/schema";
+import { insertBookSchema, insertTransactionSchema, insertBookRequestSchema, insertNotificationSchema, insertExtensionRequestSchema, updateProfileSchema, TransactionStatus, BookRequestStatus, NotificationType, ExtensionRequestStatus } from "@shared/schema";
 import { z } from "zod";
 import { prisma } from "./db";
 import multer from "multer";
@@ -487,6 +487,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(request);
     } catch (error) {
       res.status(500).json({ message: "Failed to reject book request" });
+    }
+  });
+
+  // Extension Request routes
+  // Create a new extension request (students only)
+  app.post("/api/extension-requests", requireAuth, async (req, res) => {
+    try {
+      if (req.user!.role !== "STUDENT") {
+        return res.status(403).json({ message: "Only students can create extension requests" });
+      }
+
+      const data = insertExtensionRequestSchema.parse({
+        ...req.body,
+        userId: req.user!.id,
+        currentDueDate: new Date(req.body.currentDueDate),
+        requestedDueDate: new Date(req.body.requestedDueDate)
+      });
+
+      const extensionRequest = await storage.createExtensionRequest(data);
+      res.status(201).json(extensionRequest);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid extension request data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create extension request" });
+    }
+  });
+
+  // Get extension requests for current user (students)
+  app.get("/api/extension-requests/my", requireAuth, async (req, res) => {
+    try {
+      const requests = await storage.getExtensionRequestsByUser(req.user!.id);
+      res.json(requests);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch extension requests" });
+    }
+  });
+
+  // Get all extension requests (librarians/admins)
+  app.get("/api/extension-requests", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const requests = await storage.getAllExtensionRequests();
+      res.json(requests);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch extension requests" });
+    }
+  });
+
+  // Get pending extension requests (librarians/admins)
+  app.get("/api/extension-requests/pending", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const requests = await storage.getPendingExtensionRequests();
+      res.json(requests);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch pending extension requests" });
+    }
+  });
+
+  // Approve an extension request (librarians/admins)
+  app.post("/api/extension-requests/:id/approve", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const request = await storage.approveExtensionRequest(req.params.id, req.user!.username);
+      if (!request) {
+        return res.status(404).json({ message: "Extension request not found" });
+      }
+      res.json(request);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to approve extension request" });
+    }
+  });
+
+  // Reject an extension request (librarians/admins)
+  app.post("/api/extension-requests/:id/reject", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const request = await storage.rejectExtensionRequest(req.params.id, req.user!.username);
+      if (!request) {
+        return res.status(404).json({ message: "Extension request not found" });
+      }
+      res.json(request);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to reject extension request" });
     }
   });
 
