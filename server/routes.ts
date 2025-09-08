@@ -2,7 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertBookSchema, insertTransactionSchema, insertBookRequestSchema, insertNotificationSchema, insertExtensionRequestSchema, updateProfileSchema, TransactionStatus, BookRequestStatus, NotificationType, ExtensionRequestStatus } from "@shared/schema";
+import { PushNotificationService } from "./push-service";
+import { insertBookSchema, insertTransactionSchema, insertBookRequestSchema, insertNotificationSchema, insertPushSubscriptionSchema, insertExtensionRequestSchema, updateProfileSchema, TransactionStatus, BookRequestStatus, NotificationType, ExtensionRequestStatus } from "@shared/schema";
 import { z } from "zod";
 import { prisma } from "./db";
 import multer from "multer";
@@ -731,6 +732,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const notificationData = insertNotificationSchema.parse(req.body);
       const notification = await storage.createNotification(notificationData);
+      
+      // Send push notification
+      await PushNotificationService.sendNotificationToUser(notification.userId, {
+        title: notification.title,
+        message: notification.message,
+        type: notification.type
+      });
+      
       res.status(201).json(notification);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -808,6 +817,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Clear Chat History Error:', error);
       res.status(500).json({ message: "Failed to clear chat history" });
+    }
+  });
+
+  // Push Subscription routes
+  app.post("/api/push/subscribe", requireAuth, async (req, res) => {
+    try {
+      const subscriptionData = insertPushSubscriptionSchema.parse({
+        ...req.body,
+        userId: req.user!.id
+      });
+      
+      const subscription = await storage.createPushSubscription(subscriptionData);
+      res.status(201).json(subscription);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid subscription data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create push subscription" });
+    }
+  });
+
+  app.delete("/api/push/unsubscribe/:id", requireAuth, async (req, res) => {
+    try {
+      const deleted = await storage.deletePushSubscription(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Subscription not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete push subscription" });
+    }
+  });
+
+  app.get("/api/push/vapid-public-key", (req, res) => {
+    res.json({ 
+      publicKey: process.env.VAPID_PUBLIC_KEY || "" 
+    });
+  });
+
+  // Test push notification endpoint (for admin testing)
+  app.post("/api/push/test", requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const { userId, title, message } = req.body;
+      
+      if (userId) {
+        await PushNotificationService.sendNotificationToUser(userId, {
+          title: title || "Test Notification",
+          message: message || "This is a test push notification from the library system.",
+          type: NotificationType.BOOK_BORROWED
+        });
+      } else {
+        await PushNotificationService.sendNotificationToAllUsers({
+          title: title || "Test Notification",
+          message: message || "This is a test push notification from the library system.",
+          type: NotificationType.BOOK_BORROWED
+        });
+      }
+
+      res.json({ message: "Test push notification sent successfully" });
+    } catch (error) {
+      console.error('Test push notification error:', error);
+      res.status(500).json({ message: "Failed to send test push notification" });
     }
   });
 

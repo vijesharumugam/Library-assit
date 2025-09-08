@@ -5,6 +5,7 @@ import {
   BookRequest,
   ExtensionRequest,
   Notification,
+  PushSubscription,
   Role, 
   TransactionStatus,
   BookRequestStatus,
@@ -15,6 +16,7 @@ import {
   InsertBookRequest,
   InsertExtensionRequest,
   InsertNotification,
+  InsertPushSubscription,
   UpdateProfile,
   TransactionWithBook, 
   TransactionWithUserAndBook,
@@ -79,6 +81,12 @@ export interface IStorage {
   markNotificationAsRead(id: string): Promise<Notification | null>;
   markAllNotificationsAsRead(userId: string): Promise<boolean>;
   clearAllNotifications(userId: string): Promise<boolean>;
+  
+  // Push Subscription methods
+  createPushSubscription(subscription: InsertPushSubscription): Promise<PushSubscription>;
+  getUserPushSubscriptions(userId: string): Promise<PushSubscription[]>;
+  deletePushSubscription(id: string): Promise<boolean>;
+  getAllPushSubscriptions(): Promise<PushSubscription[]>;
   
   sessionStore: session.Store;
 }
@@ -685,6 +693,46 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       return false;
     }
+  }
+
+  // Push Subscription methods
+  async createPushSubscription(insertSubscription: InsertPushSubscription): Promise<PushSubscription> {
+    return await prisma.pushSubscription.upsert({
+      where: {
+        userId_endpoint: {
+          userId: insertSubscription.userId,
+          endpoint: insertSubscription.endpoint
+        }
+      },
+      update: {
+        p256dh: insertSubscription.p256dh,
+        auth: insertSubscription.auth
+      },
+      create: insertSubscription as any
+    });
+  }
+
+  async getUserPushSubscriptions(userId: string): Promise<PushSubscription[]> {
+    return await prisma.pushSubscription.findMany({
+      where: { userId }
+    });
+  }
+
+  async deletePushSubscription(id: string): Promise<boolean> {
+    try {
+      await prisma.pushSubscription.delete({
+        where: { id }
+      });
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async getAllPushSubscriptions(): Promise<PushSubscription[]> {
+    return await prisma.pushSubscription.findMany({
+      include: { user: true }
+    });
   }
 }
 

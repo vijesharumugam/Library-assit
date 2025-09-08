@@ -231,5 +231,25 @@ export type ExtensionRequestWithUserAndTransaction = ExtensionRequest & {
   transaction: TransactionWithBook;
 };
 
+// Push subscription for Web Push API
+export type PushSubscription = {
+  id: string;
+  userId: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  createdAt: Date;
+  user?: User;
+};
+
+export const insertPushSubscriptionSchema = z.object({
+  userId: z.string().min(1, "User ID is required"),
+  endpoint: z.string().min(1, "Endpoint is required"),
+  p256dh: z.string().min(1, "p256dh key is required"),
+  auth: z.string().min(1, "Auth key is required"),
+});
+
+export type InsertPushSubscription = z.infer<typeof insertPushSubscriptionSchema>;
+
 // User without sensitive fields for frontend
 export type SafeUser = Omit<User, 'password'>;

@@ -27,6 +27,7 @@ model User {
   bookRequests BookRequest[]
   notifications Notification[]
   extensionRequests ExtensionRequest[]
+  pushSubscriptions PushSubscription[]
 
   @@map("users")
 }
@@ -150,4 +151,20 @@ enum ExtensionRequestStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+model PushSubscription {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  endpoint  String
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  // Ensure one subscription per user per endpoint
+  @@unique([userId, endpoint])
+  @@map("push_subscriptions")
 }
