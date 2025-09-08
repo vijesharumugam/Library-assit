@@ -1,19 +1,51 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, ArrowLeft, Calendar, BookOpen, AlertTriangle } from "lucide-react";
+import { Clock, ArrowLeft, Calendar, BookOpen, AlertTriangle, CalendarPlus } from "lucide-react";
 import { useState, useMemo, memo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Transaction, Book, User } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { BottomNavigation } from "@/components/bottom-navigation";
+import { apiRequest } from "@/lib/queryClient";
 
 function StudentDueSoon() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: myTransactions = [], isLoading: transactionsLoading } = useQuery<(Transaction & { book: Book })[]>({
     queryKey: ["/api/transactions/my"],
   });
+
+  const extensionRequestMutation = useMutation({
+    mutationFn: async ({ transactionId, reason }: { transactionId: string; reason: string }) => {
+      const res = await apiRequest("POST", "/api/extension-requests", {
+        transactionId,
+        reason
+      });
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Extension Request Submitted",
+        description: "Your extension request has been submitted and is awaiting librarian approval.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions/my"] });
+    },
+    onError: () => {
+      toast({
+        title: "Request Failed",
+        description: "Failed to submit extension request. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleExtensionRequest = (transactionId: string, bookTitle: string) => {
+    // For now, use a default reason. In a full implementation, you'd show a dialog
+    const reason = `Extension request for "${bookTitle}" - Need additional time to complete reading.`;
+    extensionRequestMutation.mutate({ transactionId, reason });
+  };
 
   const dueSoonBooks = useMemo(() => {
     const today = new Date();
@@ -192,8 +224,8 @@ function StudentDueSoon() {
                         </div>
                       </div>
                       
-                      {/* Status Badge */}
-                      <div className="text-right">
+                      {/* Actions */}
+                      <div className="flex flex-col gap-2 items-end">
                         <Badge
                           variant={isOverdue ? "destructive" : "secondary"}
                           className={isOverdue ? "" : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100"}
@@ -204,6 +236,17 @@ function StudentDueSoon() {
                             : `${daysUntilDue} days left`
                           }
                         </Badge>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleExtensionRequest(transaction.id, transaction.book.title)}
+                          disabled={extensionRequestMutation.isPending}
+                          className="flex items-center gap-1 text-xs"
+                          data-testid={`request-extension-${transaction.id}`}
+                        >
+                          <CalendarPlus className="h-3 w-3" />
+                          {extensionRequestMutation.isPending ? "Requesting..." : "Request Extension"}
+                        </Button>
                       </div>
                     </div>
                   );
@@ -223,10 +266,10 @@ function StudentDueSoon() {
                 </div>
                 <div>
                   <h4 className="font-medium text-blue-900 dark:text-blue-100 text-sm">
-                    Reminder
+                    Need More Time?
                   </h4>
                   <p className="text-blue-700 dark:text-blue-300 text-xs mt-1">
-                    Please return or renew your books before the due date to avoid late fees. Contact the library if you need assistance.
+                    You can request an extension for any book by clicking the "Request Extension" button. Extension requests are reviewed by librarians and you'll receive a notification with the decision.
                   </p>
                 </div>
               </div>
