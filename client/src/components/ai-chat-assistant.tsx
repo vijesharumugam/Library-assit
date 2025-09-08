@@ -190,36 +190,36 @@ How can I assist you today?`,
     if (!bookLinks || bookLinks.length === 0) return null;
 
     return (
-      <div className="mt-4 space-y-3">
-        <p className="text-sm font-semibold text-foreground mb-3">Book Resources:</p>
+      <div className="mt-3 space-y-2">
+        <p className="text-xs sm:text-sm font-semibold text-foreground mb-2">Book Resources:</p>
         {bookLinks.map((link, index) => (
-          <div key={index} className="flex items-center gap-3 p-3 border rounded-md bg-card hover:bg-accent/50 transition-colors overflow-hidden">
+          <div key={index} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border rounded-md bg-card/50 hover:bg-accent/30 transition-colors overflow-hidden">
             <div className="flex-1 min-w-0 space-y-1">
-              <p className="text-sm font-medium truncate break-words leading-tight">{link.title}</p>
+              <p className="text-xs sm:text-sm font-medium break-words leading-tight line-clamp-2">{link.title}</p>
               {link.platform && (
-                <p className="text-xs text-muted-foreground">{link.platform}</p>
+                <p className="text-xs text-muted-foreground truncate">{link.platform}</p>
               )}
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
               {link.type === 'free' ? (
-                <Badge variant="secondary" className="text-xs px-2 py-1">
-                  <Download className="h-3 w-3 mr-1" />
+                <Badge variant="secondary" className="text-xs px-1.5 py-0.5 sm:px-2 sm:py-1">
+                  <Download className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
                   Free
                 </Badge>
               ) : (
-                <Badge variant="outline" className="text-xs px-2 py-1">
-                  <ShoppingCart className="h-3 w-3 mr-1" />
+                <Badge variant="outline" className="text-xs px-1.5 py-0.5 sm:px-2 sm:py-1">
+                  <ShoppingCart className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
                   {link.price || 'Buy'}
                 </Badge>
               )}
               <Button 
                 size="sm" 
                 variant="ghost" 
-                className="h-8 w-8 p-0"
+                className="h-6 w-6 sm:h-8 sm:w-8 p-0"
                 onClick={() => window.open(link.url, '_blank')}
                 data-testid={`book-link-${index}`}
               >
-                <ExternalLink className="h-3 w-3" />
+                <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               </Button>
             </div>
           </div>
@@ -238,8 +238,8 @@ How can I assist you today?`,
       {/* Floating Chat Button */}
       <div 
         className={cn(
-          "fixed bottom-4 left-4 z-50 transition-all duration-300",
-          "sm:bottom-6 sm:left-6",
+          "fixed bottom-20 left-4 z-50 transition-all duration-300",
+          "sm:bottom-6 sm:left-6 md:bottom-8 md:left-8",
           isOpen ? "scale-0 opacity-0" : "scale-100 opacity-100"
         )}
       >
@@ -262,11 +262,11 @@ How can I assist you today?`,
             onClick={handleCloseChat}
           />
           
-          {/* Chat Modal - Centered */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in-0 duration-300" data-testid="chat-window">
-            <div className="w-full max-w-lg h-[36rem] max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-5 duration-300">
-            <Card className="h-full flex flex-col shadow-2xl border-2 bg-background/95 backdrop-blur-md">
-            <CardHeader className="pb-3 bg-primary text-primary-foreground rounded-t-lg">
+          {/* Chat Modal - Responsive Positioning */}
+          <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:justify-center p-0 sm:p-4 animate-in fade-in-0 duration-300" data-testid="chat-window">
+            <div className="w-full sm:max-w-md md:max-w-lg h-[85vh] sm:h-[32rem] md:h-[36rem] sm:max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-5 duration-300">
+            <Card className="h-full flex flex-col shadow-2xl sm:border-2 border-0 sm:rounded-lg rounded-none bg-background/95 backdrop-blur-md">
+            <CardHeader className="pb-3 bg-primary text-primary-foreground sm:rounded-t-lg rounded-none px-4 py-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5" />
@@ -285,39 +285,39 @@ How can I assist you today?`,
             </CardHeader>
             
             <CardContent className="flex-1 flex flex-col p-0 min-h-0 overflow-hidden">
-              <ScrollArea className="flex-1 p-6">
-                <div className="space-y-6">
+              <ScrollArea className="flex-1 p-4 sm:p-6">
+                <div className="space-y-4 sm:space-y-6">
                   {messages.map((message) => (
                     <div
                       key={message.id}
                       className={cn(
-                        "flex gap-3",
+                        "flex gap-2 sm:gap-3",
                         message.type === 'user' ? 'justify-end' : 'justify-start'
                       )}
                     >
                       {message.type === 'assistant' && (
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className="bg-primary text-primary-foreground">
+                        <Avatar className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0">
+                          <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                             AI
                           </AvatarFallback>
                         </Avatar>
                       )}
                       <div
                         className={cn(
-                          "max-w-[90%] rounded-lg p-4 text-sm leading-relaxed shadow-sm",
+                          "max-w-[85%] sm:max-w-[90%] rounded-lg p-3 sm:p-4 text-sm leading-relaxed shadow-sm",
                           message.type === 'user'
-                            ? 'bg-primary text-primary-foreground ml-auto'
-                            : 'bg-background border border-border'
+                            ? 'bg-primary text-primary-foreground ml-auto rounded-br-sm'
+                            : 'bg-muted/50 border border-border/50 rounded-bl-sm'
                         )}
                       >
                         <div className="overflow-hidden">
-                          <p className="whitespace-pre-wrap break-words word-break break-all mb-0">{message.content}</p>
+                          <p className="whitespace-pre-wrap break-words hyphens-auto mb-0">{message.content}</p>
                         </div>
                         {renderBookLinks(message.bookLinks)}
                       </div>
                       {message.type === 'user' && (
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className="bg-muted">
+                        <Avatar className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0">
+                          <AvatarFallback className="bg-muted text-xs">
                             {user?.fullName?.[0] || 'U'}
                           </AvatarFallback>
                         </Avatar>
@@ -325,20 +325,20 @@ How can I assist you today?`,
                     </div>
                   ))}
                   {isLoading && (
-                    <div className="flex gap-3 justify-start">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-primary text-primary-foreground">
+                    <div className="flex gap-2 sm:gap-3 justify-start">
+                      <Avatar className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0">
+                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                           AI
                         </AvatarFallback>
                       </Avatar>
-                      <div className="bg-muted rounded-lg p-3 text-sm">
+                      <div className="bg-muted/50 border border-border/50 rounded-lg rounded-bl-sm p-3 text-sm max-w-[85%] sm:max-w-[90%]">
                         <div className="flex items-center gap-2">
                           <div className="flex gap-1">
                             <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" />
                             <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
                             <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
                           </div>
-                          {animatedText && <span className="text-muted-foreground">{animatedText}</span>}
+                          {animatedText && <span className="text-muted-foreground text-xs">{animatedText}</span>}
                         </div>
                       </div>
                     </div>
@@ -347,22 +347,22 @@ How can I assist you today?`,
                 <div ref={messagesEndRef} />
               </ScrollArea>
               
-              <div className="p-4 border-t bg-background/50 backdrop-blur-sm">
-                <div className="flex gap-2">
+              <div className="p-3 sm:p-4 border-t bg-background/80 backdrop-blur-sm">
+                <div className="flex gap-2 items-end">
                   <Input
                     placeholder="Ask about library services..."
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyDown={handleKeyPress}
                     disabled={isLoading}
-                    className="text-sm flex-1"
+                    className="text-sm flex-1 min-h-[2.5rem] resize-none"
                     data-testid="chat-input"
                   />
                   <Button
                     size="sm"
                     onClick={handleSendMessage}
                     disabled={isLoading || !inputMessage.trim()}
-                    className="shrink-0"
+                    className="shrink-0 h-10 w-10 p-0"
                     data-testid="chat-send-button"
                   >
                     <Send className="h-4 w-4" />
