@@ -8,6 +8,7 @@ import { prisma } from "./db";
 import multer from "multer";
 import * as XLSX from "xlsx";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { LibraryAIService } from "./ai-service";
 
 function requireAuth(req: any, res: any, next: any) {
   if (!req.isAuthenticated()) {
@@ -33,6 +34,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Initialize Google Gemini AI client for intelligent search
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+  
+  // Initialize AI Service
+  const aiService = new LibraryAIService();
 
   // Configure multer for file uploads (for Excel files)
   const upload = multer({
@@ -688,6 +692,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "All notifications cleared" });
     } catch (error) {
       res.status(500).json({ message: "Failed to clear all notifications" });
+    }
+  });
+
+  // AI Chat Assistant endpoint for students
+  app.post("/api/ai-chat", requireRole(["STUDENT"]), async (req, res) => {
+    try {
+      const { message } = req.body;
+      
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ message: "Message is required" });
+      }
+
+      const user = req.user!;
+      const aiResponse = await aiService.processUserQuery(user, message);
+      
+      res.json(aiResponse);
+    } catch (error) {
+      console.error('AI Chat Error:', error);
+      res.status(500).json({ 
+        response: "I'm sorry, I'm experiencing technical difficulties. Please try again later or contact library staff for assistance.",
+        message: "AI service temporarily unavailable" 
+      });
     }
   });
 
