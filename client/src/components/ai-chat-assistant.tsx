@@ -166,23 +166,32 @@ How can I assist you today?`,
       <div 
         className={cn(
           "fixed bottom-6 left-6 z-50 transition-all duration-300",
+          "md:bottom-8 md:left-8",
           isOpen ? "scale-0 opacity-0" : "scale-100 opacity-100"
         )}
       >
         <Button
           size="lg"
           onClick={() => setIsOpen(true)}
-          className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-primary hover:bg-primary/90"
+          className="h-12 w-12 md:h-14 md:w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-primary hover:bg-primary/90"
           data-testid="chat-open-button"
         >
-          <MessageCircle className="h-6 w-6" />
+          <MessageCircle className="h-5 w-5 md:h-6 md:w-6" />
         </Button>
       </div>
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 left-6 w-80 h-96 z-50 animate-in slide-in-from-bottom-5 duration-300" data-testid="chat-window">
-          <Card className="h-full flex flex-col shadow-2xl border-2">
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+            onClick={() => setIsOpen(false)}
+          />
+          
+          {/* Chat Modal */}
+          <div className="fixed bottom-6 left-6 right-6 md:right-auto md:w-96 md:left-8 md:bottom-8 h-[28rem] max-h-[80vh] z-50 animate-in slide-in-from-bottom-5 duration-300" data-testid="chat-window">
+            <Card className="h-full flex flex-col shadow-2xl border-2 bg-background">
             <CardHeader className="pb-3 bg-primary text-primary-foreground rounded-t-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -221,7 +230,7 @@ How can I assist you today?`,
                       )}
                       <div
                         className={cn(
-                          "max-w-[75%] rounded-lg p-3 text-sm",
+                          "max-w-[80%] rounded-lg p-3 text-sm leading-relaxed",
                           message.type === 'user'
                             ? 'bg-primary text-primary-foreground ml-auto'
                             : 'bg-muted'
@@ -259,7 +268,7 @@ How can I assist you today?`,
                 <div ref={messagesEndRef} />
               </ScrollArea>
               
-              <div className="p-4 border-t">
+              <div className="p-3 md:p-4 border-t bg-background/50 backdrop-blur-sm">
                 <div className="flex gap-2">
                   <Input
                     placeholder="Ask about library services..."
@@ -267,13 +276,14 @@ How can I assist you today?`,
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyDown={handleKeyPress}
                     disabled={isLoading}
-                    className="text-sm"
+                    className="text-sm flex-1"
                     data-testid="chat-input"
                   />
                   <Button
                     size="sm"
                     onClick={handleSendMessage}
                     disabled={isLoading || !inputMessage.trim()}
+                    className="shrink-0"
                     data-testid="chat-send-button"
                   >
                     <Send className="h-4 w-4" />
@@ -281,8 +291,9 @@ How can I assist you today?`,
                 </div>
               </div>
             </CardContent>
-          </Card>
-        </div>
+            </Card>
+          </div>
+        </>
       )}
     </>
   );
