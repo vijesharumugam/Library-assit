@@ -191,7 +191,7 @@ How can I assist you today?`,
           
           {/* Chat Modal - Centered */}
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in-0 duration-300" data-testid="chat-window">
-            <div className="w-full max-w-md h-[32rem] max-h-[85vh] animate-in slide-in-from-bottom-5 duration-300">
+            <div className="w-full max-w-md h-[32rem] max-h-[85vh] flex flex-col animate-in slide-in-from-bottom-5 duration-300">
             <Card className="h-full flex flex-col shadow-2xl border-2 bg-background/95 backdrop-blur-md">
             <CardHeader className="pb-3 bg-primary text-primary-foreground rounded-t-lg">
               <div className="flex items-center justify-between">
@@ -211,7 +211,7 @@ How can I assist you today?`,
               </div>
             </CardHeader>
             
-            <CardContent className="flex-1 flex flex-col p-0">
+            <CardContent className="flex-1 flex flex-col p-0 min-h-0 overflow-hidden">
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-4">
                   {messages.map((message) => (
