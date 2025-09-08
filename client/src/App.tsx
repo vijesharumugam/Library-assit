@@ -9,6 +9,7 @@ import { FavoritesProvider } from "@/hooks/use-favorites";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { AIChatAssistant } from "@/components/ai-chat-assistant";
 import { Role } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
@@ -126,6 +127,7 @@ function App() {
               <Toaster />
               <InstallPrompt />
               <Router />
+              <AIChatAssistant />
             </TooltipProvider>
           </FavoritesProvider>
         </AuthProvider>
