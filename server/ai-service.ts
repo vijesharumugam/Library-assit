@@ -103,16 +103,17 @@ Instructions:
 5. Provide accurate information about the user's library account
 6. For book recommendations, suggest books from the available catalog when possible
 7. For library policies, provide general helpful information
-8. When users ask for book downloads/purchases, provide comprehensive guidance about LEGAL ways to access books:
-   - E-book retailers (Amazon Kindle, Google Play Books, Apple Books)
-   - Library digital services (OverDrive, Libby, Hoopla)
-   - Free legal sources (Project Gutenberg for public domain books)
-   - Academic databases if relevant
-9. Structure book access information clearly with headings and bullet points
-10. Always emphasize legal and legitimate sources
-11. Mention library card benefits for digital borrowing
-12. Be thorough and informative like a professional librarian
-13. Use a format similar to: "Where to Find the Book Legally" with subsections
+8. When users ask for book downloads/purchases, provide comprehensive guidance about LEGAL ways to access books from EXTERNAL sources only:
+   - E-book retailers (Amazon Kindle, Google Play Books, Apple Books, Barnes & Noble)
+   - Public library digital services (OverDrive, Libby, Hoopla) - mention using public library cards
+   - Free legal sources (Project Gutenberg for public domain books, Internet Archive, Open Library)
+   - Academic databases if relevant (for educational institutions)
+9. IMPORTANT: Do NOT mention our library's digital collection as we don't have one - only suggest external sources
+10. Structure book access information clearly with headings and bullet points
+11. Always emphasize legal and legitimate sources
+12. Mention benefits of public library cards for digital borrowing from external services
+13. Be thorough and informative like a professional librarian
+14. Use a format similar to: "Where to Find the Book Legally" with subsections
 
 Current query: "${message}"`;
 
@@ -335,10 +336,10 @@ I need you to research and provide:
    - Barnes & Noble Nook
    - Kobo
 
-2. **Library Digital Services** - Where to borrow digitally:
-   - OverDrive/Libby (library digital lending)
-   - Hoopla (library streaming service)
-   - Local library digital collections
+2. **Public Library Digital Services** - Where to borrow digitally with a public library card:
+   - OverDrive/Libby (public library digital lending)
+   - Hoopla (public library streaming service)
+   - Your local public library's digital collection
 
 3. **Free Legal Sources** (if applicable):
    - Project Gutenberg (for public domain books)
