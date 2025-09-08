@@ -7,6 +7,7 @@ import { z } from "zod";
 import { prisma } from "./db";
 import multer from "multer";
 import * as XLSX from "xlsx";
+import OpenAI from "openai";
 
 function requireAuth(req: any, res: any, next: any) {
   if (!req.isAuthenticated()) {
@@ -29,6 +30,11 @@ function requireRole(roles: string[]) {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
+
+  // Initialize OpenAI client for intelligent search
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
 
   // Configure multer for file uploads (for Excel files)
   const upload = multer({
@@ -202,6 +208,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // AI-powered intelligent search endpoint
+  app.get("/api/books/search/intelligent", requireAuth, async (req, res) => {
+    try {
+      const { query } = req.query as { query?: string };
+      
+      if (!query || typeof query !== 'string' || query.trim().length === 0) {
+        return res.status(400).json({ message: "Search query is required" });
+      }
+
+      // Get all available books
+      const books = await storage.getAvailableBooks();
+      
+      if (books.length === 0) {
+        return res.json([]);
+      }
+
+      // Generate embedding for the user's search query
+      const queryEmbedding = await openai.embeddings.create({
+        model: "text-embedding-3-small",
+        input: query.trim(),
+        encoding_format: "float",
+      });
+
+      // Calculate similarity scores for each book
+      const bookScores: Array<{ book: any, score: number }> = [];
+      
+      for (const book of books) {
+        // Create a searchable text representation of the book
+        const bookText = `${book.title} ${book.author} ${book.category} ${book.description || ''} ${book.publisher || ''}`;
+        
+        // Generate embedding for the book
+        const bookEmbedding = await openai.embeddings.create({
+          model: "text-embedding-3-small",
+          input: bookText,
+          encoding_format: "float",
+        });
+
+        // Calculate cosine similarity
+        const similarity = calculateCosineSimilarity(
+          queryEmbedding.data[0].embedding,
+          bookEmbedding.data[0].embedding
+        );
+
+        bookScores.push({ book, score: similarity });
+      }
+
+      // Sort by similarity score (descending) and return top results
+      const sortedBooks = bookScores
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 20) // Return top 20 results
+        .map(item => item.book);
+
+      res.json(sortedBooks);
+    } catch (error) {
+      console.error('Intelligent search error:', error);
+      res.status(500).json({ message: "Failed to perform intelligent search" });
+    }
+  });
+
+  // Utility function to calculate cosine similarity between two vectors
+  function calculateCosineSimilarity(vecA: number[], vecB: number[]): number {
+    const dotProduct = vecA.reduce((sum, a, idx) => sum + a * vecB[idx], 0);
+    const magnitudeA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
+    const magnitudeB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
+    
+    if (magnitudeA === 0 || magnitudeB === 0) {
+      return 0;
+    }
+    
+    return dotProduct / (magnitudeA * magnitudeB);
+  }
 
   // Transaction routes
   app.get("/api/transactions", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
