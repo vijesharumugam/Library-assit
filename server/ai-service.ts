@@ -189,6 +189,8 @@ Current query: "${message}"`;
   }
 
   private extractBookTitle(query: string): string | null {
+    console.log(`Extracting title from: "${query}"`);
+    
     // Enhanced book title extraction with multiple patterns
     const patterns = [
       // Quoted titles
@@ -198,11 +200,14 @@ Current query: "${message}"`;
       // Titles with "by" author pattern
       /(?:find|get|download|buy|looking for|need|want|book about|read)\s+(?:book\s+)?(?:called\s+)?([A-Z][a-zA-Z\s&:,-]+?)\s+(?:by|author|written by)/i,
       
-      // Titles followed by common book-related words
-      /(?:find|get|download|buy|looking for|need|want|book about|read)\s+(?:book\s+)?(?:called\s+)?([A-Z][a-zA-Z\s&:,-]+?)(?:\s+(?:book|novel|story|text|pdf|ebook))?$/i,
+      // "book about X" pattern - clean extraction
+      /book about\s+([^,?.!]+?)(?:\s+(?:by|author|book|link|download|pdf)|$)/i,
       
-      // Patterns for "book about X"
-      /book about\s+(.+?)(?:\s+(?:by|author)|$)/i,
+      // Direct book title patterns
+      /(?:the|a|an)?\s*([A-Z][a-zA-Z\s&:,-]+?)(?:\s+(?:book|link|download|pdf|ebook|by))/i,
+      
+      // Titles followed by common book-related words
+      /(?:find|get|download|buy|looking for|need|want|read)\s+(?:book\s+)?(?:called\s+)?([A-Z][a-zA-Z\s&:,-]+?)(?:\s+(?:book|novel|story|text|pdf|ebook|link|download))/i,
       
       // Generic extraction for capitalized words
       /([A-Z][a-zA-Z\s&:,-]{2,})/i,
@@ -211,15 +216,33 @@ Current query: "${message}"`;
     for (const pattern of patterns) {
       const match = query.match(pattern);
       if (match && match[1]) {
-        const title = match[1].trim();
-        // Filter out common false positives
-        const commonWords = ['book', 'download', 'find', 'get', 'want', 'need', 'looking', 'called', 'about'];
-        if (title.length > 2 && !commonWords.includes(title.toLowerCase())) {
-          return title;
+        let title = match[1].trim();
+        
+        // Clean up the title by removing common non-title words
+        const wordsToRemove = ['book', 'download', 'find', 'get', 'want', 'need', 'looking', 'called', 'about', 'link', 'pdf', 'ebook', 'free', 'buy', 'purchase'];
+        
+        // Split title into words and filter out unwanted words
+        const titleWords = title.split(/\s+/).filter(word => {
+          const lowerWord = word.toLowerCase();
+          return !wordsToRemove.includes(lowerWord) && word.length > 1;
+        });
+        
+        if (titleWords.length > 0) {
+          title = titleWords.join(' ');
+          
+          // Additional cleanup - capitalize first letter of each word
+          title = title.replace(/\b\w/g, char => char.toUpperCase());
+          
+          console.log(`Cleaned title: "${title}"`);
+          
+          if (title.length > 2) {
+            return title;
+          }
         }
       }
     }
 
+    console.log('No title extracted');
     return null;
   }
 
