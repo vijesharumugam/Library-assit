@@ -12,7 +12,7 @@ import { useLocation } from "wouter";
 import { useState, useMemo, memo } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Book, Transaction, User, BookRequest, TransactionStatus, BookRequestStatus, Role } from "@shared/schema";
+import { Book, Transaction, User, BookRequest, ExtensionRequest, TransactionStatus, BookRequestStatus, ExtensionRequestStatus, Role } from "@shared/schema";
 import { AddBookModal } from "@/components/add-book-modal";
 import { EditBookModal } from "@/components/edit-book-modal";
 import { BorrowModal } from "@/components/borrow-modal";
@@ -47,6 +47,14 @@ function LibrarianDashboard() {
 
   const { data: pendingRequests = [], isLoading: pendingRequestsLoading } = useQuery<(BookRequest & { user: User; book: Book })[]>({
     queryKey: ["/api/book-requests/pending"],
+  });
+
+  const { data: extensionRequests = [], isLoading: extensionRequestsLoading } = useQuery<(ExtensionRequest & { user: User; transaction: Transaction & { book: Book } })[]>({
+    queryKey: ["/api/extension-requests"],
+  });
+
+  const { data: pendingExtensionRequests = [], isLoading: pendingExtensionRequestsLoading } = useQuery<(ExtensionRequest & { user: User; transaction: Transaction & { book: Book } })[]>({
+    queryKey: ["/api/extension-requests/pending"],
   });
 
   const deleteBookMutation = useMutation({
@@ -109,6 +117,51 @@ function LibrarianDashboard() {
     onError: (error: Error) => {
       toast({
         title: "Failed to reject request",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const approveExtensionMutation = useMutation({
+    mutationFn: async (requestId: string) => {
+      const res = await apiRequest("POST", `/api/extension-requests/${requestId}/approve`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/extension-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/extension-requests/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      toast({
+        title: "Extension approved successfully",
+        description: "The extension request has been approved and the due date updated",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to approve extension",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const rejectExtensionMutation = useMutation({
+    mutationFn: async (requestId: string) => {
+      const res = await apiRequest("POST", `/api/extension-requests/${requestId}/reject`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/extension-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/extension-requests/pending"] });
+      toast({
+        title: "Extension rejected",
+        description: "The extension request has been rejected",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to reject extension",
         description: error.message,
         variant: "destructive",
       });
@@ -354,9 +407,10 @@ function LibrarianDashboard() {
       {/* Desktop Layout */}
       <div className="hidden md:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         <Tabs defaultValue="dashboard" className="space-y-4 md:space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-11 bg-muted p-1 rounded-lg">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 h-11 bg-muted p-1 rounded-lg">
             <TabsTrigger value="dashboard" data-testid="tab-dashboard" className="text-xs sm:text-sm font-medium">Dashboard</TabsTrigger>
             <TabsTrigger value="requests" data-testid="tab-requests" className="text-xs sm:text-sm font-medium">Requests</TabsTrigger>
+            <TabsTrigger value="extensions" data-testid="tab-extensions" className="text-xs sm:text-sm font-medium">Extensions</TabsTrigger>
             <TabsTrigger value="books" data-testid="tab-books" className="text-xs sm:text-sm font-medium">Books</TabsTrigger>
             <TabsTrigger value="transactions" data-testid="tab-transactions" className="text-xs sm:text-sm font-medium">Transactions</TabsTrigger>
           </TabsList>
@@ -661,6 +715,209 @@ function LibrarianDashboard() {
                             </td>
                             <td className="px-6 py-4 text-sm text-muted-foreground" data-testid={`text-all-request-notes-${request.id}`}>
                               {request.notes || "—"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="extensions" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">Extension Requests</h2>
+                <p className="text-muted-foreground">Manage student book extension requests</p>
+              </div>
+            </div>
+
+            {/* Pending Extension Requests */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between" data-testid="title-pending-extensions">
+                  <span>Pending Extension Requests</span>
+                  <Badge variant="outline" className="text-sm">
+                    {pendingExtensionRequests.length} pending
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {pendingExtensionRequestsLoading ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Loading pending extension requests...</p>
+                  </div>
+                ) : pendingExtensionRequests.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No pending extension requests</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {pendingExtensionRequests.map((request) => {
+                      const currentDueDate = new Date(request.transaction.dueDate);
+                      const requestedDueDate = new Date(request.requestedDueDate);
+                      const isOverdue = currentDueDate < new Date();
+                      
+                      return (
+                        <div
+                          key={request.id}
+                          className={`border rounded-lg p-4 ${
+                            isOverdue 
+                              ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30' 
+                              : 'border-border bg-card'
+                          }`}
+                          data-testid={`card-extension-request-${request.id}`}
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-center gap-4 flex-1 min-w-0">
+                              {/* Book Icon */}
+                              <div className="w-12 h-16 bg-gradient-to-b from-blue-600 to-blue-800 rounded shadow-sm flex items-center justify-center flex-shrink-0">
+                                <BookOpen className="h-4 w-4 text-white" />
+                              </div>
+                              
+                              {/* Request Details */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h4 className="font-semibold text-foreground truncate" data-testid={`text-extension-book-title-${request.id}`}>
+                                    {request.transaction.book.title}
+                                  </h4>
+                                  {isOverdue && (
+                                    <Badge variant="destructive" className="text-xs">
+                                      Overdue
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-sm text-muted-foreground truncate" data-testid={`text-extension-book-author-${request.id}`}>
+                                  by {request.transaction.book.author}
+                                </p>
+                                <div className="mt-2 space-y-1">
+                                  <div className="text-xs text-muted-foreground">
+                                    <span className="font-medium">Student:</span> {request.user.fullName} ({request.user.username})
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    <span className="font-medium">Current Due:</span> {currentDueDate.toLocaleDateString()}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    <span className="font-medium">Requested Due:</span> {requestedDueDate.toLocaleDateString()}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    <span className="font-medium">Reason:</span> {request.reason}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    <span className="font-medium">Requested:</span> {new Date(request.requestDate).toLocaleDateString()}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Action Buttons */}
+                            <div className="flex gap-2 flex-shrink-0">
+                              <Button
+                                size="sm"
+                                onClick={() => approveExtensionMutation.mutate(request.id)}
+                                disabled={approveExtensionMutation.isPending}
+                                className="bg-green-600 hover:bg-green-700"
+                                data-testid={`button-approve-extension-${request.id}`}
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                {approveExtensionMutation.isPending ? "Approving..." : "Approve"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => rejectExtensionMutation.mutate(request.id)}
+                                disabled={rejectExtensionMutation.isPending}
+                                data-testid={`button-reject-extension-${request.id}`}
+                              >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                {rejectExtensionMutation.isPending ? "Rejecting..." : "Reject"}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* All Extension Requests */}
+            <Card>
+              <CardHeader>
+                <CardTitle data-testid="title-all-extensions">All Extension Requests</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {extensionRequestsLoading ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Loading all extension requests...</p>
+                  </div>
+                ) : extensionRequests.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No extension requests found</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-muted/50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Student</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Book</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Current Due</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Requested Due</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Request Date</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-card divide-y divide-border">
+                        {extensionRequests.map((request) => (
+                          <tr key={request.id} className="hover:bg-muted/50" data-testid={`row-extension-${request.id}`}>
+                            <td className="px-6 py-4">
+                              <div>
+                                <div className="text-sm font-medium text-foreground" data-testid={`text-extension-student-${request.id}`}>
+                                  {request.user.fullName}
+                                </div>
+                                <div className="text-sm text-muted-foreground" data-testid={`text-extension-username-${request.id}`}>
+                                  {request.user.username}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center">
+                                <div className="h-12 w-8 bg-gradient-to-b from-blue-600 to-blue-800 rounded shadow-sm mr-4 flex items-center justify-center">
+                                  <BookOpen className="h-3 w-3 text-white" />
+                                </div>
+                                <div>
+                                  <div className="text-sm font-medium text-foreground" data-testid={`text-extension-book-title-${request.id}`}>
+                                    {request.transaction.book.title}
+                                  </div>
+                                  <div className="text-sm text-muted-foreground" data-testid={`text-extension-book-author-${request.id}`}>
+                                    {request.transaction.book.author}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-foreground" data-testid={`text-extension-current-due-${request.id}`}>
+                              {new Date(request.transaction.dueDate).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-foreground" data-testid={`text-extension-requested-due-${request.id}`}>
+                              {new Date(request.requestedDueDate).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4">
+                              <Badge 
+                                variant={
+                                  request.status === "APPROVED" ? "default" :
+                                  request.status === "REJECTED" ? "destructive" : "outline"
+                                }
+                                data-testid={`badge-extension-status-${request.id}`}
+                              >
+                                {request.status}
+                              </Badge>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-foreground" data-testid={`text-extension-request-date-${request.id}`}>
+                              {new Date(request.requestDate).toLocaleDateString()}
                             </td>
                           </tr>
                         ))}
