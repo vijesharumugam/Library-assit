@@ -368,21 +368,23 @@ function StudentDashboard() {
             </Card>
           </Link>
 
-          <Card className="library-card">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center">
-                <div className="p-1.5 sm:p-2 bg-chart-4/20 rounded-lg">
-                  <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-chart-4" />
+          <Link href="/student/due-soon">
+            <Card className="library-card cursor-pointer hover:bg-muted/50 transition-all duration-200 hover:scale-[1.02] hover:shadow-md">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex items-center">
+                  <div className="p-1.5 sm:p-2 bg-chart-4/20 rounded-lg">
+                    <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-chart-4" />
+                  </div>
+                  <div className="ml-2 sm:ml-4">
+                    <p className="text-xs sm:text-sm font-medium text-muted-foreground library-subheading">Due Soon</p>
+                    <p className="text-lg sm:text-2xl font-semibold text-foreground" data-testid="stat-due-soon">
+                      {dueSoon.length}
+                    </p>
+                  </div>
                 </div>
-                <div className="ml-2 sm:ml-4">
-                  <p className="text-xs sm:text-sm font-medium text-muted-foreground library-subheading">Due Soon</p>
-                  <p className="text-lg sm:text-2xl font-semibold text-foreground" data-testid="stat-due-soon">
-                    {dueSoon.length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         {/* Search and Filter */}

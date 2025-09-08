@@ -27,6 +27,7 @@ const StudentPendingRequests = lazy(() => import("@/pages/student-pending-reques
 const StudentProfile = lazy(() => import("@/pages/student-profile"));
 const StudentFavorites = lazy(() => import("@/pages/student-favorites"));
 const StudentBooks = lazy(() => import("@/pages/student-books"));
+const StudentDueSoon = lazy(() => import("@/pages/student-due-soon"));
 const LibrarianProfile = lazy(() => import("@/pages/librarian-profile"));
 
 // Loading component with library theme
@@ -84,6 +85,11 @@ function Router() {
       <ProtectedRoute 
         path="/student/books" 
         component={() => <Suspense fallback={<LoadingSpinner />}><StudentBooks /></Suspense>} 
+        allowedRoles={[Role.STUDENT]} 
+      />
+      <ProtectedRoute 
+        path="/student/due-soon" 
+        component={() => <Suspense fallback={<LoadingSpinner />}><StudentDueSoon /></Suspense>} 
         allowedRoles={[Role.STUDENT]} 
       />
       <ProtectedRoute 
