@@ -264,7 +264,7 @@ How can I assist you today?`,
           
           {/* Chat Modal - Centered */}
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in-0 duration-300" data-testid="chat-window">
-            <div className="w-full max-w-md h-[32rem] max-h-[85vh] flex flex-col animate-in slide-in-from-bottom-5 duration-300">
+            <div className="w-full max-w-lg h-[36rem] max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-5 duration-300">
             <Card className="h-full flex flex-col shadow-2xl border-2 bg-background/95 backdrop-blur-md">
             <CardHeader className="pb-3 bg-primary text-primary-foreground rounded-t-lg">
               <div className="flex items-center justify-between">
@@ -304,13 +304,15 @@ How can I assist you today?`,
                       )}
                       <div
                         className={cn(
-                          "max-w-[85%] rounded-lg p-4 text-sm leading-relaxed overflow-hidden shadow-sm",
+                          "max-w-[90%] rounded-lg p-4 text-sm leading-relaxed shadow-sm",
                           message.type === 'user'
                             ? 'bg-primary text-primary-foreground ml-auto'
                             : 'bg-background border border-border'
                         )}
                       >
-                        <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere mb-0">{message.content}</p>
+                        <div className="overflow-hidden">
+                          <p className="whitespace-pre-wrap break-words word-break break-all mb-0">{message.content}</p>
+                        </div>
                         {renderBookLinks(message.bookLinks)}
                       </div>
                       {message.type === 'user' && (
