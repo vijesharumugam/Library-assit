@@ -265,7 +265,7 @@ How can I assist you today?`,
           {/* Chat Modal - Responsive Positioning */}
           <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:justify-center p-0 sm:p-4 animate-in fade-in-0 duration-300" data-testid="chat-window">
             <div className="w-full sm:max-w-md md:max-w-lg h-[85vh] sm:h-[32rem] md:h-[36rem] sm:max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-5 duration-300">
-            <Card className="h-full flex flex-col shadow-2xl sm:border-2 border-0 sm:rounded-lg rounded-none bg-background/95 backdrop-blur-md">
+            <Card className="h-full flex flex-col shadow-2xl sm:border-2 border-0 sm:rounded-lg rounded-none bg-background">
             <CardHeader className="pb-3 bg-primary text-primary-foreground sm:rounded-t-lg rounded-none px-4 py-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -347,7 +347,7 @@ How can I assist you today?`,
                 <div ref={messagesEndRef} />
               </ScrollArea>
               
-              <div className="p-3 sm:p-4 border-t bg-background/80 backdrop-blur-sm">
+              <div className="p-3 sm:p-4 border-t bg-background">
                 <div className="flex gap-2 items-end">
                   <Input
                     placeholder="Ask about library services..."
