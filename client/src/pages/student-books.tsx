@@ -138,43 +138,38 @@ function StudentBooks() {
         {/* Search and Filter Section */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2" data-testid="books-search-title">
-              <Search className="h-4 w-4" />
-              Search & Filter Books
+            <CardTitle className="text-base flex items-center justify-between" data-testid="books-search-title">
+              <div className="flex items-center gap-2">
+                <Search className="h-4 w-4" />
+                Search & Filter Books
+              </div>
+              <div className="flex items-center gap-2">
+                {isSearching && (
+                  <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
+                )}
+                <button
+                  onClick={toggleSearchMode}
+                  className={`p-1.5 rounded-full transition-all duration-200 hover:scale-110 ${
+                    isIntelligentSearch 
+                      ? 'bg-primary text-primary-foreground shadow-lg' 
+                      : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                  }`}
+                  data-testid="intelligent-search-toggle"
+                  title={isIntelligentSearch ? "AI Search Active" : "Enable AI Search"}
+                >
+                  <Sparkles className="h-4 w-4" />
+                </button>
+              </div>
             </CardTitle>
+            {isIntelligentSearch && (
+              <div className="bg-muted/50 rounded-lg p-3 mt-3">
+                <p className="text-xs text-muted-foreground">
+                  💡 AI Search enabled - Try: "mystery novels", "books about science", "programming guides"
+                </p>
+              </div>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Search Mode Toggle */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant={isIntelligentSearch ? "default" : "outline"}
-                    size="sm"
-                    onClick={toggleSearchMode}
-                    className="flex items-center gap-2"
-                    data-testid="intelligent-search-toggle"
-                  >
-                    <Sparkles className={`h-4 w-4 ${isIntelligentSearch ? 'text-white' : 'text-primary'}`} />
-                    {isIntelligentSearch ? "AI Search" : "Regular"}
-                  </Button>
-                  {isSearching && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                      Searching...
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {isIntelligentSearch && (
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground">
-                    💡 Try natural language: "mystery novels", "books about science", "programming guides"
-                  </p>
-                </div>
-              )}
-            </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
