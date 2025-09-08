@@ -250,93 +250,72 @@ Current query: "${message}"`;
     const searchResults: BookSearchResult[] = [];
     
     try {
-      // Use Gemini to search the web for book links
-      const searchPrompt = `Search the web for the book "${bookTitle}" and find current download and purchase links. 
+      // Use Gemini to search the web for specific book availability
+      const searchPrompt = `I need you to search the internet and find SPECIFIC, VERIFIED links where the book "${bookTitle}" is actually available for download or purchase right now.
 
-      I need you to find REAL, working links for:
-      1. Free download sources (Project Gutenberg, Internet Archive, Open Library, etc.)
-      2. Purchase options (Amazon, Google Books, Apple Books, Barnes & Noble, etc.)
-      
-      For each link found, provide:
-      - The exact title as found on the platform
-      - The direct URL to the book
-      - Whether it's free or paid
-      - The platform name
-      - Price if it's a paid option
-      
-      Format your response as JSON array with objects containing: title, url, type (free/purchase), platform, price (optional)
-      
-      Only return real, current links that are working. If you can't find the book on a platform, don't include it.`;
+IMPORTANT INSTRUCTIONS:
+1. Only return links where you can confirm the book is actually available
+2. For free sources: Check Project Gutenberg, Internet Archive, Open Library, Google Books (free), HathiTrust
+3. For purchase: Check Amazon Kindle, Google Play Books, Apple Books, Barnes & Noble, Kobo
+4. Provide DIRECT links to the book page, not search pages
+5. Verify the book title matches exactly or very closely
+
+Please search and provide results in this format:
+- Title: [exact title as found]
+- URL: [direct link to book page]
+- Type: free or purchase
+- Platform: [platform name]
+- Price: [if purchase, provide actual price or "Varies"]
+- Status: [Available/Not Found]
+
+Only include results where Status is "Available". Do not include search pages or general category pages.
+
+Search for: "${bookTitle}"`;
 
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         config: {
-          systemInstruction: "You are a web search assistant that finds current, real book links. Always return valid JSON format and only include working links.",
+          systemInstruction: "You are a specialist book finder. Search the web thoroughly and only return verified links where the specific book is actually available. Be precise and accurate. If you cannot find the book on a platform, do not include that platform in results.",
         },
         contents: searchPrompt,
       });
 
       const responseText = response.text || '';
+      console.log('Gemini search response:', responseText.substring(0, 500) + '...');
       
       if (!responseText) {
         throw new Error('Empty response from Gemini');
       }
       
-      try {
-        // Try to parse JSON response from Gemini
-        const parsedResults = JSON.parse(responseText);
-        
-        if (Array.isArray(parsedResults)) {
-          for (const result of parsedResults) {
-            if (result.title && result.url && result.type && result.platform) {
-              searchResults.push({
-                title: result.title,
-                url: result.url,
-                type: result.type === 'free' ? 'free' : 'purchase',
-                platform: result.platform,
-                price: result.price
-              });
-            }
-          }
-        }
-      } catch (parseError) {
-        console.log('Could not parse Gemini response as JSON, falling back to search URLs');
-        
-        // Fallback to constructing search URLs
+      // Parse the response to extract book links
+      const parsedLinks = this.parseGeminiBookResponse(responseText, bookTitle);
+      
+      if (parsedLinks.length > 0) {
+        searchResults.push(...parsedLinks);
+      } else {
+        // Fallback - but with more targeted search URLs
+        console.log('No specific links found, providing targeted search URLs');
         const encodedTitle = encodeURIComponent(bookTitle);
         
         searchResults.push(
           {
-            title: bookTitle,
+            title: `Search "${bookTitle}" on Project Gutenberg`,
             url: `https://www.gutenberg.org/ebooks/search/?query=${encodedTitle}`,
             type: 'free',
             platform: 'Project Gutenberg'
           },
           {
-            title: bookTitle,
-            url: `https://archive.org/search.php?query=${encodedTitle}`,
+            title: `Search "${bookTitle}" on Internet Archive`,
+            url: `https://archive.org/search.php?query=${encodedTitle}&and[]=mediatype%3A%22texts%22`,
             type: 'free',
             platform: 'Internet Archive'
           },
           {
-            title: bookTitle,
-            url: `https://openlibrary.org/search?q=${encodedTitle}`,
-            type: 'free',
-            platform: 'Open Library'
-          },
-          {
-            title: bookTitle,
-            url: `https://books.google.com/books?q=${encodedTitle}`,
-            type: 'purchase',
-            platform: 'Google Books',
-            price: 'Varies'
-          },
-          {
-            title: bookTitle,
-            url: `https://amazon.com/s?k=${encodedTitle}&i=digital-text`,
+            title: `Search "${bookTitle}" on Amazon`,
+            url: `https://www.amazon.com/s?k=${encodedTitle}&i=digital-text&ref=nb_sb_noss`,
             type: 'purchase',
             platform: 'Amazon Kindle',
-            price: 'From $0.99'
+            price: 'Varies'
           }
         );
       }
@@ -346,5 +325,65 @@ Current query: "${message}"`;
       console.error('Error performing book search:', error);
       return [];
     }
+  }
+
+  private parseGeminiBookResponse(responseText: string, bookTitle: string): BookSearchResult[] {
+    const results: BookSearchResult[] = [];
+    
+    // Try to extract structured information from Gemini's response
+    const lines = responseText.split('\n');
+    let currentResult: Partial<BookSearchResult> = {};
+    
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      
+      // Look for URL patterns
+      const urlMatch = trimmedLine.match(/(?:URL|Link):\s*(https?:\/\/[^\s]+)/i);
+      if (urlMatch) {
+        currentResult.url = urlMatch[1];
+      }
+      
+      // Look for title patterns
+      const titleMatch = trimmedLine.match(/(?:Title):\s*(.+)/i);
+      if (titleMatch) {
+        currentResult.title = titleMatch[1];
+      }
+      
+      // Look for platform patterns
+      const platformMatch = trimmedLine.match(/(?:Platform):\s*(.+)/i);
+      if (platformMatch) {
+        currentResult.platform = platformMatch[1];
+      }
+      
+      // Look for type patterns
+      const typeMatch = trimmedLine.match(/(?:Type):\s*(free|purchase)/i);
+      if (typeMatch) {
+        currentResult.type = typeMatch[1].toLowerCase() as 'free' | 'purchase';
+      }
+      
+      // Look for price patterns
+      const priceMatch = trimmedLine.match(/(?:Price):\s*(.+)/i);
+      if (priceMatch) {
+        currentResult.price = priceMatch[1];
+      }
+      
+      // Look for status to confirm availability
+      const statusMatch = trimmedLine.match(/(?:Status):\s*Available/i);
+      
+      // If we have enough information and it's available, add to results
+      if (currentResult.url && currentResult.platform && currentResult.type && (statusMatch || trimmedLine.includes('Available'))) {
+        results.push({
+          title: currentResult.title || bookTitle,
+          url: currentResult.url,
+          type: currentResult.type,
+          platform: currentResult.platform,
+          price: currentResult.price
+        });
+        currentResult = {}; // Reset for next result
+      }
+    }
+    
+    console.log(`Parsed ${results.length} verified book links from Gemini response`);
+    return results;
   }
 }
