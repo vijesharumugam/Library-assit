@@ -30,6 +30,7 @@ export function AIChatAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
+  const [animatedText, setAnimatedText] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -68,6 +69,41 @@ How can I assist you today?`,
     
     return hasKeyword || looksLikeSearch;
   };
+
+  // Animated text effect for loading message
+  useEffect(() => {
+    if (!loadingMessage || !isLoading) {
+      setAnimatedText("");
+      return;
+    }
+
+    let currentIndex = 0;
+    const fullText = loadingMessage;
+    setAnimatedText("");
+    
+    const typeWriter = setInterval(() => {
+      setAnimatedText(fullText.substring(0, currentIndex + 1));
+      currentIndex++;
+      
+      if (currentIndex >= fullText.length) {
+        clearInterval(typeWriter);
+        // Start dot animation after text is complete
+        let dotCount = 0;
+        const dotAnimation = setInterval(() => {
+          if (!isLoading) {
+            clearInterval(dotAnimation);
+            return;
+          }
+          dotCount = (dotCount + 1) % 4;
+          setAnimatedText(fullText + ".".repeat(dotCount));
+        }, 500);
+        
+        return () => clearInterval(dotAnimation);
+      }
+    }, 50);
+
+    return () => clearInterval(typeWriter);
+  }, [loadingMessage, isLoading]);
 
   useEffect(() => {
     scrollToBottom();
@@ -126,6 +162,7 @@ How can I assist you today?`,
     } finally {
       setIsLoading(false);
       setLoadingMessage("");
+      setAnimatedText("");
     }
   };
 
@@ -285,7 +322,7 @@ How can I assist you today?`,
                             <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
                             <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
                           </div>
-                          {loadingMessage && <span className="text-muted-foreground">{loadingMessage}</span>}
+                          {animatedText && <span className="text-muted-foreground">{animatedText}</span>}
                         </div>
                       </div>
                     </div>
