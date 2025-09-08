@@ -2,7 +2,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Heart, BookOpen, Search } from "lucide-react";
+import { Heart, BookOpen, Search, ArrowLeft } from "lucide-react";
 import { useState, useMemo, memo } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -57,11 +57,46 @@ function StudentFavorites() {
       {/* Mobile Header */}
       <header className="bg-card border-b border-border sticky top-0 z-40 block md:hidden">
         <div className="px-4 py-3">
-          <div className="flex items-center justify-center">
-            <Heart className="h-5 w-5 text-red-500 mr-2" />
-            <h1 className="text-lg font-semibold text-foreground" data-testid="favorites-header-title">
-              My Favorites
-            </h1>
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.history.back()}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+              data-testid="back-button"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+            <div className="flex items-center">
+              <Heart className="h-5 w-5 text-red-500 mr-2" />
+              <h1 className="text-lg font-semibold text-foreground" data-testid="favorites-header-title">
+                My Favorites
+              </h1>
+            </div>
+            <div className="w-16"></div> {/* Spacer for centering */}
+          </div>
+        </div>
+      </header>
+
+      {/* Desktop Header */}
+      <header className="bg-card border-b border-border hidden md:block">
+        <div className="max-w-2xl mx-auto px-4 py-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.history.back()}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+              data-testid="desktop-back-button"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+            <div className="flex items-center">
+              <Heart className="h-6 w-6 text-red-500 mr-3" />
+              <h1 className="text-2xl font-bold text-foreground">My Favorites</h1>
+            </div>
           </div>
         </div>
       </header>
