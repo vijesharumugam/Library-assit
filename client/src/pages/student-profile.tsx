@@ -5,9 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { User, LogOut, Mail, BookOpen, Settings, Shield, Edit, Save, X, Camera } from "lucide-react";
+import { User, LogOut, Mail, BookOpen, Settings, Shield, Edit, Save, X, Camera, ArrowLeft } from "lucide-react";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { useState, useRef, memo } from "react";
+import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -117,10 +118,19 @@ function StudentProfile() {
       {/* Mobile Header */}
       <header className="bg-card border-b border-border sticky top-0 z-40 block md:hidden">
         <div className="px-4 py-3">
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-between">
             <h1 className="text-lg font-semibold text-foreground" data-testid="profile-header-title">
               Profile
             </h1>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => window.history.back()}
+              className="h-8 w-8 p-0"
+              data-testid="button-back"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </header>
