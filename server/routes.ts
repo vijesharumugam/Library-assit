@@ -704,7 +704,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Message is required" });
       }
 
-      const user = req.user!;
+      const user = req.user! as any;
       const aiResponse = await aiService.processUserQuery(user, message);
       
       res.json(aiResponse);

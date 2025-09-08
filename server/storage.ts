@@ -155,55 +155,62 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllUsers(): Promise<User[]> {
-    return await prisma.user.findMany({
+    const users = await prisma.user.findMany({
       orderBy: { createdAt: 'desc' }
     });
+    return users.map(convertPrismaUser);
   }
 
   async getStudents(): Promise<User[]> {
-    return await prisma.user.findMany({
+    const users = await prisma.user.findMany({
       where: { role: Role.STUDENT },
       orderBy: { fullName: 'asc' }
     });
+    return users.map(convertPrismaUser);
   }
 
   // Book methods
   async getBook(id: string): Promise<Book | null> {
-    return await prisma.book.findUnique({
+    const book = await prisma.book.findUnique({
       where: { id }
     });
+    return book ? convertPrismaBook(book) : null;
   }
 
   async getAllBooks(): Promise<Book[]> {
-    return await prisma.book.findMany({
+    const books = await prisma.book.findMany({
       orderBy: { createdAt: 'desc' }
     });
+    return books.map(convertPrismaBook);
   }
 
   async getAvailableBooks(): Promise<Book[]> {
-    return await prisma.book.findMany({
+    const books = await prisma.book.findMany({
       where: {
         availableCopies: { gt: 0 }
       },
       orderBy: { createdAt: 'desc' }
     });
+    return books.map(convertPrismaBook);
   }
 
   async createBook(insertBook: InsertBook): Promise<Book> {
-    return await prisma.book.create({
+    const book = await prisma.book.create({
       data: {
         ...insertBook,
         availableCopies: insertBook.totalCopies
       }
     });
+    return convertPrismaBook(book);
   }
 
   async updateBook(id: string, bookData: Partial<InsertBook>): Promise<Book | null> {
     try {
-      return await prisma.book.update({
+      const book = await prisma.book.update({
         where: { id },
         data: bookData
       });
+      return convertPrismaBook(book);
     } catch (error) {
       return null;
     }
@@ -251,25 +258,34 @@ export class DatabaseStorage implements IStorage {
       message: `You have successfully borrowed "${transaction.book.title}" by ${transaction.book.author}. Due date: ${new Date(transaction.dueDate).toLocaleDateString()}`
     });
 
-    return transaction;
+    return convertPrismaTransaction(transaction);
   }
 
   async getUserTransactions(userId: string): Promise<TransactionWithBook[]> {
-    return await prisma.transaction.findMany({
+    const transactions = await prisma.transaction.findMany({
       where: { userId },
       include: { book: true },
       orderBy: { borrowedDate: 'desc' }
     });
+    return transactions.map(t => ({
+      ...convertPrismaTransaction(t),
+      book: convertPrismaBook(t.book)
+    }));
   }
 
   async getAllTransactions(): Promise<TransactionWithUserAndBook[]> {
-    return await prisma.transaction.findMany({
+    const transactions = await prisma.transaction.findMany({
       include: { 
         user: true, 
         book: true 
       },
       orderBy: { borrowedDate: 'desc' }
     });
+    return transactions.map(t => ({
+      ...convertPrismaTransaction(t),
+      user: convertPrismaUser(t.user),
+      book: convertPrismaBook(t.book)
+    }));
   }
 
   async updateTransactionStatus(id: string, status: TransactionStatus, returnedDate?: Date): Promise<Transaction | null> {
@@ -295,14 +311,14 @@ export class DatabaseStorage implements IStorage {
         });
       }
 
-      return transaction;
+      return convertPrismaTransaction(transaction);
     } catch (error) {
       return null;
     }
   }
 
   async getActiveTransactions(): Promise<TransactionWithUserAndBook[]> {
-    return await prisma.transaction.findMany({
+    const transactions = await prisma.transaction.findMany({
       where: { 
         status: TransactionStatus.BORROWED 
       },
@@ -312,35 +328,50 @@ export class DatabaseStorage implements IStorage {
       },
       orderBy: { borrowedDate: 'desc' }
     });
+    return transactions.map(t => ({
+      ...convertPrismaTransaction(t),
+      user: convertPrismaUser(t.user),
+      book: convertPrismaBook(t.book)
+    }));
   }
 
   // Book Request methods
   async createBookRequest(insertRequest: InsertBookRequest): Promise<BookRequest> {
-    return await prisma.bookRequest.create({
+    const request = await prisma.bookRequest.create({
       data: insertRequest
     });
+    return convertPrismaBookRequest(request);
   }
 
   async getBookRequestsByUser(userId: string): Promise<BookRequestWithBook[]> {
-    return await prisma.bookRequest.findMany({
+    const requests = await prisma.bookRequest.findMany({
       where: { userId },
       include: { book: true },
       orderBy: { requestDate: 'desc' }
     });
+    return requests.map(r => ({
+      ...convertPrismaBookRequest(r),
+      book: convertPrismaBook(r.book)
+    }));
   }
 
   async getAllBookRequests(): Promise<BookRequestWithUserAndBook[]> {
-    return await prisma.bookRequest.findMany({
+    const requests = await prisma.bookRequest.findMany({
       include: { 
         user: true, 
         book: true 
       },
       orderBy: { requestDate: 'desc' }
     });
+    return requests.map(r => ({
+      ...convertPrismaBookRequest(r),
+      user: convertPrismaUser(r.user),
+      book: convertPrismaBook(r.book)
+    }));
   }
 
   async getPendingBookRequests(): Promise<BookRequestWithUserAndBook[]> {
-    return await prisma.bookRequest.findMany({
+    const requests = await prisma.bookRequest.findMany({
       where: { 
         status: BookRequestStatus.PENDING 
       },
@@ -350,14 +381,20 @@ export class DatabaseStorage implements IStorage {
       },
       orderBy: { requestDate: 'desc' }
     });
+    return requests.map(r => ({
+      ...convertPrismaBookRequest(r),
+      user: convertPrismaUser(r.user),
+      book: convertPrismaBook(r.book)
+    }));
   }
 
   async updateBookRequestStatus(id: string, status: BookRequestStatus): Promise<BookRequest | null> {
     try {
-      return await prisma.bookRequest.update({
+      const request = await prisma.bookRequest.update({
         where: { id },
         data: { status }
       });
+      return convertPrismaBookRequest(request);
     } catch (error) {
       return null;
     }
@@ -434,7 +471,7 @@ export class DatabaseStorage implements IStorage {
         message: `Your request for "${request.book.title}" by ${request.book.author} has been approved. Due date: ${dueDate.toLocaleDateString()}`
       });
 
-      return transaction;
+      return convertPrismaTransaction(transaction);
     } catch (error) {
       return null;
     }
