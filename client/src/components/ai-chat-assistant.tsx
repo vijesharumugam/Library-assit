@@ -190,24 +190,24 @@ How can I assist you today?`,
     if (!bookLinks || bookLinks.length === 0) return null;
 
     return (
-      <div className="mt-3 space-y-2">
-        <p className="text-sm font-medium text-muted-foreground">Book Resources:</p>
+      <div className="mt-4 space-y-3">
+        <p className="text-sm font-semibold text-foreground mb-3">Book Resources:</p>
         {bookLinks.map((link, index) => (
-          <div key={index} className="flex items-center gap-2 p-2 border rounded-lg bg-muted/50 overflow-hidden">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate break-words">{link.title}</p>
+          <div key={index} className="flex items-center gap-3 p-3 border rounded-md bg-card hover:bg-accent/50 transition-colors overflow-hidden">
+            <div className="flex-1 min-w-0 space-y-1">
+              <p className="text-sm font-medium truncate break-words leading-tight">{link.title}</p>
               {link.platform && (
-                <p className="text-xs text-muted-foreground truncate">{link.platform}</p>
+                <p className="text-xs text-muted-foreground">{link.platform}</p>
               )}
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2 flex-shrink-0">
               {link.type === 'free' ? (
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-xs px-2 py-1">
                   <Download className="h-3 w-3 mr-1" />
                   Free
                 </Badge>
               ) : (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs px-2 py-1">
                   <ShoppingCart className="h-3 w-3 mr-1" />
                   {link.price || 'Buy'}
                 </Badge>
@@ -215,6 +215,7 @@ How can I assist you today?`,
               <Button 
                 size="sm" 
                 variant="ghost" 
+                className="h-8 w-8 p-0"
                 onClick={() => window.open(link.url, '_blank')}
                 data-testid={`book-link-${index}`}
               >
@@ -284,8 +285,8 @@ How can I assist you today?`,
             </CardHeader>
             
             <CardContent className="flex-1 flex flex-col p-0 min-h-0 overflow-hidden">
-              <ScrollArea className="flex-1 p-4">
-                <div className="space-y-4">
+              <ScrollArea className="flex-1 p-6">
+                <div className="space-y-6">
                   {messages.map((message) => (
                     <div
                       key={message.id}
@@ -303,13 +304,13 @@ How can I assist you today?`,
                       )}
                       <div
                         className={cn(
-                          "max-w-[80%] rounded-lg p-3 text-sm leading-relaxed overflow-hidden",
+                          "max-w-[85%] rounded-lg p-4 text-sm leading-relaxed overflow-hidden shadow-sm",
                           message.type === 'user'
                             ? 'bg-primary text-primary-foreground ml-auto'
-                            : 'bg-muted'
+                            : 'bg-background border border-border'
                         )}
                       >
-                        <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere">{message.content}</p>
+                        <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere mb-0">{message.content}</p>
                         {renderBookLinks(message.bookLinks)}
                       </div>
                       {message.type === 'user' && (
@@ -344,7 +345,7 @@ How can I assist you today?`,
                 <div ref={messagesEndRef} />
               </ScrollArea>
               
-              <div className="p-3 md:p-4 border-t bg-background/50 backdrop-blur-sm">
+              <div className="p-4 border-t bg-background/50 backdrop-blur-sm">
                 <div className="flex gap-2">
                   <Input
                     placeholder="Ask about library services..."
