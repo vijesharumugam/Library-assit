@@ -18,13 +18,14 @@ import { NotificationBell } from "@/components/notification-bell";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { MobileBookCard } from "@/components/mobile-book-card";
 import { ProfileDropdown } from "@/components/profile-dropdown";
+import { useFavorites } from "@/hooks/use-favorites";
 
 function StudentDashboard() {
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
+  const { favorites, toggleFavorite } = useFavorites();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
-  const [favorites, setFavorites] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<'all' | 'recent' | 'favorites'>('all');
 
   const { data: availableBooks = [], isLoading: booksLoading } = useQuery<Book[]>({
@@ -91,11 +92,7 @@ function StudentDashboard() {
   }, [myTransactions, myRequests]);
 
   const handleToggleFavorite = (bookId: string) => {
-    setFavorites(prev => 
-      prev.includes(bookId) 
-        ? prev.filter(id => id !== bookId)
-        : [...prev, bookId]
-    );
+    toggleFavorite(bookId);
   };
 
   const recentBooks = useMemo(() => {
@@ -353,21 +350,23 @@ function StudentDashboard() {
             </Card>
           </Link>
 
-          <Card className="library-card">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center">
-                <div className="p-1.5 sm:p-2 bg-accent/20 rounded-lg">
-                  <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6 text-accent" />
+          <Link href="/student/favorites">
+            <Card className="library-card cursor-pointer hover:bg-muted/50 transition-all duration-200 hover:scale-[1.02] hover:shadow-md">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex items-center">
+                  <div className="p-1.5 sm:p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                    <Heart className="h-4 w-4 sm:h-6 sm:w-6 text-red-500" />
+                  </div>
+                  <div className="ml-2 sm:ml-4">
+                    <p className="text-xs sm:text-sm font-medium text-muted-foreground library-subheading">Favorites</p>
+                    <p className="text-lg sm:text-2xl font-semibold text-foreground" data-testid="stat-favorites-count">
+                      {favorites.length}
+                    </p>
+                  </div>
                 </div>
-                <div className="ml-2 sm:ml-4">
-                  <p className="text-xs sm:text-sm font-medium text-muted-foreground library-subheading">Total Borrowed</p>
-                  <p className="text-lg sm:text-2xl font-semibold text-foreground" data-testid="stat-total-borrowed">
-                    {myTransactions.length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
 
           <Card className="library-card">
             <CardContent className="p-4 sm:p-6">
