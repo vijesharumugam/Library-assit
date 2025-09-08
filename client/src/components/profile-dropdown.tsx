@@ -81,7 +81,7 @@ export function ProfileDropdown() {
           <DropdownMenuSeparator />
           
           <DropdownMenuItem 
-            onClick={() => setLocation('/student/profile')}
+            onClick={() => setLocation(user.role === 'LIBRARIAN' ? '/librarian/profile' : '/student/profile')}
             data-testid="dropdown-profile"
           >
             <User className="mr-2 h-4 w-4" />

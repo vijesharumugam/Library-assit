@@ -26,6 +26,7 @@ const StudentPendingRequests = lazy(() => import("@/pages/student-pending-reques
 const StudentProfile = lazy(() => import("@/pages/student-profile"));
 const StudentFavorites = lazy(() => import("@/pages/student-favorites"));
 const StudentBooks = lazy(() => import("@/pages/student-books"));
+const LibrarianProfile = lazy(() => import("@/pages/librarian-profile"));
 
 // Loading component with library theme
 function LoadingSpinner() {
@@ -97,6 +98,11 @@ function Router() {
       <ProtectedRoute 
         path="/librarian/overdue-books" 
         component={() => <Suspense fallback={<LoadingSpinner />}><OverdueBooksPage /></Suspense>} 
+        allowedRoles={[Role.LIBRARIAN, Role.ADMIN]} 
+      />
+      <ProtectedRoute 
+        path="/librarian/profile" 
+        component={() => <Suspense fallback={<LoadingSpinner />}><LibrarianProfile /></Suspense>} 
         allowedRoles={[Role.LIBRARIAN, Role.ADMIN]} 
       />
       <ProtectedRoute 
