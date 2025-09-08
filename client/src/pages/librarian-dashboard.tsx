@@ -242,19 +242,6 @@ function LibrarianDashboard() {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-r from-chart-5/10 to-chart-2/10 border-chart-5/20 hover:from-chart-5/15 hover:to-chart-2/15 transition-all duration-300">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-chart-5 font-semibold">Users</p>
-                  <p className="text-2xl font-bold text-chart-5" data-testid="mobile-stat-users">
-                    {activeUsers}
-                  </p>
-                </div>
-                <Users className="h-6 w-6 text-chart-5" />
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Pending Requests */}
