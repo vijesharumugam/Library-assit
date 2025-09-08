@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { BookOpen, Users, Clock, TrendingUp, LogOut, Plus, Edit, Trash2, Upload } from "lucide-react";
+import { BookOpen, Users, Clock, TrendingUp, LogOut, Plus, Edit, Trash2, Upload, CheckCircle } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState, useMemo, memo } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -19,6 +19,7 @@ import { BorrowModal } from "@/components/borrow-modal";
 import { ExcelUploadModal } from "@/components/excel-upload-modal";
 import FloatingLibraryElements from "@/components/FloatingLibraryElements";
 import { ProfileDropdown } from "@/components/profile-dropdown";
+import { BottomNavigation } from "@/components/bottom-navigation";
 
 function LibrarianDashboard() {
   const { user, logoutMutation } = useAuth();
@@ -186,7 +187,185 @@ function LibrarianDashboard() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+      {/* Mobile Layout */}
+      <div className="block md:hidden px-4 py-4 space-y-6">
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 gap-3">
+          <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 hover:from-primary/15 hover:to-accent/15 transition-all duration-300">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-primary font-semibold">Books</p>
+                  <p className="text-2xl font-bold text-primary" data-testid="mobile-stat-books">
+                    {totalBooks}
+                  </p>
+                </div>
+                <BookOpen className="h-6 w-6 text-primary" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card 
+            className="bg-gradient-to-r from-chart-3/10 to-chart-4/10 border-chart-3/20 hover:from-chart-3/15 hover:to-chart-4/15 transition-all duration-300 cursor-pointer"
+            onClick={() => setLocation("/librarian/borrowed-books")}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-chart-3 font-semibold">Borrowed</p>
+                  <p className="text-2xl font-bold text-chart-3" data-testid="mobile-stat-borrowed">
+                    {borrowedBooks}
+                  </p>
+                </div>
+                <TrendingUp className="h-6 w-6 text-chart-3" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Additional Stats */}
+        <div className="grid grid-cols-2 gap-3">
+          <Card 
+            className="bg-gradient-to-r from-chart-4/10 to-destructive/10 border-chart-4/20 hover:from-chart-4/15 hover:to-destructive/15 transition-all duration-300 cursor-pointer"
+            onClick={() => setLocation("/librarian/overdue-books")}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-chart-4 font-semibold">Overdue</p>
+                  <p className="text-2xl font-bold text-chart-4" data-testid="mobile-stat-overdue">
+                    {overdueBooks}
+                  </p>
+                </div>
+                <Clock className="h-6 w-6 text-chart-4" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-r from-chart-5/10 to-chart-2/10 border-chart-5/20 hover:from-chart-5/15 hover:to-chart-2/15 transition-all duration-300">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-chart-5 font-semibold">Users</p>
+                  <p className="text-2xl font-bold text-chart-5" data-testid="mobile-stat-users">
+                    {activeUsers}
+                  </p>
+                </div>
+                <Users className="h-6 w-6 text-chart-5" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Pending Requests */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center justify-between" data-testid="mobile-pending-title">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Pending Requests
+              </div>
+              <Badge variant="outline" className="text-xs">
+                {totalPendingRequests} pending
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {pendingRequestsLoading ? (
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground">Loading requests...</p>
+              </div>
+            ) : pendingRequests.length === 0 ? (
+              <div className="text-center py-6">
+                <CheckCircle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No pending requests</p>
+              </div>
+            ) : (
+              pendingRequests.slice(0, 3).map((request) => (
+                <Card key={request.id} className="p-3 bg-muted/30">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium" data-testid={`mobile-request-book-${request.id}`}>
+                        {request.book.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground" data-testid={`mobile-request-student-${request.id}`}>
+                        by {request.user.fullName}
+                      </p>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        onClick={() => approveRequestMutation.mutate(request.id)}
+                        disabled={approveRequestMutation.isPending}
+                        className="h-7 px-2 text-xs"
+                        data-testid={`mobile-approve-${request.id}`}
+                      >
+                        ✓
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => rejectRequestMutation.mutate(request.id)}
+                        disabled={rejectRequestMutation.isPending}
+                        className="h-7 px-2 text-xs"
+                        data-testid={`mobile-reject-${request.id}`}
+                      >
+                        ✗
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
+            {pendingRequests.length > 3 && (
+              <Button variant="outline" size="sm" className="w-full" onClick={() => setLocation("/librarian")}>
+                View all {pendingRequests.length} requests
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2" data-testid="mobile-actions-title">
+              <Plus className="h-4 w-4" />
+              Quick Actions
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button 
+              className="w-full justify-start" 
+              onClick={() => setShowAddBookModal(true)}
+              data-testid="mobile-add-book"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add New Book
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full justify-start" 
+              onClick={() => setShowBorrowModal(true)}
+              data-testid="mobile-borrow-book"
+            >
+              <BookOpen className="h-4 w-4 mr-2" />
+              Borrow Book
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full justify-start" 
+              onClick={() => setShowExcelUploadModal(true)}
+              data-testid="mobile-upload-excel"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Excel
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Desktop Layout */}
+      <div className="hidden md:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         <Tabs defaultValue="dashboard" className="space-y-4 md:space-y-6">
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-11 bg-muted p-1 rounded-lg">
             <TabsTrigger value="dashboard" data-testid="tab-dashboard" className="text-xs sm:text-sm font-medium">Dashboard</TabsTrigger>
@@ -787,6 +966,9 @@ function LibrarianDashboard() {
           onOpenChange={setShowExcelUploadModal}
         />
       </div>
+
+      {/* Bottom Navigation for Mobile */}
+      <BottomNavigation userRole="librarian" />
     </div>
   );
 }
