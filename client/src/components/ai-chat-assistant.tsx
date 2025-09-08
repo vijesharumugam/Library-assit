@@ -121,11 +121,11 @@ How can I assist you today?`,
       <div className="mt-3 space-y-2">
         <p className="text-sm font-medium text-muted-foreground">Book Resources:</p>
         {bookLinks.map((link, index) => (
-          <div key={index} className="flex items-center gap-2 p-2 border rounded-lg bg-muted/50">
+          <div key={index} className="flex items-center gap-2 p-2 border rounded-lg bg-muted/50 overflow-hidden">
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{link.title}</p>
+              <p className="text-sm font-medium truncate break-words">{link.title}</p>
               {link.platform && (
-                <p className="text-xs text-muted-foreground">{link.platform}</p>
+                <p className="text-xs text-muted-foreground truncate">{link.platform}</p>
               )}
             </div>
             <div className="flex items-center gap-1">
@@ -231,13 +231,13 @@ How can I assist you today?`,
                       )}
                       <div
                         className={cn(
-                          "max-w-[80%] rounded-lg p-3 text-sm leading-relaxed",
+                          "max-w-[80%] rounded-lg p-3 text-sm leading-relaxed overflow-hidden",
                           message.type === 'user'
                             ? 'bg-primary text-primary-foreground ml-auto'
                             : 'bg-muted'
                         )}
                       >
-                        <p className="whitespace-pre-wrap">{message.content}</p>
+                        <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere">{message.content}</p>
                         {renderBookLinks(message.bookLinks)}
                       </div>
                       {message.type === 'user' && (
