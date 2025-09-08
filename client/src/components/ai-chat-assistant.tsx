@@ -173,6 +173,19 @@ How can I assist you today?`,
     }
   };
 
+  const handleCloseChat = async () => {
+    try {
+      // Clear chat history on server when closing
+      await fetch('/api/ai-chat/history', {
+        method: 'DELETE',
+      });
+    } catch (error) {
+      console.log('Failed to clear chat history:', error);
+    } finally {
+      setIsOpen(false);
+    }
+  };
+
   const renderBookLinks = (bookLinks?: BookLink[]) => {
     if (!bookLinks || bookLinks.length === 0) return null;
 
@@ -245,7 +258,7 @@ How can I assist you today?`,
           {/* Backdrop */}
           <div 
             className="fixed inset-0 bg-black/60 z-40"
-            onClick={() => setIsOpen(false)}
+            onClick={handleCloseChat}
           />
           
           {/* Chat Modal - Centered */}
@@ -261,7 +274,7 @@ How can I assist you today?`,
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleCloseChat}
                   className="h-6 w-6 p-0 hover:bg-primary-foreground/20 text-primary-foreground"
                   data-testid="chat-close-button"
                 >

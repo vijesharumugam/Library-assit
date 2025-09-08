@@ -717,6 +717,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Clear AI Chat history when user closes chat
+  app.delete("/api/ai-chat/history", requireRole(["STUDENT"]), async (req, res) => {
+    try {
+      const user = req.user! as any;
+      aiService.clearChatHistory(user.id);
+      
+      res.json({ message: "Chat history cleared successfully" });
+    } catch (error) {
+      console.error('Clear Chat History Error:', error);
+      res.status(500).json({ message: "Failed to clear chat history" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

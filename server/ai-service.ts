@@ -27,11 +27,60 @@ interface AIResponse {
   bookLinks?: BookSearchResult[];
 }
 
+// In-memory chat sessions storage
+const chatSessions = new Map<string, ChatMessage[]>();
+
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
 export class LibraryAIService {
+  private getSessionId(userId: string): string {
+    return `chat_${userId}`;
+  }
+
+  private getChatHistory(userId: string): ChatMessage[] {
+    const sessionId = this.getSessionId(userId);
+    return chatSessions.get(sessionId) || [];
+  }
+
+  private addToChatHistory(userId: string, role: 'user' | 'assistant', content: string): void {
+    const sessionId = this.getSessionId(userId);
+    const history = this.getChatHistory(userId);
+    
+    history.push({
+      role,
+      content,
+      timestamp: new Date()
+    });
+    
+    // Keep only last 20 messages to prevent memory issues
+    if (history.length > 20) {
+      history.shift();
+    }
+    
+    chatSessions.set(sessionId, history);
+  }
+
+  clearChatHistory(userId: string): void {
+    const sessionId = this.getSessionId(userId);
+    chatSessions.delete(sessionId);
+    console.log(`Cleared chat history for user ${userId}`);
+  }
+
   async processUserQuery(user: User, message: string): Promise<AIResponse> {
     try {
       // Get user's library context
       const userContext = await this.getUserLibraryContext(user);
+      
+      // Get chat history for context
+      const chatHistory = this.getChatHistory(user.id);
+      console.log(`Processing query with ${chatHistory.length} previous messages in context`);
+      
+      // Add current user message to history
+      this.addToChatHistory(user.id, 'user', message);
       
       // Check if this is a book search/download request
       const isBookSearchQuery = this.isBookSearchQuery(message);
@@ -43,21 +92,27 @@ Current user: ${user.fullName} (Student ID: ${user.studentId})
 User's current library status:
 ${userContext}
 
+CONVERSATION CONTEXT:
+${chatHistory.length > 0 ? 'Previous conversation:\n' + chatHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n') + '\n' : 'This is the start of a new conversation.\n'}
+
 Instructions:
 1. Be helpful, friendly, and professional
-2. Provide accurate information about the user's library account
-3. For book recommendations, suggest books from the available catalog when possible
-4. For library policies, provide general helpful information
-5. When users ask for book downloads/purchases, provide comprehensive guidance about LEGAL ways to access books:
+2. Use conversation context to provide relevant, contextual responses
+3. Remember what the user asked about previously in this session
+4. If they refer to "that book" or "it", use context to understand what they mean
+5. Provide accurate information about the user's library account
+6. For book recommendations, suggest books from the available catalog when possible
+7. For library policies, provide general helpful information
+8. When users ask for book downloads/purchases, provide comprehensive guidance about LEGAL ways to access books:
    - E-book retailers (Amazon Kindle, Google Play Books, Apple Books)
    - Library digital services (OverDrive, Libby, Hoopla)
    - Free legal sources (Project Gutenberg for public domain books)
    - Academic databases if relevant
-6. Structure book access information clearly with headings and bullet points
-7. Always emphasize legal and legitimate sources
-8. Mention library card benefits for digital borrowing
-9. Be thorough and informative like a professional librarian
-10. Use a format similar to: "Where to Find the Book Legally" with subsections
+9. Structure book access information clearly with headings and bullet points
+10. Always emphasize legal and legitimate sources
+11. Mention library card benefits for digital borrowing
+12. Be thorough and informative like a professional librarian
+13. Use a format similar to: "Where to Find the Book Legally" with subsections
 
 Current query: "${message}"`;
 
@@ -79,6 +134,9 @@ Current query: "${message}"`;
           aiResponse += "\n\nI found some resources for the book you're looking for:";
         }
       }
+
+      // Add assistant's response to chat history
+      this.addToChatHistory(user.id, 'assistant', aiResponse);
 
       return {
         response: aiResponse,
