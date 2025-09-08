@@ -492,14 +492,14 @@ export class DatabaseStorage implements IStorage {
 
   // Extension Request methods
   async createExtensionRequest(insertExtensionRequest: InsertExtensionRequest): Promise<ExtensionRequest> {
-    const extensionRequest = await prisma.extensionRequest.create({
+    const extensionRequest = await (prisma as any).extensionRequest.create({
       data: insertExtensionRequest
     });
     return convertPrismaExtensionRequest(extensionRequest);
   }
 
   async getExtensionRequestsByUser(userId: string): Promise<ExtensionRequestWithUserAndTransaction[]> {
-    const requests = await prisma.extensionRequest.findMany({
+    const requests = await (prisma as any).extensionRequest.findMany({
       where: { userId },
       include: {
         user: true,
@@ -510,7 +510,7 @@ export class DatabaseStorage implements IStorage {
       orderBy: { requestDate: 'desc' }
     });
     
-    return requests.map(request => ({
+    return requests.map((request: any) => ({
       ...convertPrismaExtensionRequest(request),
       user: convertPrismaUser(request.user),
       transaction: {
@@ -521,7 +521,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllExtensionRequests(): Promise<ExtensionRequestWithUserAndTransaction[]> {
-    const requests = await prisma.extensionRequest.findMany({
+    const requests = await (prisma as any).extensionRequest.findMany({
       include: {
         user: true,
         transaction: {
@@ -531,7 +531,7 @@ export class DatabaseStorage implements IStorage {
       orderBy: { requestDate: 'desc' }
     });
     
-    return requests.map(request => ({
+    return requests.map((request: any) => ({
       ...convertPrismaExtensionRequest(request),
       user: convertPrismaUser(request.user),
       transaction: {
@@ -542,7 +542,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPendingExtensionRequests(): Promise<ExtensionRequestWithUserAndTransaction[]> {
-    const requests = await prisma.extensionRequest.findMany({
+    const requests = await (prisma as any).extensionRequest.findMany({
       where: { status: ExtensionRequestStatus.PENDING },
       include: {
         user: true,
@@ -553,7 +553,7 @@ export class DatabaseStorage implements IStorage {
       orderBy: { requestDate: 'desc' }
     });
     
-    return requests.map(request => ({
+    return requests.map((request: any) => ({
       ...convertPrismaExtensionRequest(request),
       user: convertPrismaUser(request.user),
       transaction: {
@@ -565,7 +565,7 @@ export class DatabaseStorage implements IStorage {
 
   async approveExtensionRequest(requestId: string, processedBy: string): Promise<ExtensionRequest | null> {
     try {
-      const request = await prisma.extensionRequest.findUnique({
+      const request = await (prisma as any).extensionRequest.findUnique({
         where: { id: requestId },
         include: { transaction: { include: { book: true } }, user: true }
       });
@@ -581,7 +581,7 @@ export class DatabaseStorage implements IStorage {
       });
 
       // Update extension request status
-      const updatedRequest = await prisma.extensionRequest.update({
+      const updatedRequest = await (prisma as any).extensionRequest.update({
         where: { id: requestId },
         data: {
           status: ExtensionRequestStatus.APPROVED,
@@ -606,7 +606,7 @@ export class DatabaseStorage implements IStorage {
 
   async rejectExtensionRequest(requestId: string, processedBy: string): Promise<ExtensionRequest | null> {
     try {
-      const request = await prisma.extensionRequest.findUnique({
+      const request = await (prisma as any).extensionRequest.findUnique({
         where: { id: requestId },
         include: { transaction: { include: { book: true } }, user: true }
       });
@@ -616,7 +616,7 @@ export class DatabaseStorage implements IStorage {
       }
 
       // Update extension request status
-      const updatedRequest = await prisma.extensionRequest.update({
+      const updatedRequest = await (prisma as any).extensionRequest.update({
         where: { id: requestId },
         data: {
           status: ExtensionRequestStatus.REJECTED,

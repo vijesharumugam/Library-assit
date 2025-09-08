@@ -1,6 +1,6 @@
 // Server-side type conversions to handle Prisma/Schema enum differences
-import { User as PrismaUser, Book as PrismaBook, Transaction as PrismaTransaction, BookRequest as PrismaBookRequest, ExtensionRequest as PrismaExtensionRequest } from "@prisma/client";
-import { User, Book, Transaction, BookRequest, ExtensionRequest } from "@shared/schema";
+import type { User as PrismaUser, Book as PrismaBook, Transaction as PrismaTransaction, BookRequest as PrismaBookRequest, ExtensionRequest as PrismaExtensionRequest } from "@prisma/client";
+import type { User, Book, Transaction, BookRequest, ExtensionRequest } from "@shared/schema";
 
 // Convert Prisma types to shared schema types
 export function convertPrismaUser(user: PrismaUser): User {
