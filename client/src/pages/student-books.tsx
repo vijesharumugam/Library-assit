@@ -2,8 +2,9 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BookOpen, Search, Filter } from "lucide-react";
-import { useState, useMemo, memo } from "react";
+import { Button } from "@/components/ui/button";
+import { BookOpen, Search, Filter, Sparkles, RefreshCw } from "lucide-react";
+import { useState, useMemo, memo, useCallback, useEffect } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useFavorites } from "@/hooks/use-favorites";
@@ -16,6 +17,9 @@ function StudentBooks() {
   const { toggleFavorite, isFavorite } = useFavorites();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [isIntelligentSearch, setIsIntelligentSearch] = useState(false);
+  const [intelligentResults, setIntelligentResults] = useState<Book[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   const { data: availableBooks = [], isLoading: booksLoading } = useQuery<Book[]>({
     queryKey: ["/api/books/available"],
@@ -42,16 +46,79 @@ function StudentBooks() {
     },
   });
 
+  // Intelligent search function
+  const performIntelligentSearch = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setIntelligentResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/books/search/intelligent?query=${encodeURIComponent(query.trim())}`);
+      if (!response.ok) {
+        throw new Error('Search failed');
+      }
+      const results = await response.json();
+      setIntelligentResults(results);
+    } catch (error) {
+      toast({
+        title: "Intelligent search failed",
+        description: "Falling back to regular search",
+        variant: "destructive",
+      });
+      setIsIntelligentSearch(false);
+    } finally {
+      setIsSearching(false);
+    }
+  }, [toast]);
+
+  // Handle search mode toggle
+  const toggleSearchMode = useCallback(() => {
+    setIsIntelligentSearch(!isIntelligentSearch);
+    if (!isIntelligentSearch && searchQuery.trim()) {
+      // Switching to intelligent search with existing query
+      performIntelligentSearch(searchQuery);
+    } else {
+      // Switching to regular search
+      setIntelligentResults([]);
+    }
+  }, [isIntelligentSearch, searchQuery, performIntelligentSearch]);
+
+  // Debounced intelligent search effect
+  useEffect(() => {
+    if (!isIntelligentSearch || !searchQuery.trim()) return;
+    
+    const timeoutId = setTimeout(() => {
+      performIntelligentSearch(searchQuery);
+    }, 800);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, isIntelligentSearch, performIntelligentSearch]);
 
   const filteredBooks = useMemo(() => {
-    return availableBooks.filter(book => {
+    // Use intelligent search results if intelligent search is active and has results
+    const booksToFilter = isIntelligentSearch && intelligentResults.length > 0 
+      ? intelligentResults 
+      : availableBooks;
+
+    // For intelligent search, apply only category filter (search is already done by AI)
+    if (isIntelligentSearch && intelligentResults.length > 0) {
+      return booksToFilter.filter(book => {
+        const matchesCategory = categoryFilter === "" || categoryFilter === "all" || book.category === categoryFilter;
+        return matchesCategory;
+      });
+    }
+
+    // For regular search, apply both search and category filters
+    return booksToFilter.filter(book => {
       const matchesSearch = searchQuery === "" || 
         book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         book.author.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = categoryFilter === "" || categoryFilter === "all" || book.category === categoryFilter;
       return matchesSearch && matchesCategory;
     });
-  }, [availableBooks, searchQuery, categoryFilter]);
+  }, [availableBooks, intelligentResults, searchQuery, categoryFilter, isIntelligentSearch]);
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
@@ -77,15 +144,56 @@ function StudentBooks() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Search Mode Toggle */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={isIntelligentSearch ? "default" : "outline"}
+                  size="sm"
+                  onClick={toggleSearchMode}
+                  className="flex items-center gap-2"
+                  data-testid="intelligent-search-toggle"
+                >
+                  <Sparkles className={`h-4 w-4 ${isIntelligentSearch ? 'text-white' : 'text-primary'}`} />
+                  {isIntelligentSearch ? "AI Search" : "Regular"}
+                </Button>
+                {isIntelligentSearch && (
+                  <span className="text-xs text-muted-foreground">
+                    Try: "mystery novels", "books about science"
+                  </span>
+                )}
+              </div>
+              {isSearching && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  Searching...
+                </div>
+              )}
+            </div>
+
             <div className="flex gap-2">
-              <Input
-                type="text"
-                placeholder="Search by title, author, or ISBN..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                data-testid="books-search-input"
-                className="text-base flex-1"
-              />
+              <div className="relative flex-1">
+                <Input
+                  type="text"
+                  placeholder={
+                    isIntelligentSearch 
+                      ? "Ask in natural language: 'books about space exploration'..." 
+                      : "Search by title, author, or ISBN..."
+                  }
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && isIntelligentSearch && searchQuery.trim()) {
+                      performIntelligentSearch(searchQuery);
+                    }
+                  }}
+                  data-testid="books-search-input"
+                  className="text-base pr-10"
+                />
+                {isIntelligentSearch && (
+                  <Sparkles className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-primary" />
+                )}
+              </div>
               
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                 <SelectTrigger data-testid="books-category-filter" className="w-40">
@@ -112,6 +220,7 @@ function StudentBooks() {
                     onClick={() => {
                       setSearchQuery("");
                       setCategoryFilter("");
+                      setIntelligentResults([]);
                     }}
                     className="text-primary hover:underline"
                     data-testid="clear-filters-button"
