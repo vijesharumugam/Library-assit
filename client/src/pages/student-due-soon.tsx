@@ -18,10 +18,22 @@ function StudentDueSoon() {
   });
 
   const extensionRequestMutation = useMutation({
-    mutationFn: async ({ transactionId, reason }: { transactionId: string; reason: string }) => {
+    mutationFn: async ({ 
+      transactionId, 
+      reason, 
+      currentDueDate, 
+      requestedDueDate 
+    }: { 
+      transactionId: string; 
+      reason: string;
+      currentDueDate: string;
+      requestedDueDate: string;
+    }) => {
       const res = await apiRequest("POST", "/api/extension-requests", {
         transactionId,
-        reason
+        reason,
+        currentDueDate,
+        requestedDueDate
       });
       return await res.json();
     },
@@ -42,9 +54,21 @@ function StudentDueSoon() {
   });
 
   const handleExtensionRequest = (transactionId: string, bookTitle: string) => {
-    // For now, use a default reason. In a full implementation, you'd show a dialog
+    // Find the transaction to get current due date
+    const transaction = myTransactions.find(t => t.id === transactionId);
+    if (!transaction) return;
+    
+    const currentDueDate = new Date(transaction.dueDate).toISOString();
+    // Request 7 days extension from current due date
+    const requestedDueDate = new Date(new Date(transaction.dueDate).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
     const reason = `Extension request for "${bookTitle}" - Need additional time to complete reading.`;
-    extensionRequestMutation.mutate({ transactionId, reason });
+    
+    extensionRequestMutation.mutate({ 
+      transactionId, 
+      reason, 
+      currentDueDate, 
+      requestedDueDate 
+    });
   };
 
   const dueSoonBooks = useMemo(() => {
