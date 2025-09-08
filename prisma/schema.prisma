@@ -26,6 +26,7 @@ model User {
   transactions Transaction[]
   bookRequests BookRequest[]
   notifications Notification[]
+  extensionRequests ExtensionRequest[]
 
   @@map("users")
 }
@@ -61,6 +62,7 @@ model Transaction {
   // Relations
   user User @relation(fields: [userId], references: [id])
   book Book @relation(fields: [bookId], references: [id])
+  extensionRequests ExtensionRequest[]
 
   @@map("transactions")
 }
@@ -96,6 +98,25 @@ model Notification {
   @@map("notifications")
 }
 
+model ExtensionRequest {
+  id              String                  @id @default(auto()) @map("_id") @db.ObjectId
+  transactionId   String                  @db.ObjectId
+  userId          String                  @db.ObjectId
+  requestDate     DateTime                @default(now())
+  currentDueDate  DateTime
+  requestedDueDate DateTime
+  reason          String?
+  status          ExtensionRequestStatus  @default(PENDING)
+  processedBy     String?                 // Librarian who processed the request
+  processedDate   DateTime?
+
+  // Relations
+  user        User        @relation(fields: [userId], references: [id])
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+
+  @@map("extension_requests")
+}
+
 enum Role {
   STUDENT
   LIBRARIAN
@@ -121,4 +142,12 @@ enum NotificationType {
   BOOK_DUE_SOON
   BOOK_OVERDUE
   BOOK_REQUEST_REJECTED
+  EXTENSION_REQUEST_APPROVED
+  EXTENSION_REQUEST_REJECTED
+}
+
+enum ExtensionRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

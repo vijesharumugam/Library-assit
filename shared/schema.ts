@@ -56,11 +56,26 @@ export type BookRequest = {
   book?: Book;
 };
 
+export type ExtensionRequest = {
+  id: string;
+  transactionId: string;
+  userId: string;
+  requestDate: Date;
+  currentDueDate: Date;
+  requestedDueDate: Date;
+  reason?: string | null;
+  status: ExtensionRequestStatus;
+  processedBy?: string | null;
+  processedDate?: Date | null;
+  user?: User;
+  transaction?: Transaction;
+};
+
 // Define Notification types manually to avoid import issues
 export type Notification = {
   id: string;
   userId: string;
-  type: "BOOK_BORROWED" | "BOOK_RETURNED" | "BOOK_DUE_SOON" | "BOOK_OVERDUE" | "BOOK_REQUEST_REJECTED";
+  type: "BOOK_BORROWED" | "BOOK_RETURNED" | "BOOK_DUE_SOON" | "BOOK_OVERDUE" | "BOOK_REQUEST_REJECTED" | "EXTENSION_REQUEST_APPROVED" | "EXTENSION_REQUEST_REJECTED";
   title: string;
   message: string;
   isRead: boolean;
@@ -73,7 +88,9 @@ export enum NotificationType {
   BOOK_RETURNED = "BOOK_RETURNED", 
   BOOK_DUE_SOON = "BOOK_DUE_SOON",
   BOOK_OVERDUE = "BOOK_OVERDUE",
-  BOOK_REQUEST_REJECTED = "BOOK_REQUEST_REJECTED"
+  BOOK_REQUEST_REJECTED = "BOOK_REQUEST_REJECTED",
+  EXTENSION_REQUEST_APPROVED = "EXTENSION_REQUEST_APPROVED",
+  EXTENSION_REQUEST_REJECTED = "EXTENSION_REQUEST_REJECTED"
 }
 
 // Define enums manually to avoid Prisma imports
@@ -94,6 +111,12 @@ export enum BookRequestStatus {
   APPROVED = "APPROVED", 
   REJECTED = "REJECTED",
   FULFILLED = "FULFILLED"
+}
+
+export enum ExtensionRequestStatus {
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED"
 }
 
 // Input validation schemas for creating new records
@@ -151,6 +174,15 @@ export const insertNotificationSchema = z.object({
   isRead: z.boolean().optional(),
 });
 
+export const insertExtensionRequestSchema = z.object({
+  transactionId: z.string().min(1, "Transaction ID is required"),
+  userId: z.string().min(1, "User ID is required"),
+  currentDueDate: z.date(),
+  requestedDueDate: z.date(),
+  reason: z.string().optional(),
+  status: z.nativeEnum(ExtensionRequestStatus).optional(),
+});
+
 // Login schema
 export const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -164,6 +196,7 @@ export type InsertBook = z.infer<typeof insertBookSchema>;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type InsertBookRequest = z.infer<typeof insertBookRequestSchema>;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type InsertExtensionRequest = z.infer<typeof insertExtensionRequestSchema>;
 export type LoginCredentials = z.infer<typeof loginSchema>;
 
 // Extended types for queries with relations (as returned by Prisma)
@@ -187,6 +220,15 @@ export type BookRequestWithUserAndBook = BookRequest & {
 
 export type NotificationWithUser = Notification & {
   user: User;
+};
+
+export type ExtensionRequestWithUser = ExtensionRequest & {
+  user: User;
+};
+
+export type ExtensionRequestWithUserAndTransaction = ExtensionRequest & {
+  user: User;
+  transaction: TransactionWithBook;
 };
 
 // User without sensitive fields for frontend
