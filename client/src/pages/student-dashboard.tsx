@@ -423,14 +423,16 @@ function StudentDashboard() {
         <Card className="mb-8 library-card">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle data-testid="title-available-books" className="library-heading">Available Books</CardTitle>
-            <Button
-              variant="ghost" 
-              size="sm"
-              className="hidden md:flex text-sm text-muted-foreground hover:text-foreground"
-              data-testid="button-view-all-books"
-            >
-              View All
-            </Button>
+            <Link href="/student/books">
+              <Button
+                variant="ghost" 
+                size="sm"
+                className="hidden md:flex text-sm text-muted-foreground hover:text-foreground"
+                data-testid="button-view-all-books"
+              >
+                View All
+              </Button>
+            </Link>
           </CardHeader>
           <CardContent>
             {booksLoading ? (
