@@ -15,6 +15,8 @@ const notificationIcons: Record<NotificationType, any> = {
   BOOK_DUE_SOON: Clock,
   BOOK_OVERDUE: AlertTriangle,
   BOOK_REQUEST_REJECTED: X,
+  EXTENSION_REQUEST_APPROVED: CheckCircle,
+  EXTENSION_REQUEST_REJECTED: X,
 };
 
 const notificationColors: Record<NotificationType, string> = {
@@ -23,6 +25,8 @@ const notificationColors: Record<NotificationType, string> = {
   BOOK_DUE_SOON: "text-amber-600",
   BOOK_OVERDUE: "text-red-600",
   BOOK_REQUEST_REJECTED: "text-red-600",
+  EXTENSION_REQUEST_APPROVED: "text-green-600",
+  EXTENSION_REQUEST_REJECTED: "text-red-600",
 };
 
 export function NotificationItem({ notification }: NotificationItemProps) {
