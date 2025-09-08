@@ -144,24 +144,43 @@ Current query: "${message}"`;
     const bookSearchKeywords = [
       'download', 'find book', 'get book', 'book copy', 'e-book', 'ebook', 'pdf',
       'read online', 'free book', 'buy book', 'purchase book', 'book link',
-      'where can i find', 'looking for book', 'need book', 'want to read'
+      'where can i find', 'looking for book', 'need book', 'want to read',
+      'book about', 'search for', 'looking for', 'find', 'get', 'want', 'need'
     ];
     
     const lowerMessage = message.toLowerCase();
-    return bookSearchKeywords.some(keyword => lowerMessage.includes(keyword));
+    
+    // Check for direct book search keywords
+    const hasKeyword = bookSearchKeywords.some(keyword => lowerMessage.includes(keyword));
+    
+    // Check if message contains "book" or similar terms and looks like a search
+    const hasBookTerm = /\b(book|novel|story|text|title)\b/i.test(message);
+    const looksLikeSearch = hasBookTerm && /\b(about|on|by|called|titled|named)\b/i.test(message);
+    
+    const isBookSearch = hasKeyword || looksLikeSearch;
+    
+    console.log(`Book search detection for "${message}": ${isBookSearch}`);
+    console.log(`Has keyword: ${hasKeyword}, Has book term: ${hasBookTerm}, Looks like search: ${looksLikeSearch}`);
+    
+    return isBookSearch;
   }
 
   private async searchBookLinks(query: string): Promise<BookSearchResult[]> {
     // Extract book title from the query
     const bookTitle = this.extractBookTitle(query);
     
+    console.log(`Extracted book title from "${query}": "${bookTitle}"`);
+    
     if (!bookTitle) {
+      console.log('No book title extracted, returning empty results');
       return [];
     }
 
     try {
       // Search for book download/purchase links
+      console.log(`Searching for book: "${bookTitle}"`);
       const searchResults = await this.performBookSearch(bookTitle);
+      console.log(`Found ${searchResults.length} book links for "${bookTitle}"`);
       return searchResults;
     } catch (error) {
       console.error('Book search error:', error);
