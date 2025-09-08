@@ -103,17 +103,19 @@ Instructions:
 5. Provide accurate information about the user's library account
 6. For book recommendations, suggest books from the available catalog when possible
 7. For library policies, provide general helpful information
-8. When users ask for book downloads/purchases, provide comprehensive guidance about LEGAL ways to access books from EXTERNAL sources only:
-   - E-book retailers (Amazon Kindle, Google Play Books, Apple Books, Barnes & Noble)
+8. When users ask for book downloads/purchases, provide DIRECT WORKING LINKS to external sources where they can actually access the book:
+   - E-book retailers with direct purchase links (Amazon Kindle, Google Play Books, Apple Books, Barnes & Noble)
+   - Free legal sources with direct download links (Project Gutenberg, Internet Archive, Open Library)
    - Public library digital services (OverDrive, Libby, Hoopla) - mention using public library cards
-   - Free legal sources (Project Gutenberg for public domain books, Internet Archive, Open Library)
    - Academic databases if relevant (for educational institutions)
-9. IMPORTANT: Do NOT mention our library's digital collection as we don't have one - only suggest external sources
-10. Structure book access information clearly with headings and bullet points
-11. Always emphasize legal and legitimate sources
-12. Mention benefits of public library cards for digital borrowing from external services
-13. Be thorough and informative like a professional librarian
-14. Use a format similar to: "Where to Find the Book Legally" with subsections
+9. IMPORTANT: This library only has PHYSICAL books - no digital collection. Always direct users to external sources for digital access
+10. ALWAYS provide actual clickable links, not just descriptions or explanations
+11. Structure book access information clearly with headings and bullet points
+12. Always emphasize legal and legitimate sources
+13. Mention benefits of public library cards for digital borrowing from external services
+14. Be thorough and informative like a professional librarian
+15. Use a format similar to: "Where to Find the Book Legally" with subsections
+16. CRITICAL: Our library is PHYSICAL ONLY - we only lend physical books, no digital services
 
 Current query: "${message}"`;
 
@@ -365,17 +367,23 @@ Search for: "${bookTitle}"`;
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         config: {
-          systemInstruction: `You are a professional librarian and book access specialist. Provide comprehensive, well-structured information about legal ways to access books. 
+          systemInstruction: `You are a professional librarian and book access specialist. Search the web and provide ACTUAL WORKING DIRECT LINKS where users can access books digitally.
 
-Format your response like a professional library guide with:
-- Clear headings and sections
-- Bullet points for easy reading
-- Specific platform names and prices
-- Actual working links when available
-- Professional library terminology
-- Emphasis on legal and legitimate sources only
+CRITICAL REQUIREMENTS:
+- Find and provide REAL, CLICKABLE, WORKING LINKS to specific book pages
+- Do NOT provide general descriptions or search pages
+- Focus on direct access links where the book is actually available
+- Provide specific URLs that lead directly to the book
+- Include exact pricing and availability status
+- Format with clear sections and direct links
 
-Be thorough, accurate, and helpful. Structure information clearly with sections like "E-book Retailers", "Library Digital Services", and "Free Legal Sources".`,
+Format your response with:
+- **E-book Retailers**: Direct purchase links with exact prices
+- **Free Legal Sources**: Direct download links if book is in public domain
+- **Public Library Services**: Specific instructions for accessing with library cards
+- Always provide the actual URL, not just platform names
+
+Be thorough, accurate, and provide WORKING LINKS ONLY. If you cannot find working links, clearly state that.`,
         },
         contents: searchPrompt,
       });
