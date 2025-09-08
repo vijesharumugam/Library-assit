@@ -169,47 +169,111 @@ self.addEventListener('sync', (event) => {
   }
 });
 
-// Push notification support (for future features)
+// Push notification handler
 self.addEventListener('push', (event) => {
-  console.log('Push message received');
+  console.log('Push message received', event);
   
-  const options = {
-    body: event.data ? event.data.text() : 'New library notification',
+  let notificationData = {
+    title: 'Library Management',
+    body: 'New library notification',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-72x72.png',
-    vibrate: [100, 50, 100],
     data: {
-      dateOfArrival: Date.now(),
-      primaryKey: 1
+      url: '/',
+      timestamp: Date.now()
     },
     actions: [
       {
-        action: 'explore',
-        title: 'View Details',
-        icon: '/icons/icon-192x192.png'
+        action: 'view',
+        title: 'View Details'
       },
       {
         action: 'close',
-        title: 'Close',
-        icon: '/icons/icon-192x192.png'
+        title: 'Close'
       }
     ]
   };
 
+  // Parse the push payload
+  if (event.data) {
+    try {
+      const payload = event.data.json();
+      notificationData = {
+        ...notificationData,
+        title: payload.title || notificationData.title,
+        body: payload.body || notificationData.body,
+        icon: payload.icon || notificationData.icon,
+        badge: payload.badge || notificationData.badge,
+        data: {
+          ...notificationData.data,
+          ...payload.data,
+          type: payload.data?.type,
+          url: payload.data?.url || '/'
+        },
+        actions: payload.actions || notificationData.actions
+      };
+      
+      // Add vibration pattern based on notification type
+      if (payload.data?.type) {
+        switch (payload.data.type) {
+          case 'BOOK_DUE_SOON':
+          case 'BOOK_OVERDUE':
+            notificationData.vibrate = [200, 100, 200, 100, 200];
+            break;
+          case 'BOOK_REQUEST_REJECTED':
+            notificationData.vibrate = [300, 200, 300];
+            break;
+          default:
+            notificationData.vibrate = [100, 50, 100];
+        }
+      }
+    } catch (error) {
+      console.error('Failed to parse push payload:', error);
+    }
+  }
+
   event.waitUntil(
-    self.registration.showNotification('Library Management', options)
+    self.registration.showNotification(notificationData.title, notificationData)
   );
 });
 
 // Handle notification clicks
 self.addEventListener('notificationclick', (event) => {
-  console.log('Notification click received.');
+  console.log('Notification click received:', event.action, event.notification.data);
 
   event.notification.close();
 
-  if (event.action === 'explore') {
-    event.waitUntil(
-      clients.openWindow('/')
-    );
+  // Handle different actions
+  if (event.action === 'close') {
+    // Just close the notification, no action needed
+    return;
   }
+
+  // For 'view' action or notification tap, open the app
+  const urlToOpen = event.notification.data?.url || '/';
+  
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        // Check if the app is already open
+        for (const client of clientList) {
+          if (client.url.includes(self.location.origin)) {
+            // Focus the existing window and navigate to the notification URL
+            return client.focus().then(() => {
+              if ('navigate' in client) {
+                return client.navigate(urlToOpen);
+              } else {
+                return client.postMessage({ 
+                  type: 'NOTIFICATION_CLICK', 
+                  url: urlToOpen,
+                  notificationType: event.notification.data?.type 
+                });
+              }
+            });
+          }
+        }
+        // If no window is open, open a new one
+        return clients.openWindow(urlToOpen);
+      })
+  );
 });
