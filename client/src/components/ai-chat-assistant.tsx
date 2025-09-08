@@ -185,12 +185,13 @@ How can I assist you today?`,
         <>
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/60 z-40"
             onClick={() => setIsOpen(false)}
           />
           
-          {/* Chat Modal */}
-          <div className="fixed bottom-4 left-4 right-4 sm:right-auto sm:left-4 sm:bottom-4 sm:w-96 h-[32rem] max-h-[85vh] z-50 animate-in slide-in-from-bottom-5 duration-300" data-testid="chat-window">
+          {/* Chat Modal - Centered */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in-0 duration-300" data-testid="chat-window">
+            <div className="w-full max-w-md h-[32rem] max-h-[85vh] animate-in slide-in-from-bottom-5 duration-300">
             <Card className="h-full flex flex-col shadow-2xl border-2 bg-background/95 backdrop-blur-md">
             <CardHeader className="pb-3 bg-primary text-primary-foreground rounded-t-lg">
               <div className="flex items-center justify-between">
@@ -292,6 +293,7 @@ How can I assist you today?`,
               </div>
             </CardContent>
             </Card>
+            </div>
           </div>
         </>
       )}
