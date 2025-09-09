@@ -7,13 +7,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { BookOpen, Users, Shield, TrendingUp, LogOut, UserPlus, Edit, Trash2, ChevronUp } from "lucide-react";
+import { BookOpen, Users, Shield, TrendingUp, LogOut, UserPlus, Edit, Trash2, ChevronUp, Bell, Send } from "lucide-react";
 import { useState, useMemo, memo } from "react";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Book, Transaction, User, TransactionStatus, Role } from "@shared/schema";
 import { AddBookModal } from "@/components/add-book-modal";
 import FloatingLibraryElements from "@/components/FloatingLibraryElements";
+
+const pushNotificationSchema = z.object({
+  userId: z.string().optional(),
+  title: z.string().min(1, "Title is required").max(100, "Title must be less than 100 characters"),
+  message: z.string().min(1, "Message is required").max(200, "Message must be less than 200 characters"),
+});
 
 function AdminDashboard() {
   const { user, logoutMutation } = useAuth();
@@ -154,11 +164,12 @@ function AdminDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5">
             <TabsTrigger value="dashboard" data-testid="tab-dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="users" data-testid="tab-users">User Management</TabsTrigger>
             <TabsTrigger value="books" data-testid="tab-books">Book Management</TabsTrigger>
             <TabsTrigger value="transactions" data-testid="tab-transactions">All Transactions</TabsTrigger>
+            <TabsTrigger value="notifications" data-testid="tab-notifications">Push Notifications</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
