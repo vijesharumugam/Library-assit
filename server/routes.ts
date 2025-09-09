@@ -875,10 +875,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      res.json({ message: "Test push notification sent successfully" });
+      res.json({ 
+        message: "Test notification sent successfully - appears in both push notifications and in-app notification center" 
+      });
     } catch (error) {
       console.error('Test push notification error:', error);
-      res.status(500).json({ message: "Failed to send test push notification" });
+      res.status(500).json({ message: "Failed to send test notification" });
     }
   });
 

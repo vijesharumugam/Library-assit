@@ -46,10 +46,19 @@ interface PushNotificationData {
 export class PushNotificationService {
   static async sendNotificationToUser(userId: string, data: PushNotificationData) {
     try {
+      // First, create an in-app notification
+      await storage.createNotification({
+        userId,
+        type: data.type,
+        title: data.title,
+        message: data.message,
+        isRead: false
+      });
+
       const subscriptions = await storage.getUserPushSubscriptions(userId);
       
       if (subscriptions.length === 0) {
-        console.log(`No push subscriptions found for user ${userId}`);
+        console.log(`No push subscriptions found for user ${userId}, but in-app notification created`);
         return;
       }
 
@@ -107,6 +116,19 @@ export class PushNotificationService {
 
   static async sendNotificationToAllUsers(data: PushNotificationData) {
     try {
+      // First, create in-app notifications for all users
+      const allUsers = await storage.getAllUsers();
+      const notificationPromises = allUsers.map(user => 
+        storage.createNotification({
+          userId: user.id,
+          type: data.type,
+          title: data.title,
+          message: data.message,
+          isRead: false
+        })
+      );
+      await Promise.all(notificationPromises);
+
       const subscriptions = await storage.getAllPushSubscriptions();
       
       const payload = JSON.stringify({
