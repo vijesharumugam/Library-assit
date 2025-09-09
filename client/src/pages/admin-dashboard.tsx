@@ -85,6 +85,35 @@ function AdminDashboard() {
     },
   });
 
+  const testPushNotificationMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof pushNotificationSchema>) => {
+      const res = await apiRequest("POST", "/api/push/test", data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Test notification sent!",
+        description: "Push notification has been sent successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to send notification",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const pushForm = useForm<z.infer<typeof pushNotificationSchema>>({
+    resolver: zodResolver(pushNotificationSchema),
+    defaultValues: {
+      title: "Test Library Notification",
+      message: "This is a test push notification from Library Sanctum!",
+      userId: "",
+    },
+  });
+
   const filteredUsers = useMemo(() => {
     return users.filter(u => {
       const matchesSearch = userSearchQuery === "" || 
@@ -542,6 +571,127 @@ function AdminDashboard() {
                     </table>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Push Notifications Tab */}
+          <TabsContent value="notifications" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  Push Notification Testing
+                </CardTitle>
+                <CardDescription>
+                  Test push notifications to ensure they work correctly. Send notifications to specific users or all users.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <Form {...pushForm}>
+                  <form 
+                    onSubmit={pushForm.handleSubmit((data) => testPushNotificationMutation.mutate(data))}
+                    className="space-y-4"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={pushForm.control}
+                        name="userId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Target User (Optional)</FormLabel>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              value={field.value}
+                              data-testid="select-target-user"
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Send to all users" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="" data-testid="option-all-users">
+                                  All Users
+                                </SelectItem>
+                                {users.map((user) => (
+                                  <SelectItem 
+                                    key={user.id} 
+                                    value={user.id}
+                                    data-testid={`option-user-${user.id}`}
+                                  >
+                                    {user.fullName} ({user.email}) - {user.role}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={pushForm.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Notification Title</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field}
+                              placeholder="Enter notification title"
+                              data-testid="input-notification-title"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={pushForm.control}
+                      name="message"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Notification Message</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field}
+                              placeholder="Enter notification message"
+                              data-testid="input-notification-message"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button 
+                      type="submit" 
+                      disabled={testPushNotificationMutation.isPending}
+                      className="w-full md:w-auto"
+                      data-testid="button-send-test-notification"
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      {testPushNotificationMutation.isPending ? "Sending..." : "Send Test Notification"}
+                    </Button>
+                  </form>
+                </Form>
+
+                <div className="bg-muted/50 rounded-lg p-4 border-l-4 border-blue-500">
+                  <h4 className="font-medium text-sm mb-2 flex items-center gap-2">
+                    <Bell className="h-4 w-4 text-blue-600" />
+                    How to test push notifications:
+                  </h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• First, make sure you've allowed notifications in your browser</li>
+                    <li>• Choose a specific user or leave blank to send to everyone</li>
+                    <li>• Enter a title and message for your test notification</li>
+                    <li>• Click "Send Test Notification" and check if the notification appears</li>
+                    <li>• The notification should appear like a native mobile app notification</li>
+                  </ul>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
