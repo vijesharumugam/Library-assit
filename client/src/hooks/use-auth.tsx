@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, ReactNode, useContext, useEffect } from "react";
 import {
   useQuery,
   useMutation,
@@ -7,6 +7,7 @@ import {
 import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 type AuthContextType = {
   user: SelectUser | null;
@@ -25,6 +26,8 @@ type LoginData = {
 export const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const { subscribe, isSupported, permission } = usePushNotifications();
+  
   const {
     data: user,
     error,
@@ -42,13 +45,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     retryDelay: 2000,
   });
 
+  // Auto-request notification permission for students and librarians on login
+  useEffect(() => {
+    const requestNotificationPermission = async () => {
+      if (user && (user.role === "STUDENT" || user.role === "LIBRARIAN")) {
+        if (isSupported && permission === "default") {
+          try {
+            // Show a friendly message before requesting permission
+            toast({
+              title: "Enable Notifications",
+              description: "Get notified about library updates, due dates, and important messages",
+            });
+            
+            // Wait a moment for the toast to show, then request permission
+            setTimeout(async () => {
+              await subscribe();
+            }, 1500);
+          } catch (error) {
+            console.log("Failed to request notification permission:", error);
+          }
+        }
+      }
+    };
+
+    requestNotificationPermission();
+  }, [user, isSupported, permission, subscribe, toast]);
+
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
       const res = await apiRequest("POST", "/api/login", credentials);
       return await res.json();
     },
-    onSuccess: (user: SelectUser) => {
+    onSuccess: async (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      
+      // Auto-request notification permission for students and librarians on successful login
+      if ((user.role === "STUDENT" || user.role === "LIBRARIAN") && isSupported && permission === "default") {
+        try {
+          // Show a friendly message before requesting permission
+          toast({
+            title: "Enable Notifications",
+            description: "Get notified about library updates, due dates, and important messages",
+          });
+          
+          // Wait a moment for the toast to show, then request permission
+          setTimeout(async () => {
+            await subscribe();
+          }, 1500);
+        } catch (error) {
+          console.log("Failed to request notification permission:", error);
+        }
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -64,8 +111,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiRequest("POST", "/api/register", credentials);
       return await res.json();
     },
-    onSuccess: (user: SelectUser) => {
+    onSuccess: async (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      
+      // Auto-request notification permission for students and librarians on successful registration
+      if ((user.role === "STUDENT" || user.role === "LIBRARIAN") && isSupported && permission === "default") {
+        try {
+          // Show a friendly message before requesting permission
+          toast({
+            title: "Welcome! Enable Notifications",
+            description: "Get notified about library updates, due dates, and important messages",
+          });
+          
+          // Wait a moment for the toast to show, then request permission
+          setTimeout(async () => {
+            await subscribe();
+          }, 1500);
+        } catch (error) {
+          console.log("Failed to request notification permission:", error);
+        }
+      }
     },
     onError: (error: Error) => {
       toast({
