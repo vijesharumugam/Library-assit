@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { BookOpen, Users, Shield } from "lucide-react";
+import { BookOpen, Users, Shield, Eye, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUserSchema, Role } from "@shared/schema";
@@ -31,6 +31,9 @@ type RegisterForm = z.infer<typeof registerSchema>;
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [rememberMe, setRememberMe] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -119,13 +122,32 @@ export default function AuthPage() {
 
                     <div className="space-y-2">
                       <Label htmlFor="login-password">Password</Label>
-                      <Input
-                        id="login-password"
-                        type="password"
-                        placeholder="Enter your password"
-                        data-testid="input-login-password"
-                        {...loginForm.register("password")}
-                      />
+                      <div className="relative">
+                        <Input
+                          id="login-password"
+                          type={showLoginPassword ? "text" : "password"}
+                          placeholder="Enter your password"
+                          data-testid="input-login-password"
+                          {...loginForm.register("password")}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowLoginPassword(!showLoginPassword)}
+                          data-testid="button-toggle-login-password"
+                        >
+                          {showLoginPassword ? (
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          <span className="sr-only">
+                            {showLoginPassword ? "Hide password" : "Show password"}
+                          </span>
+                        </Button>
+                      </div>
                       {loginForm.formState.errors.password && (
                         <p className="text-sm text-destructive">
                           {loginForm.formState.errors.password.message}
@@ -252,13 +274,32 @@ export default function AuthPage() {
 
                     <div className="space-y-2">
                       <Label htmlFor="register-password">Password</Label>
-                      <Input
-                        id="register-password"
-                        type="password"
-                        placeholder="Create a password"
-                        data-testid="input-register-password"
-                        {...registerForm.register("password")}
-                      />
+                      <div className="relative">
+                        <Input
+                          id="register-password"
+                          type={showRegisterPassword ? "text" : "password"}
+                          placeholder="Create a password"
+                          data-testid="input-register-password"
+                          {...registerForm.register("password")}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                          data-testid="button-toggle-register-password"
+                        >
+                          {showRegisterPassword ? (
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          <span className="sr-only">
+                            {showRegisterPassword ? "Hide password" : "Show password"}
+                          </span>
+                        </Button>
+                      </div>
                       {registerForm.formState.errors.password && (
                         <p className="text-sm text-destructive">
                           {registerForm.formState.errors.password.message}
@@ -268,13 +309,32 @@ export default function AuthPage() {
 
                     <div className="space-y-2">
                       <Label htmlFor="register-confirmPassword">Confirm Password</Label>
-                      <Input
-                        id="register-confirmPassword"
-                        type="password"
-                        placeholder="Confirm your password"
-                        data-testid="input-register-confirm-password"
-                        {...registerForm.register("confirmPassword")}
-                      />
+                      <div className="relative">
+                        <Input
+                          id="register-confirmPassword"
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="Confirm your password"
+                          data-testid="input-register-confirm-password"
+                          {...registerForm.register("confirmPassword")}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          data-testid="button-toggle-confirm-password"
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          <span className="sr-only">
+                            {showConfirmPassword ? "Hide password" : "Show password"}
+                          </span>
+                        </Button>
+                      </div>
                       {registerForm.formState.errors.confirmPassword && (
                         <p className="text-sm text-destructive">
                           {registerForm.formState.errors.confirmPassword.message}
