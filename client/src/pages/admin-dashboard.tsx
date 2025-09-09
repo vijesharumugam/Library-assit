@@ -87,7 +87,12 @@ function AdminDashboard() {
 
   const testPushNotificationMutation = useMutation({
     mutationFn: async (data: z.infer<typeof pushNotificationSchema>) => {
-      const res = await apiRequest("POST", "/api/push/test", data);
+      // Convert "all" back to empty string for the API
+      const apiData = {
+        ...data,
+        userId: data.userId === "all" ? undefined : data.userId
+      };
+      const res = await apiRequest("POST", "/api/push/test", apiData);
       return await res.json();
     },
     onSuccess: () => {
@@ -110,7 +115,7 @@ function AdminDashboard() {
     defaultValues: {
       title: "Test Library Notification",
       message: "This is a test push notification from Library Sanctum!",
-      userId: "",
+      userId: "all",
     },
   });
 
@@ -611,7 +616,7 @@ function AdminDashboard() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="" data-testid="option-all-users">
+                                <SelectItem value="all" data-testid="option-all-users">
                                   All Users
                                 </SelectItem>
                                 {users.map((user) => (
