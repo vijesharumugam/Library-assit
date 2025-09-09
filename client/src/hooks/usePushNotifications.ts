@@ -17,7 +17,7 @@ export function usePushNotifications() {
   const { toast } = useToast();
 
   // Get VAPID public key
-  const { data: vapidData } = useQuery({
+  const { data: vapidData } = useQuery<{ publicKey: string }>({
     queryKey: ['/api/push/vapid-public-key'],
     staleTime: Infinity, // Cache indefinitely
   });

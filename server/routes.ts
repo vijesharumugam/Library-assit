@@ -737,7 +737,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await PushNotificationService.sendNotificationToUser(notification.userId, {
         title: notification.title,
         message: notification.message,
-        type: notification.type
+        type: notification.type as any
       });
       
       res.status(201).json(notification);
@@ -865,13 +865,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await PushNotificationService.sendNotificationToUser(userId, {
           title: title || "Test Notification",
           message: message || "This is a test push notification from the library system.",
-          type: NotificationType.BOOK_BORROWED
+          type: "BOOK_BORROWED" as any
         });
       } else {
         await PushNotificationService.sendNotificationToAllUsers({
           title: title || "Test Notification",
           message: message || "This is a test push notification from the library system.",
-          type: NotificationType.BOOK_BORROWED
+          type: "BOOK_BORROWED" as any
         });
       }
 
