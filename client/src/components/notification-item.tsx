@@ -1,4 +1,4 @@
-import { BookOpen, CheckCircle, Clock, AlertTriangle, X } from "lucide-react";
+import { BookOpen, CheckCircle, Clock, AlertTriangle, X, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -39,8 +39,9 @@ export function NotificationItem({ notification }: NotificationItemProps) {
     },
   });
 
-  const Icon = notificationIcons[notification.type];
-  const iconColor = notificationColors[notification.type];
+  // Safe icon and color lookup with fallbacks
+  const Icon = notificationIcons[notification.type] || Bell;
+  const iconColor = notificationColors[notification.type] || "text-gray-600";
 
   const handleMarkAsRead = () => {
     if (!notification.isRead) {
@@ -70,7 +71,17 @@ export function NotificationItem({ notification }: NotificationItemProps) {
             {notification.message}
           </p>
           <p className="text-xs text-muted-foreground mt-2" data-testid={`notification-time-${notification.id}`}>
-            {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+            {(() => {
+              try {
+                const date = new Date(notification.createdAt);
+                if (isNaN(date.getTime())) {
+                  return "Recently";
+                }
+                return formatDistanceToNow(date, { addSuffix: true });
+              } catch (error) {
+                return "Recently";
+              }
+            })()}
           </p>
         </div>
         {!notification.isRead && (
