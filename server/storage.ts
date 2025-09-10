@@ -271,12 +271,12 @@ export class DatabaseStorage implements IStorage {
       include: { book: true, user: true }
     });
 
-    // Create notification for book borrowed
-    await this.createNotification({
-      userId: transaction.userId,
-      type: "BOOK_BORROWED" as any,
+    // Create notification and send push notification for book borrowed
+    const { PushNotificationService } = await import('./push-service');
+    await PushNotificationService.sendNotificationToUser(transaction.userId, {
       title: "Book Borrowed Successfully",
-      message: `You have successfully borrowed "${transaction.book.title}" by ${transaction.book.author}. Due date: ${new Date(transaction.dueDate).toLocaleDateString()}`
+      message: `You have successfully borrowed "${transaction.book.title}" by ${transaction.book.author}. Due date: ${new Date(transaction.dueDate).toLocaleDateString()}`,
+      type: "BOOK_BORROWED" as any
     });
 
     return convertPrismaTransaction(transaction);
@@ -322,13 +322,13 @@ export class DatabaseStorage implements IStorage {
         include: { book: true, user: true }
       });
 
-      // Create notification for book returned
+      // Create notification and send push notification for book returned
       if (status === TransactionStatus.RETURNED) {
-        await this.createNotification({
-          userId: transaction.userId,
-          type: "BOOK_RETURNED" as any,
+        const { PushNotificationService } = await import('./push-service');
+        await PushNotificationService.sendNotificationToUser(transaction.userId, {
           title: "Book Returned Successfully",
-          message: `You have successfully returned "${transaction.book.title}" by ${transaction.book.author}. Thank you for returning on time!`
+          message: `You have successfully returned "${transaction.book.title}" by ${transaction.book.author}. Thank you for returning on time!`,
+          type: "BOOK_RETURNED" as any
         });
       }
 
@@ -598,12 +598,12 @@ export class DatabaseStorage implements IStorage {
         }
       });
 
-      // Create notification for approved extension
-      await this.createNotification({
-        userId: request.userId,
-        type: "EXTENSION_REQUEST_APPROVED" as any,
+      // Create notification and send push notification for approved extension
+      const { PushNotificationService } = await import('./push-service');
+      await PushNotificationService.sendNotificationToUser(request.userId, {
         title: "Extension Request Approved",
-        message: `Your extension request for "${request.transaction.book.title}" has been approved. New due date: ${request.requestedDueDate.toLocaleDateString()}`
+        message: `Your extension request for "${request.transaction.book.title}" has been approved. New due date: ${request.requestedDueDate.toLocaleDateString()}`,
+        type: "EXTENSION_REQUEST_APPROVED" as any
       });
 
       return convertPrismaExtensionRequest(updatedRequest);
@@ -633,12 +633,12 @@ export class DatabaseStorage implements IStorage {
         }
       });
 
-      // Create notification for rejected extension
-      await this.createNotification({
-        userId: request.userId,
-        type: "EXTENSION_REQUEST_REJECTED" as any,
+      // Create notification and send push notification for rejected extension
+      const { PushNotificationService } = await import('./push-service');
+      await PushNotificationService.sendNotificationToUser(request.userId, {
         title: "Extension Request Rejected",
-        message: `Your extension request for "${request.transaction.book.title}" has been rejected by the librarian.`
+        message: `Your extension request for "${request.transaction.book.title}" has been rejected by the librarian.`,
+        type: "EXTENSION_REQUEST_REJECTED" as any
       });
 
       return convertPrismaExtensionRequest(updatedRequest);

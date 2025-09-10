@@ -46,7 +46,7 @@ interface PushNotificationData {
 export class PushNotificationService {
   static async sendNotificationToUser(userId: string, data: PushNotificationData) {
     try {
-      // First, create an in-app notification
+      // Create an in-app notification
       await storage.createNotification({
         userId,
         type: data.type,
