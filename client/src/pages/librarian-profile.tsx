@@ -5,9 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { User, LogOut, Mail, BookOpen, Settings, Shield, Edit, Save, X, Camera } from "lucide-react";
+import { User, LogOut, Mail, BookOpen, Settings, Shield, Edit, Save, X, Camera, ArrowLeft } from "lucide-react";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { useState, useRef, memo } from "react";
+import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -21,6 +22,7 @@ function LibrarianProfile() {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [, setLocation] = useLocation();
 
   const form = useForm<UpdateProfile>({
     resolver: zodResolver(updateProfileSchema),
@@ -125,11 +127,23 @@ function LibrarianProfile() {
       {/* Mobile Header */}
       <header className="bg-card border-b border-border sticky top-0 z-40 block md:hidden">
         <div className="px-4 py-3">
-          <div className="flex items-center justify-center">
-            <User className="h-5 w-5 text-primary mr-2" />
-            <h1 className="text-lg font-semibold text-foreground" data-testid="profile-header-title">
-              Librarian Profile
-            </h1>
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocation("/librarian")}
+              className="hover:bg-muted p-2"
+              data-testid="button-back-mobile"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex items-center">
+              <User className="h-5 w-5 text-primary mr-2" />
+              <h1 className="text-lg font-semibold text-foreground" data-testid="profile-header-title">
+                Librarian Profile
+              </h1>
+            </div>
+            <div className="w-10"></div> {/* Spacer for centering */}
           </div>
         </div>
       </header>
@@ -139,6 +153,16 @@ function LibrarianProfile() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setLocation("/librarian")}
+                className="mr-3 hover:bg-muted"
+                data-testid="button-back"
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back
+              </Button>
               <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-primary mr-2 sm:mr-3" />
               <h1 className="text-lg sm:text-xl library-heading">Librarian Profile</h1>
             </div>
