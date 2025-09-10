@@ -13,6 +13,7 @@ import { AIChatAssistant } from "@/components/ai-chat-assistant";
 import { Role } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
+import { useRoutePrefetch } from "@/hooks/use-route-prefetch";
 
 // Pre-load critical dashboard components for faster navigation
 import NotFound from "@/pages/not-found";
@@ -52,6 +53,9 @@ function LoadingSpinner() {
 }
 
 function Router() {
+  // Pre-load routes for faster navigation
+  useRoutePrefetch();
+  
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <Switch>
