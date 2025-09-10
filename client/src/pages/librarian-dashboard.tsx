@@ -129,8 +129,8 @@ function LibrarianDashboard() {
   });
 
   const approveExtensionMutation = useMutation({
-    mutationFn: async (requestId: string) => {
-      const res = await apiRequest("POST", `/api/extension-requests/${requestId}/approve`);
+    mutationFn: async ({ requestId, dueDate }: { requestId: string; dueDate: Date }) => {
+      const res = await apiRequest("POST", `/api/extension-requests/${requestId}/approve`, { dueDate: dueDate.toISOString() });
       return await res.json();
     },
     onSuccess: () => {
