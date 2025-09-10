@@ -730,9 +730,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllPushSubscriptions(): Promise<PushSubscription[]> {
-    return await prisma.pushSubscription.findMany({
+    const subscriptions = await prisma.pushSubscription.findMany({
       include: { user: true }
     });
+    return subscriptions.map(sub => ({
+      ...sub,
+      user: sub.user ? convertPrismaUser(sub.user) : undefined
+    })) as PushSubscription[];
   }
 }
 
