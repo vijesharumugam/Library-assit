@@ -14,12 +14,14 @@ import { Role } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
 
-// Lazy load all page components for better bundle splitting
-const NotFound = lazy(() => import("@/pages/not-found"));
-const AuthPage = lazy(() => import("@/pages/auth-page"));
-const StudentDashboard = lazy(() => import("@/pages/student-dashboard"));
-const LibrarianDashboard = lazy(() => import("@/pages/librarian-dashboard"));
-const AdminDashboard = lazy(() => import("@/pages/admin-dashboard"));
+// Pre-load critical dashboard components for faster navigation
+import NotFound from "@/pages/not-found";
+import AuthPage from "@/pages/auth-page";
+import StudentDashboard from "@/pages/student-dashboard";
+import LibrarianDashboard from "@/pages/librarian-dashboard";
+import AdminDashboard from "@/pages/admin-dashboard";
+
+// Lazy load secondary pages
 const BorrowedBooksPage = lazy(() => import("@/pages/borrowed-books-page"));
 const OverdueBooksPage = lazy(() => import("@/pages/overdue-books-page"));
 const StudentBorrowedBooks = lazy(() => import("@/pages/student-borrowed-books"));
@@ -51,75 +53,77 @@ function LoadingSpinner() {
 
 function Router() {
   return (
-    <Switch>
-      <ProtectedRoute 
-        path="/" 
-        component={() => <Suspense fallback={<LoadingSpinner />}><StudentDashboard /></Suspense>} 
-        allowedRoles={[Role.STUDENT]} 
-      />
-      <ProtectedRoute 
-        path="/student" 
-        component={() => <Suspense fallback={<LoadingSpinner />}><StudentDashboard /></Suspense>} 
-        allowedRoles={[Role.STUDENT]} 
-      />
-      <ProtectedRoute 
-        path="/student/borrowed-books" 
-        component={() => <Suspense fallback={<LoadingSpinner />}><StudentBorrowedBooks /></Suspense>} 
-        allowedRoles={[Role.STUDENT]} 
-      />
-      <ProtectedRoute 
-        path="/student/pending-requests" 
-        component={() => <Suspense fallback={<LoadingSpinner />}><StudentPendingRequests /></Suspense>} 
-        allowedRoles={[Role.STUDENT]} 
-      />
-      <ProtectedRoute 
-        path="/student/profile" 
-        component={() => <Suspense fallback={<LoadingSpinner />}><StudentProfile /></Suspense>} 
-        allowedRoles={[Role.STUDENT]} 
-      />
-      <ProtectedRoute 
-        path="/student/favorites" 
-        component={() => <Suspense fallback={<LoadingSpinner />}><StudentFavorites /></Suspense>} 
-        allowedRoles={[Role.STUDENT]} 
-      />
-      <ProtectedRoute 
-        path="/student/books" 
-        component={() => <Suspense fallback={<LoadingSpinner />}><StudentBooks /></Suspense>} 
-        allowedRoles={[Role.STUDENT]} 
-      />
-      <ProtectedRoute 
-        path="/student/due-soon" 
-        component={() => <Suspense fallback={<LoadingSpinner />}><StudentDueSoon /></Suspense>} 
-        allowedRoles={[Role.STUDENT]} 
-      />
-      <ProtectedRoute 
-        path="/librarian" 
-        component={() => <Suspense fallback={<LoadingSpinner />}><LibrarianDashboard /></Suspense>} 
-        allowedRoles={[Role.LIBRARIAN, Role.ADMIN]} 
-      />
-      <ProtectedRoute 
-        path="/librarian/borrowed-books" 
-        component={() => <Suspense fallback={<LoadingSpinner />}><BorrowedBooksPage /></Suspense>} 
-        allowedRoles={[Role.LIBRARIAN, Role.ADMIN]} 
-      />
-      <ProtectedRoute 
-        path="/librarian/overdue-books" 
-        component={() => <Suspense fallback={<LoadingSpinner />}><OverdueBooksPage /></Suspense>} 
-        allowedRoles={[Role.LIBRARIAN, Role.ADMIN]} 
-      />
-      <ProtectedRoute 
-        path="/librarian/profile" 
-        component={() => <Suspense fallback={<LoadingSpinner />}><LibrarianProfile /></Suspense>} 
-        allowedRoles={[Role.LIBRARIAN, Role.ADMIN]} 
-      />
-      <ProtectedRoute 
-        path="/admin" 
-        component={() => <Suspense fallback={<LoadingSpinner />}><AdminDashboard /></Suspense>} 
-        allowedRoles={[Role.ADMIN]} 
-      />
-      <Route path="/auth" component={() => <Suspense fallback={<LoadingSpinner />}><AuthPage /></Suspense>} />
-      <Route component={() => <Suspense fallback={<LoadingSpinner />}><NotFound /></Suspense>} />
-    </Switch>
+    <Suspense fallback={<LoadingSpinner />}>
+      <Switch>
+        <ProtectedRoute 
+          path="/" 
+          component={() => <StudentDashboard />} 
+          allowedRoles={[Role.STUDENT]} 
+        />
+        <ProtectedRoute 
+          path="/student" 
+          component={() => <StudentDashboard />} 
+          allowedRoles={[Role.STUDENT]} 
+        />
+        <ProtectedRoute 
+          path="/student/borrowed-books" 
+          component={() => <StudentBorrowedBooks />} 
+          allowedRoles={[Role.STUDENT]} 
+        />
+        <ProtectedRoute 
+          path="/student/pending-requests" 
+          component={() => <StudentPendingRequests />} 
+          allowedRoles={[Role.STUDENT]} 
+        />
+        <ProtectedRoute 
+          path="/student/profile" 
+          component={() => <StudentProfile />} 
+          allowedRoles={[Role.STUDENT]} 
+        />
+        <ProtectedRoute 
+          path="/student/favorites" 
+          component={() => <StudentFavorites />} 
+          allowedRoles={[Role.STUDENT]} 
+        />
+        <ProtectedRoute 
+          path="/student/books" 
+          component={() => <StudentBooks />} 
+          allowedRoles={[Role.STUDENT]} 
+        />
+        <ProtectedRoute 
+          path="/student/due-soon" 
+          component={() => <StudentDueSoon />} 
+          allowedRoles={[Role.STUDENT]} 
+        />
+        <ProtectedRoute 
+          path="/librarian" 
+          component={() => <LibrarianDashboard />} 
+          allowedRoles={[Role.LIBRARIAN, Role.ADMIN]} 
+        />
+        <ProtectedRoute 
+          path="/librarian/borrowed-books" 
+          component={() => <BorrowedBooksPage />} 
+          allowedRoles={[Role.LIBRARIAN, Role.ADMIN]} 
+        />
+        <ProtectedRoute 
+          path="/librarian/overdue-books" 
+          component={() => <OverdueBooksPage />} 
+          allowedRoles={[Role.LIBRARIAN, Role.ADMIN]} 
+        />
+        <ProtectedRoute 
+          path="/librarian/profile" 
+          component={() => <LibrarianProfile />} 
+          allowedRoles={[Role.LIBRARIAN, Role.ADMIN]} 
+        />
+        <ProtectedRoute 
+          path="/admin" 
+          component={() => <AdminDashboard />} 
+          allowedRoles={[Role.ADMIN]} 
+        />
+        <Route path="/auth" component={() => <AuthPage />} />
+        <Route component={() => <NotFound />} />
+      </Switch>
+    </Suspense>
   );
 }
 
