@@ -7,7 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { BookOpen, Users, Clock, TrendingUp, LogOut, Plus, Edit, Trash2, Upload, CheckCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Calendar } from "@/components/ui/calendar";
+import { BookOpen, Users, Clock, TrendingUp, LogOut, Plus, Edit, Trash2, Upload, CheckCircle, CalendarIcon } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState, useMemo, memo } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -32,6 +34,9 @@ function LibrarianDashboard() {
   const [showExcelUploadModal, setShowExcelUploadModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [showDatePickerDialog, setShowDatePickerDialog] = useState(false);
+  const [selectedRequestId, setSelectedRequestId] = useState<string>("");
+  const [selectedDueDate, setSelectedDueDate] = useState<Date>();
 
   const { data: books = [], isLoading: booksLoading } = useQuery<Book[]>({
     queryKey: ["/api/books"],
@@ -78,8 +83,8 @@ function LibrarianDashboard() {
   });
 
   const approveRequestMutation = useMutation({
-    mutationFn: async (requestId: string) => {
-      const res = await apiRequest("POST", `/api/book-requests/${requestId}/approve`);
+    mutationFn: async ({ requestId, dueDate }: { requestId: string; dueDate: Date }) => {
+      const res = await apiRequest("POST", `/api/book-requests/${requestId}/approve`, { dueDate: dueDate.toISOString() });
       return await res.json();
     },
     onSuccess: () => {
@@ -171,6 +176,21 @@ function LibrarianDashboard() {
   const handleEditBook = (book: Book) => {
     setEditingBook(book);
     setShowEditBookModal(true);
+  };
+
+  const handleApproveWithDate = (requestId: string) => {
+    setSelectedRequestId(requestId);
+    setSelectedDueDate(undefined);
+    setShowDatePickerDialog(true);
+  };
+
+  const handleConfirmApproval = () => {
+    if (selectedDueDate && selectedRequestId) {
+      approveRequestMutation.mutate({ requestId: selectedRequestId, dueDate: selectedDueDate });
+      setShowDatePickerDialog(false);
+      setSelectedRequestId("");
+      setSelectedDueDate(undefined);
+    }
   };
 
   const filteredBooks = useMemo(() => {
@@ -335,7 +355,7 @@ function LibrarianDashboard() {
                     <div className="flex gap-1">
                       <Button
                         size="sm"
-                        onClick={() => approveRequestMutation.mutate(request.id)}
+                        onClick={() => handleApproveWithDate(request.id)}
                         disabled={approveRequestMutation.isPending}
                         className="h-7 px-2 text-xs"
                         data-testid={`mobile-approve-${request.id}`}
@@ -618,10 +638,11 @@ function LibrarianDashboard() {
                               <div className="flex space-x-2">
                                 <Button
                                   size="sm"
-                                  onClick={() => approveRequestMutation.mutate(request.id)}
+                                  onClick={() => handleApproveWithDate(request.id)}
                                   disabled={approveRequestMutation.isPending}
                                   data-testid={`button-approve-${request.id}`}
                                 >
+                                  <CalendarIcon className="h-3 w-3 mr-1" />
                                   Approve
                                 </Button>
                                 <Button
@@ -1210,6 +1231,43 @@ function LibrarianDashboard() {
           onOpenChange={setShowExcelUploadModal}
         />
       </div>
+
+      {/* Date Picker Dialog for Approval */}
+      <Dialog open={showDatePickerDialog} onOpenChange={setShowDatePickerDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select Due Date</DialogTitle>
+            <DialogDescription>
+              Choose the due date for the book loan. The book will need to be returned by this date.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center space-y-4">
+            <Calendar
+              mode="single"
+              selected={selectedDueDate}
+              onSelect={setSelectedDueDate}
+              disabled={(date) => date < new Date()}
+              className="rounded-md border"
+            />
+            <div className="flex space-x-2 w-full">
+              <Button
+                variant="outline"
+                onClick={() => setShowDatePickerDialog(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleConfirmApproval}
+                disabled={!selectedDueDate || approveRequestMutation.isPending}
+                className="flex-1"
+              >
+                {approveRequestMutation.isPending ? "Approving..." : "Approve Request"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Bottom Navigation for Mobile */}
       <BottomNavigation userRole="librarian" />

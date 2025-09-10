@@ -449,7 +449,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async approveBookRequest(requestId: string, librarianId: string): Promise<Transaction | null> {
+  async approveBookRequest(requestId: string, librarianId: string, customDueDate?: Date): Promise<Transaction | null> {
     try {
       const request = await prisma.bookRequest.findUnique({
         where: { id: requestId },
@@ -465,9 +465,12 @@ export class DatabaseStorage implements IStorage {
         return null;
       }
 
-      // Create transaction
-      const dueDate = new Date();
-      dueDate.setDate(dueDate.getDate() + 14); // 14 days from now
+      // Create transaction with custom due date or default 14 days
+      const dueDate = customDueDate || (() => {
+        const defaultDue = new Date();
+        defaultDue.setDate(defaultDue.getDate() + 14);
+        return defaultDue;
+      })();
 
       const transaction = await prisma.transaction.create({
         data: {

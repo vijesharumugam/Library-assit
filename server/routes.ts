@@ -465,7 +465,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/book-requests/:id/approve", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
     try {
-      const transaction = await storage.approveBookRequest(req.params.id, req.user!.id);
+      const { dueDate } = req.body;
+      const customDueDate = dueDate ? new Date(dueDate) : undefined;
+      
+      const transaction = await storage.approveBookRequest(req.params.id, req.user!.id, customDueDate);
       
       if (!transaction) {
         return res.status(404).json({ message: "Request not found or cannot be approved" });
