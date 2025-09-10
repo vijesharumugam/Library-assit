@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUserSchema, Role } from "@shared/schema";
 import { z } from "zod";
-import { Redirect } from "wouter";
+import { useLocation } from "wouter";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -30,6 +30,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
+  const [, setLocation] = useLocation();
   const [rememberMe, setRememberMe] = useState(false);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
@@ -56,11 +57,18 @@ export default function AuthPage() {
     },
   });
 
-  // Redirect if already logged in
+  // Fast redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      const redirectPath = user.role === "ADMIN" ? "/admin" : 
+                          user.role === "LIBRARIAN" ? "/librarian" : "/";
+      setLocation(redirectPath);
+    }
+  }, [user, setLocation]);
+
+  // Don't render if user is already logged in
   if (user) {
-    const redirectPath = user.role === "ADMIN" ? "/admin" : 
-                        user.role === "LIBRARIAN" ? "/librarian" : "/";
-    return <Redirect to={redirectPath} />;
+    return null;
   }
 
   const onLogin = (data: LoginForm) => {
