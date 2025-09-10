@@ -552,7 +552,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Approve an extension request (librarians/admins)
   app.post("/api/extension-requests/:id/approve", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
     try {
-      const request = await storage.approveExtensionRequest(req.params.id, req.user!.username);
+      const { dueDate } = req.body;
+      if (!dueDate) {
+        return res.status(400).json({ message: "Due date is required" });
+      }
+      
+      const request = await storage.approveExtensionRequest(req.params.id, req.user!.username, new Date(dueDate));
       if (!request) {
         return res.status(404).json({ message: "Extension request not found" });
       }

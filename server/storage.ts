@@ -72,7 +72,7 @@ export interface IStorage {
   getExtensionRequestsByUser(userId: string): Promise<ExtensionRequestWithUserAndTransaction[]>;
   getAllExtensionRequests(): Promise<ExtensionRequestWithUserAndTransaction[]>;
   getPendingExtensionRequests(): Promise<ExtensionRequestWithUserAndTransaction[]>;
-  approveExtensionRequest(requestId: string, processedBy: string): Promise<ExtensionRequest | null>;
+  approveExtensionRequest(requestId: string, processedBy: string, customDueDate: Date): Promise<ExtensionRequest | null>;
   rejectExtensionRequest(requestId: string, processedBy: string): Promise<ExtensionRequest | null>;
   
   // Notification methods
@@ -574,7 +574,7 @@ export class DatabaseStorage implements IStorage {
     })) as ExtensionRequestWithUserAndTransaction[];
   }
 
-  async approveExtensionRequest(requestId: string, processedBy: string): Promise<ExtensionRequest | null> {
+  async approveExtensionRequest(requestId: string, processedBy: string, customDueDate: Date): Promise<ExtensionRequest | null> {
     try {
       const request = await (prisma as any).extensionRequest.findUnique({
         where: { id: requestId },
@@ -585,10 +585,10 @@ export class DatabaseStorage implements IStorage {
         return null;
       }
 
-      // Update the transaction's due date
+      // Update the transaction's due date with the custom date
       await prisma.transaction.update({
         where: { id: request.transactionId },
-        data: { dueDate: request.requestedDueDate }
+        data: { dueDate: customDueDate }
       });
 
       // Update extension request status
@@ -605,7 +605,7 @@ export class DatabaseStorage implements IStorage {
       const { PushNotificationService } = await import('./push-service');
       await PushNotificationService.sendNotificationToUser(request.userId, {
         title: "Extension Request Approved",
-        message: `Your extension request for "${request.transaction.book.title}" has been approved. New due date: ${request.requestedDueDate.toLocaleDateString()}`,
+        message: `Your extension request for "${request.transaction.book.title}" has been approved. New due date: ${customDueDate.toLocaleDateString()}`,
         type: "EXTENSION_REQUEST_APPROVED" as any
       });
 
