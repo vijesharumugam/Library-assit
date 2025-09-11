@@ -270,14 +270,12 @@ function ForgotPasswordWizard({ open, onOpenChange }: { open: boolean; onOpenCha
     onSendOtp({ email: state.email });
   };
 
-  // Sync external open state with internal reducer
+  // Initialize state when dialog opens for the first time
   useEffect(() => {
-    if (open && !state.open) {
+    if (open && state.step === 'email' && !state.email && !state.isLoading) {
       dispatch({ type: 'OPEN' });
-    } else if (!open && state.open) {
-      dispatch({ type: 'CLOSE' });
     }
-  }, [open, state.open]);
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={(newOpen) => {
