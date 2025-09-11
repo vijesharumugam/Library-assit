@@ -12,6 +12,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { LibraryAIService } from "./ai-service";
 import { emailService } from './email-service';
 import { otpService } from './otp-service';
+import { resetTokenService } from './reset-token-service';
+import { rateLimiter } from './rate-limiter';
 import crypto from 'crypto';
 
 function requireAuth(req: any, res: any, next: any) {
@@ -873,6 +875,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/forgot-password", async (req, res) => {
     try {
       const { email } = forgotPasswordSchema.parse(req.body);
+      const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+
+      // Rate limiting
+      const ipLimit = rateLimiter.isRateLimited('forgotPasswordByIP', clientIP);
+      if (ipLimit.limited) {
+        return res.status(429).json({
+          message: "Too many password reset requests. Please try again later.",
+          retryAfter: ipLimit.retryAfter
+        });
+      }
+
+      const emailLimit = rateLimiter.isRateLimited('forgotPasswordByEmail', email.toLowerCase());
+      if (emailLimit.limited) {
+        return res.status(429).json({
+          message: "Too many password reset requests for this email. Please try again later.",
+          retryAfter: emailLimit.retryAfter
+        });
+      }
 
       // Check if user exists
       const user = await prisma.user.findUnique({
@@ -882,7 +902,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         // Don't reveal if user exists or not for security
         return res.json({ 
-          message: "If an account with this email exists, you will receive an OTP code." 
+          message: "If an account with this email exists, you will receive an OTP code.",
+          otpTTLSeconds: 600,
+          resendAfterSeconds: 60
         });
       }
 
@@ -907,7 +929,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({ 
-        message: "If an account with this email exists, you will receive an OTP code." 
+        message: "If an account with this email exists, you will receive an OTP code.",
+        otpTTLSeconds: 600,
+        resendAfterSeconds: 60
       });
 
     } catch (error) {
@@ -922,12 +946,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Verify OTP
+  // Verify OTP and issue reset token
   app.post("/api/auth/verify-otp", async (req, res) => {
     try {
       const { email, otp } = verifyOtpSchema.parse(req.body);
+      const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
 
-      const isValid = otpService.verifyOtp(email, otp);
+      // Rate limiting
+      const ipLimit = rateLimiter.isRateLimited('verifyOtpByIP', clientIP);
+      if (ipLimit.limited) {
+        return res.status(429).json({
+          message: "Too many verification attempts. Please try again later.",
+          retryAfter: ipLimit.retryAfter
+        });
+      }
+
+      const emailLimit = rateLimiter.isRateLimited('verifyOtpByEmail', email.toLowerCase());
+      if (emailLimit.limited) {
+        return res.status(429).json({
+          message: "Too many verification attempts for this email. Please try again later.",
+          retryAfter: emailLimit.retryAfter
+        });
+      }
+
+      // Verify and consume the OTP
+      const isValid = otpService.consumeOtp(email, otp);
 
       if (!isValid) {
         return res.status(400).json({ 
@@ -935,8 +978,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Check if user exists (security check)
+      const user = await prisma.user.findUnique({
+        where: { email: email.toLowerCase() }
+      });
+
+      if (!user) {
+        return res.status(400).json({ 
+          message: "Invalid request" 
+        });
+      }
+
+      // Generate and return reset token
+      const resetToken = resetTokenService.storeToken(email);
+
       res.json({ 
-        message: "OTP verified successfully" 
+        message: "OTP verified successfully",
+        resetToken
       });
 
     } catch (error) {
@@ -951,17 +1009,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Reset password with OTP
+  // Reset password with reset token
   app.post("/api/auth/reset-password", async (req, res) => {
     try {
-      const { email, otp, newPassword } = resetPasswordSchema.parse(req.body);
+      const { resetToken, newPassword } = resetPasswordSchema.parse(req.body);
 
-      // Verify and consume OTP
-      const isOtpValid = otpService.consumeOtp(email, otp);
+      // Verify and consume reset token
+      const email = resetTokenService.verifyAndConsumeToken(resetToken);
 
-      if (!isOtpValid) {
+      if (!email) {
         return res.status(400).json({ 
-          message: "Invalid or expired OTP" 
+          message: "Invalid or expired reset token" 
         });
       }
 
@@ -971,8 +1029,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       if (!user) {
-        return res.status(404).json({ 
-          message: "User not found" 
+        return res.status(400).json({ 
+          message: "Invalid request" 
         });
       }
 
