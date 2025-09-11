@@ -177,6 +177,7 @@ export default function AuthPage() {
   // Debug forgot password step changes
   useEffect(() => {
     console.log("Forgot password step changed to:", forgotPasswordStep);
+    console.log("Stack trace:", new Error().stack);
   }, [forgotPasswordStep]);
 
   // Don't render if user is already logged in
@@ -550,15 +551,19 @@ export default function AuthPage() {
       
       {/* Forgot Password Modal */}
       <Dialog open={showForgotPassword} onOpenChange={(open) => {
-        setShowForgotPassword(open);
+        console.log("Dialog onOpenChange called with:", open);
         if (!open) {
-          // Only reset step when dialog is explicitly closed
+          console.log("Dialog is closing, resetting step to email");
+          // Only reset when dialog is actually closing
+          setShowForgotPassword(false);
           setForgotPasswordStep('email');
           setForgotPasswordEmail('');
-          // Reset all forms
           forgotPasswordForm.reset();
           verifyOtpForm.reset();
           resetPasswordForm.reset();
+        } else {
+          console.log("Dialog is opening");
+          setShowForgotPassword(true);
         }
       }}>
         <DialogContent className="sm:max-w-md">
