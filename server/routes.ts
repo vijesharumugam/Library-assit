@@ -3,13 +3,16 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { PushNotificationService } from "./push-service";
-import { insertBookSchema, insertTransactionSchema, insertBookRequestSchema, insertNotificationSchema, insertPushSubscriptionSchema, insertExtensionRequestSchema, updateProfileSchema, TransactionStatus, BookRequestStatus, NotificationType, ExtensionRequestStatus } from "@shared/schema";
+import { insertBookSchema, insertTransactionSchema, insertBookRequestSchema, insertNotificationSchema, insertPushSubscriptionSchema, insertExtensionRequestSchema, updateProfileSchema, TransactionStatus, BookRequestStatus, NotificationType, ExtensionRequestStatus, forgotPasswordSchema, verifyOtpSchema, resetPasswordSchema } from "@shared/schema";
 import { z } from "zod";
 import { prisma } from "./db";
 import multer from "multer";
 import * as XLSX from "xlsx";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { LibraryAIService } from "./ai-service";
+import { emailService } from './email-service';
+import { otpService } from './otp-service';
+import crypto from 'crypto';
 
 function requireAuth(req: any, res: any, next: any) {
   if (!req.isAuthenticated()) {
@@ -862,6 +865,142 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ 
       publicKey: process.env.VAPID_PUBLIC_KEY || "" 
     });
+  });
+
+  // Forgot Password Routes
+  
+  // Request password reset (send OTP)
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = forgotPasswordSchema.parse(req.body);
+
+      // Check if user exists
+      const user = await prisma.user.findUnique({
+        where: { email: email.toLowerCase() }
+      });
+
+      if (!user) {
+        // Don't reveal if user exists or not for security
+        return res.json({ 
+          message: "If an account with this email exists, you will receive an OTP code." 
+        });
+      }
+
+      // Check if email service is available
+      const emailAvailable = await emailService.isAvailable();
+      if (!emailAvailable) {
+        return res.status(503).json({ 
+          message: "Email service is currently unavailable. Please try again later." 
+        });
+      }
+
+      // Generate and store OTP
+      const otp = otpService.storeOtp(user.email, user.fullName);
+
+      // Send OTP email
+      const emailSent = await emailService.sendOTPEmail(user.email, otp, user.fullName);
+
+      if (!emailSent) {
+        return res.status(500).json({ 
+          message: "Failed to send OTP email. Please try again." 
+        });
+      }
+
+      res.json({ 
+        message: "If an account with this email exists, you will receive an OTP code." 
+      });
+
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid email address" 
+        });
+      }
+      res.status(500).json({ 
+        message: "Failed to process password reset request" 
+      });
+    }
+  });
+
+  // Verify OTP
+  app.post("/api/auth/verify-otp", async (req, res) => {
+    try {
+      const { email, otp } = verifyOtpSchema.parse(req.body);
+
+      const isValid = otpService.verifyOtp(email, otp);
+
+      if (!isValid) {
+        return res.status(400).json({ 
+          message: "Invalid or expired OTP" 
+        });
+      }
+
+      res.json({ 
+        message: "OTP verified successfully" 
+      });
+
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid email or OTP format" 
+        });
+      }
+      res.status(500).json({ 
+        message: "Failed to verify OTP" 
+      });
+    }
+  });
+
+  // Reset password with OTP
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { email, otp, newPassword } = resetPasswordSchema.parse(req.body);
+
+      // Verify and consume OTP
+      const isOtpValid = otpService.consumeOtp(email, otp);
+
+      if (!isOtpValid) {
+        return res.status(400).json({ 
+          message: "Invalid or expired OTP" 
+        });
+      }
+
+      // Find user
+      const user = await prisma.user.findUnique({
+        where: { email: email.toLowerCase() }
+      });
+
+      if (!user) {
+        return res.status(404).json({ 
+          message: "User not found" 
+        });
+      }
+
+      // Hash new password (match registration format)
+      const salt = crypto.randomBytes(16).toString('hex');
+      const hashedPassword = crypto.scryptSync(newPassword, salt, 64);
+      const passwordWithSalt = hashedPassword.toString('hex') + '.' + salt;
+
+      // Update password
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { password: passwordWithSalt }
+      });
+
+      res.json({ 
+        message: "Password reset successfully" 
+      });
+
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid input data" 
+        });
+      }
+      res.status(500).json({ 
+        message: "Failed to reset password" 
+      });
+    }
   });
 
   // Test push notification endpoint (for admin testing)

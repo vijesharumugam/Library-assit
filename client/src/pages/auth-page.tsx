@@ -9,9 +9,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { BookOpen, Users, Shield, Eye, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertUserSchema, Role } from "@shared/schema";
+import { insertUserSchema, Role, forgotPasswordSchema, verifyOtpSchema, resetPasswordSchema } from "@shared/schema";
 import { z } from "zod";
 import { useLocation } from "wouter";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -28,13 +32,23 @@ const registerSchema = insertUserSchema.extend({
 type LoginForm = z.infer<typeof loginSchema>;
 type RegisterForm = z.infer<typeof registerSchema>;
 
+type ForgotPasswordForm = z.infer<typeof forgotPasswordSchema>;
+type VerifyOtpForm = z.infer<typeof verifyOtpSchema>;
+type ResetPasswordForm = z.infer<typeof resetPasswordSchema>;
+
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const [rememberMe, setRememberMe] = useState(false);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  // Forgot Password state
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordStep, setForgotPasswordStep] = useState<'email' | 'otp' | 'reset'>('email');
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -54,6 +68,92 @@ export default function AuthPage() {
       phone: "",
       password: "",
       confirmPassword: "",
+    },
+  });
+
+  // Forgot Password forms
+  const forgotPasswordForm = useForm<ForgotPasswordForm>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: "" }
+  });
+
+  const verifyOtpForm = useForm<VerifyOtpForm>({
+    resolver: zodResolver(verifyOtpSchema),
+    defaultValues: { email: "", otp: "" }
+  });
+
+  const resetPasswordForm = useForm<ResetPasswordForm>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: { email: "", otp: "", newPassword: "" }
+  });
+
+  // Forgot Password mutations
+  const forgotPasswordMutation = useMutation({
+    mutationFn: async (data: ForgotPasswordForm) => {
+      const res = await apiRequest("POST", "/api/auth/forgot-password", data);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "OTP sent",
+        description: data.message,
+      });
+      setForgotPasswordStep('otp');
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to send OTP",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const verifyOtpMutation = useMutation({
+    mutationFn: async (data: VerifyOtpForm) => {
+      const res = await apiRequest("POST", "/api/auth/verify-otp", data);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "OTP verified",
+        description: data.message,
+      });
+      setForgotPasswordStep('reset');
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Invalid OTP",
+        description: error.message || "Please check your OTP and try again",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (data: ResetPasswordForm) => {
+      const res = await apiRequest("POST", "/api/auth/reset-password", data);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Password reset successfully",
+        description: "You can now login with your new password",
+      });
+      setShowForgotPassword(false);
+      setForgotPasswordStep('email');
+      setForgotPasswordEmail('');
+      // Reset all forms
+      forgotPasswordForm.reset();
+      verifyOtpForm.reset();
+      resetPasswordForm.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to reset password",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
     },
   });
 
@@ -78,6 +178,25 @@ export default function AuthPage() {
   const onRegister = (data: RegisterForm) => {
     const { confirmPassword, ...userData } = data;
     registerMutation.mutate(userData);
+  };
+
+  // Forgot Password handlers
+  const onForgotPassword = (data: ForgotPasswordForm) => {
+    setForgotPasswordEmail(data.email);
+    forgotPasswordMutation.mutate(data);
+  };
+
+  const onVerifyOtp = (data: VerifyOtpForm) => {
+    verifyOtpMutation.mutate(data);
+  };
+
+  const onResetPassword = (data: ResetPasswordForm) => {
+    resetPasswordMutation.mutate(data);
+  };
+
+  const handleForgotPasswordClick = () => {
+    setShowForgotPassword(true);
+    setForgotPasswordStep('email');
   };
 
 
@@ -185,6 +304,19 @@ export default function AuthPage() {
                     >
                       {loginMutation.isPending ? "Signing in..." : "Sign in"}
                     </Button>
+                    
+                    <div className="text-center">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleForgotPasswordClick}
+                        className="text-sm text-muted-foreground hover:text-foreground"
+                        data-testid="button-forgot-password"
+                      >
+                        Forgot Password?
+                      </Button>
+                    </div>
                   </form>
                 </CardContent>
               </Card>
@@ -399,6 +531,150 @@ export default function AuthPage() {
           </div>
         </div>
       </div>
+      
+      {/* Forgot Password Modal */}
+      <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {forgotPasswordStep === 'email' && 'Forgot Password'}
+              {forgotPasswordStep === 'otp' && 'Enter OTP'}
+              {forgotPasswordStep === 'reset' && 'Reset Password'}
+            </DialogTitle>
+            <DialogDescription>
+              {forgotPasswordStep === 'email' && 'Enter your email address and we\'ll send you an OTP to reset your password.'}
+              {forgotPasswordStep === 'otp' && 'Enter the 6-digit OTP code sent to your email address.'}
+              {forgotPasswordStep === 'reset' && 'Enter your new password.'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {forgotPasswordStep === 'email' && (
+            <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPassword)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="forgot-email">Email Address</Label>
+                <Input
+                  id="forgot-email"
+                  type="email"
+                  placeholder="Enter your email"
+                  data-testid="input-forgot-email"
+                  {...forgotPasswordForm.register("email")}
+                />
+                {forgotPasswordForm.formState.errors.email && (
+                  <p className="text-sm text-destructive">
+                    {forgotPasswordForm.formState.errors.email.message}
+                  </p>
+                )}
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowForgotPassword(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1"
+                  disabled={forgotPasswordMutation.isPending}
+                  data-testid="button-send-otp"
+                >
+                  {forgotPasswordMutation.isPending ? "Sending..." : "Send OTP"}
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {forgotPasswordStep === 'otp' && (
+            <form onSubmit={verifyOtpForm.handleSubmit(onVerifyOtp)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="verify-otp">OTP Code</Label>
+                <Input
+                  id="verify-otp"
+                  type="text"
+                  placeholder="Enter 6-digit OTP"
+                  maxLength={6}
+                  data-testid="input-verify-otp"
+                  {...verifyOtpForm.register("otp")}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    e.target.value = value;
+                    verifyOtpForm.setValue("otp", value);
+                    verifyOtpForm.setValue("email", forgotPasswordEmail);
+                  }}
+                />
+                {verifyOtpForm.formState.errors.otp && (
+                  <p className="text-sm text-destructive">
+                    {verifyOtpForm.formState.errors.otp.message}
+                  </p>
+                )}
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setForgotPasswordStep('email')}
+                >
+                  Back
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1"
+                  disabled={verifyOtpMutation.isPending}
+                  data-testid="button-verify-otp"
+                >
+                  {verifyOtpMutation.isPending ? "Verifying..." : "Verify OTP"}
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {forgotPasswordStep === 'reset' && (
+            <form onSubmit={resetPasswordForm.handleSubmit(onResetPassword)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-password">New Password</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  placeholder="Enter your new password"
+                  data-testid="input-new-password"
+                  {...resetPasswordForm.register("newPassword")}
+                  onChange={(e) => {
+                    resetPasswordForm.setValue("newPassword", e.target.value);
+                    resetPasswordForm.setValue("email", forgotPasswordEmail);
+                    resetPasswordForm.setValue("otp", verifyOtpForm.getValues("otp"));
+                  }}
+                />
+                {resetPasswordForm.formState.errors.newPassword && (
+                  <p className="text-sm text-destructive">
+                    {resetPasswordForm.formState.errors.newPassword.message}
+                  </p>
+                )}
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setForgotPasswordStep('otp')}
+                >
+                  Back
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1"
+                  disabled={resetPasswordMutation.isPending}
+                  data-testid="button-reset-password"
+                >
+                  {resetPasswordMutation.isPending ? "Resetting..." : "Reset Password"}
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
