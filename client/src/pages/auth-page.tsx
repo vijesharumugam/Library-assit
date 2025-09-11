@@ -71,63 +71,69 @@ const initialForgotPasswordState: ForgotPasswordState = {
 };
 
 function forgotPasswordReducer(state: ForgotPasswordState, action: ForgotPasswordAction): ForgotPasswordState {
-  switch (action.type) {
-    case 'OPEN':
-      return { ...initialForgotPasswordState, open: true };
-    case 'CLOSE':
-      return initialForgotPasswordState;
-    case 'BACK_TO_EMAIL':
-      return {
-        ...state,
-        step: 'email',
-        error: undefined,
-        isLoading: false,
-      };
-    case 'SENT_OTP':
-      return {
-        ...state,
-        step: 'otp',
-        email: action.email,
-        countdown: action.countdown,
-        attempts: 0,
-        error: undefined,
-        isLoading: false,
-      };
-    case 'VERIFIED_OTP':
-      return {
-        ...state,
-        step: 'reset',
-        resetToken: action.resetToken,
-        error: undefined,
-        isLoading: false,
-      };
-    case 'RESET_DONE':
-      return initialForgotPasswordState;
-    case 'ERROR':
-      return {
-        ...state,
-        error: action.error,
-        isLoading: false,
-      };
-    case 'RESEND':
-      return {
-        ...state,
-        countdown: 60, // Reset countdown to 60 seconds
-        attempts: state.attempts + 1,
-      };
-    case 'TICK':
-      return {
-        ...state,
-        countdown: Math.max(0, state.countdown - 1),
-      };
-    case 'SET_LOADING':
-      return {
-        ...state,
-        isLoading: action.loading,
-      };
-    default:
-      return state;
-  }
+  console.log("Reducer called with action:", action.type, "current state:", state);
+  const newState = (() => {
+    switch (action.type) {
+      case 'OPEN':
+        return { ...initialForgotPasswordState, open: true };
+      case 'CLOSE':
+        return initialForgotPasswordState;
+      case 'BACK_TO_EMAIL':
+        return {
+          ...state,
+          step: 'email',
+          error: undefined,
+          isLoading: false,
+        };
+      case 'SENT_OTP':
+        return {
+          ...state,
+          step: 'otp',
+          email: action.email,
+          countdown: action.countdown,
+          attempts: 0,
+          error: undefined,
+          isLoading: false,
+        };
+      case 'VERIFIED_OTP':
+        return {
+          ...state,
+          step: 'reset',
+          resetToken: action.resetToken,
+          error: undefined,
+          isLoading: false,
+        };
+      case 'RESET_DONE':
+        return initialForgotPasswordState;
+      case 'ERROR':
+        return {
+          ...state,
+          error: action.error,
+          isLoading: false,
+        };
+      case 'RESEND':
+        return {
+          ...state,
+          countdown: 60, // Reset countdown to 60 seconds
+          attempts: state.attempts + 1,
+        };
+      case 'TICK':
+        return {
+          ...state,
+          countdown: Math.max(0, state.countdown - 1),
+        };
+      case 'SET_LOADING':
+        return {
+          ...state,
+          isLoading: action.loading,
+        };
+      default:
+        return state;
+    }
+  })();
+  
+  console.log("Reducer returning new state:", newState);
+  return newState;
 }
 
 // ForgotPasswordWizard component
@@ -162,16 +168,19 @@ function ForgotPasswordWizard({ open, onOpenChange }: { open: boolean; onOpenCha
       return await res.json();
     },
     onSuccess: (data) => {
+      console.log("OTP sent successfully:", data);
       toast({
         title: "OTP sent",
         description: data.message,
       });
+      const email = emailForm.getValues("email");
+      console.log("Dispatching SENT_OTP with email:", email);
       dispatch({ 
         type: 'SENT_OTP', 
-        email: emailForm.getValues("email"), 
+        email, 
         countdown: data.resendAfterSeconds || 60 
       });
-      otpForm.setValue("email", emailForm.getValues("email"));
+      otpForm.setValue("email", email);
     },
     onError: (error: any) => {
       const message = error.message || "Failed to send OTP";
@@ -272,10 +281,10 @@ function ForgotPasswordWizard({ open, onOpenChange }: { open: boolean; onOpenCha
 
   // Initialize state when dialog opens for the first time
   useEffect(() => {
-    if (open && state.step === 'email' && !state.email && !state.isLoading) {
+    if (open && !state.open) {
       dispatch({ type: 'OPEN' });
     }
-  }, [open]);
+  }, [open, state.open]);
 
   return (
     <Dialog open={open} onOpenChange={(newOpen) => {
