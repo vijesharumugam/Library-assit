@@ -94,11 +94,13 @@ export default function AuthPage() {
       return await res.json();
     },
     onSuccess: (data) => {
+      console.log("OTP sent successfully, transitioning to otp step");
       toast({
         title: "OTP sent",
         description: data.message,
       });
       setForgotPasswordStep('otp');
+      console.log("Step set to otp");
     },
     onError: (error: any) => {
       toast({
@@ -535,6 +537,7 @@ export default function AuthPage() {
       {/* Forgot Password Modal */}
       <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
         <DialogContent className="sm:max-w-md">
+          {console.log("Modal rendering, current step:", forgotPasswordStep)}
           <DialogHeader>
             <DialogTitle>
               {forgotPasswordStep === 'email' && 'Forgot Password'}
