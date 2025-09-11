@@ -90,8 +90,18 @@ export default function AuthPage() {
   // Forgot Password mutations
   const forgotPasswordMutation = useMutation({
     mutationFn: async (data: ForgotPasswordForm) => {
+      console.log("Sending forgot password request for:", data.email);
       const res = await apiRequest("POST", "/api/auth/forgot-password", data);
-      return await res.json();
+      console.log("API response status:", res.status);
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to send OTP");
+      }
+      
+      const responseData = await res.json();
+      console.log("API response data:", responseData);
+      return responseData;
     },
     onSuccess: (data) => {
       console.log("OTP sent successfully, transitioning to otp step");
@@ -103,6 +113,7 @@ export default function AuthPage() {
       console.log("Step set to otp");
     },
     onError: (error: any) => {
+      console.error("Forgot password error:", error);
       toast({
         title: "Failed to send OTP",
         description: error.message || "Please try again",
@@ -167,6 +178,11 @@ export default function AuthPage() {
       setLocation(redirectPath);
     }
   }, [user, setLocation]);
+
+  // Debug forgot password step changes
+  useEffect(() => {
+    console.log("Forgot password step changed to:", forgotPasswordStep);
+  }, [forgotPasswordStep]);
 
   // Don't render if user is already logged in
   if (user) {
@@ -537,7 +553,6 @@ export default function AuthPage() {
       {/* Forgot Password Modal */}
       <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
         <DialogContent className="sm:max-w-md">
-          {console.log("Modal rendering, current step:", forgotPasswordStep)}
           <DialogHeader>
             <DialogTitle>
               {forgotPasswordStep === 'email' && 'Forgot Password'}
