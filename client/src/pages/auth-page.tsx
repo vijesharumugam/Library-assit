@@ -154,12 +154,7 @@ export default function AuthPage() {
         description: "You can now login with your new password",
       });
       setShowForgotPassword(false);
-      setForgotPasswordStep('email');
-      setForgotPasswordEmail('');
-      // Reset all forms
-      forgotPasswordForm.reset();
-      verifyOtpForm.reset();
-      resetPasswordForm.reset();
+      // Form reset is now handled by onOpenChange
     },
     onError: (error: any) => {
       toast({
@@ -214,7 +209,10 @@ export default function AuthPage() {
 
   const handleForgotPasswordClick = () => {
     setShowForgotPassword(true);
-    setForgotPasswordStep('email');
+    // Only reset step if dialog is not already open
+    if (!showForgotPassword) {
+      setForgotPasswordStep('email');
+    }
   };
 
 
@@ -551,7 +549,18 @@ export default function AuthPage() {
       </div>
       
       {/* Forgot Password Modal */}
-      <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
+      <Dialog open={showForgotPassword} onOpenChange={(open) => {
+        setShowForgotPassword(open);
+        if (!open) {
+          // Only reset step when dialog is explicitly closed
+          setForgotPasswordStep('email');
+          setForgotPasswordEmail('');
+          // Reset all forms
+          forgotPasswordForm.reset();
+          verifyOtpForm.reset();
+          resetPasswordForm.reset();
+        }
+      }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
