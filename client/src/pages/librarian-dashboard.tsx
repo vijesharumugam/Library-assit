@@ -37,6 +37,7 @@ function LibrarianDashboard() {
   const [showDatePickerDialog, setShowDatePickerDialog] = useState(false);
   const [selectedRequestId, setSelectedRequestId] = useState<string>("");
   const [selectedDueDate, setSelectedDueDate] = useState<Date>();
+  const [requestType, setRequestType] = useState<'book' | 'extension'>('book');
 
   const { data: books = [], isLoading: booksLoading } = useQuery<Book[]>({
     queryKey: ["/api/books"],
@@ -181,12 +182,29 @@ function LibrarianDashboard() {
   const handleApproveWithDate = (requestId: string) => {
     setSelectedRequestId(requestId);
     setSelectedDueDate(undefined);
+    setRequestType('book');
+    setShowDatePickerDialog(true);
+  };
+
+  const handleApproveExtensionWithDate = (requestId: string) => {
+    setSelectedRequestId(requestId);
+    setSelectedDueDate(undefined);
+    setRequestType('extension');
     setShowDatePickerDialog(true);
   };
 
   const handleConfirmApproval = () => {
     if (selectedDueDate && selectedRequestId) {
       approveRequestMutation.mutate({ requestId: selectedRequestId, dueDate: selectedDueDate });
+      setShowDatePickerDialog(false);
+      setSelectedRequestId("");
+      setSelectedDueDate(undefined);
+    }
+  };
+
+  const handleConfirmExtensionApproval = () => {
+    if (selectedDueDate && selectedRequestId) {
+      approveExtensionMutation.mutate({ requestId: selectedRequestId, dueDate: selectedDueDate });
       setShowDatePickerDialog(false);
       setSelectedRequestId("");
       setSelectedDueDate(undefined);
@@ -837,7 +855,7 @@ function LibrarianDashboard() {
                             <div className="flex gap-2 flex-shrink-0">
                               <Button
                                 size="sm"
-                                onClick={() => approveExtensionMutation.mutate(request.id)}
+                                onClick={() => handleApproveExtensionWithDate(request.id)}
                                 disabled={approveExtensionMutation.isPending}
                                 className="bg-green-600 hover:bg-green-700"
                                 data-testid={`button-approve-extension-${request.id}`}
@@ -1238,7 +1256,9 @@ function LibrarianDashboard() {
           <DialogHeader>
             <DialogTitle>Select Due Date</DialogTitle>
             <DialogDescription>
-              Choose the due date for the book loan. The book will need to be returned by this date.
+              {requestType === 'book' 
+                ? "Choose the due date for the book loan. The book will need to be returned by this date."
+                : "Choose the extended due date for this book. The book will need to be returned by this new date."}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center space-y-4">
@@ -1246,7 +1266,7 @@ function LibrarianDashboard() {
               mode="single"
               selected={selectedDueDate}
               onSelect={setSelectedDueDate}
-              disabled={(date) => date < new Date()}
+              disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
               className="rounded-md border"
             />
             <div className="flex space-x-2 w-full">
@@ -1258,11 +1278,13 @@ function LibrarianDashboard() {
                 Cancel
               </Button>
               <Button
-                onClick={handleConfirmApproval}
-                disabled={!selectedDueDate || approveRequestMutation.isPending}
+                onClick={requestType === 'book' ? handleConfirmApproval : handleConfirmExtensionApproval}
+                disabled={!selectedDueDate || (requestType === 'book' ? approveRequestMutation.isPending : approveExtensionMutation.isPending)}
                 className="flex-1"
               >
-                {approveRequestMutation.isPending ? "Approving..." : "Approve Request"}
+                {(requestType === 'book' ? approveRequestMutation.isPending : approveExtensionMutation.isPending) 
+                  ? "Approving..." 
+                  : `Approve ${requestType === 'book' ? 'Request' : 'Extension'}`}
               </Button>
             </div>
           </div>
