@@ -25,10 +25,11 @@ import {
   ExtensionRequestWithUser,
   ExtensionRequestWithUserAndTransaction
 } from "@shared/schema";
-import { prisma } from "./db";
-import { convertPrismaUser, convertPrismaBook, convertPrismaTransaction, convertPrismaBookRequest, convertPrismaExtensionRequest } from "./types";
 import session from "express-session";
-import MongoStore from "connect-mongo";
+import MemoryStore from "memorystore";
+import { nanoid } from "nanoid";
+
+const MemoryStoreSession = MemoryStore(session);
 
 export interface IStorage {
   // User methods
@@ -39,6 +40,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUserRole(userId: string, role: Role): Promise<User | null>;
   updateProfile(userId: string, profile: UpdateProfile): Promise<User | null>;
+  updatePassword(userId: string, password: string): Promise<User | null>;
   deleteUser(userId: string): Promise<boolean>;
   getAllUsers(): Promise<User[]>;
   getStudents(): Promise<User[]>;
@@ -65,6 +67,7 @@ export interface IStorage {
   getAllBookRequests(): Promise<BookRequestWithUserAndBook[]>;
   getPendingBookRequests(): Promise<BookRequestWithUserAndBook[]>;
   updateBookRequestStatus(id: string, status: BookRequestStatus): Promise<BookRequest | null>;
+  rejectBookRequest(requestId: string): Promise<BookRequest | null>;
   approveBookRequest(requestId: string, librarianId: string): Promise<Transaction | null>;
   
   // Extension Request methods
@@ -91,6 +94,589 @@ export interface IStorage {
   sessionStore: session.Store;
 }
 
+export class MemStorage implements IStorage {
+  private users = new Map<string, User>();
+  private books = new Map<string, Book>();
+  private transactions = new Map<string, Transaction>();
+  private bookRequests = new Map<string, BookRequest>();
+  private extensionRequests = new Map<string, ExtensionRequest>();
+  private notifications = new Map<string, Notification>();
+  private pushSubscriptions = new Map<string, PushSubscription>();
+
+  sessionStore: session.Store;
+
+  constructor() {
+    this.sessionStore = new MemoryStoreSession({
+      checkPeriod: 86400000 // prune expired entries every 24h
+    });
+  }
+
+  // User methods
+  async getUser(id: string): Promise<User | null> {
+    return this.users.get(id) || null;
+  }
+
+  async getUserByUsername(username: string): Promise<User | null> {
+    const users = Array.from(this.users.values());
+    return users.find(user => user.username === username) || null;
+  }
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    const users = Array.from(this.users.values());
+    return users.find(user => user.email === email) || null;
+  }
+
+  async getUserByRegisterNumber(registerNumber: string): Promise<User | null> {
+    const users = Array.from(this.users.values());
+    return users.find(user => user.studentId === registerNumber) || null;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const user: User = {
+      id: nanoid(),
+      ...insertUser,
+      role: insertUser.role || Role.STUDENT,
+      createdAt: new Date()
+    };
+    this.users.set(user.id, user);
+    return user;
+  }
+
+  async updateUserRole(userId: string, role: Role): Promise<User | null> {
+    const user = this.users.get(userId);
+    if (!user) return null;
+    
+    const updatedUser = { ...user, role };
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+
+  async updateProfile(userId: string, profile: UpdateProfile): Promise<User | null> {
+    const user = this.users.get(userId);
+    if (!user) return null;
+    
+    const updatedUser = { ...user, ...profile };
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+
+  async updatePassword(userId: string, password: string): Promise<User | null> {
+    const user = this.users.get(userId);
+    if (!user) return null;
+    
+    const updatedUser = { ...user, password };
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+
+  async deleteUser(userId: string): Promise<boolean> {
+    return this.users.delete(userId);
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    const users = Array.from(this.users.values());
+    return users.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getStudents(): Promise<User[]> {
+    const users = Array.from(this.users.values());
+    return users
+      .filter(user => user.role === Role.STUDENT)
+      .sort((a, b) => a.fullName.localeCompare(b.fullName));
+  }
+
+  // Book methods
+  async getBook(id: string): Promise<Book | null> {
+    return this.books.get(id) || null;
+  }
+
+  async getAllBooks(): Promise<Book[]> {
+    const books = Array.from(this.books.values());
+    return books.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getAvailableBooks(): Promise<Book[]> {
+    const books = Array.from(this.books.values());
+    return books
+      .filter(book => book.availableCopies > 0)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async createBook(insertBook: InsertBook): Promise<Book> {
+    const book: Book = {
+      id: nanoid(),
+      ...insertBook,
+      availableCopies: insertBook.totalCopies,
+      createdAt: new Date()
+    };
+    this.books.set(book.id, book);
+    return book;
+  }
+
+  async updateBook(id: string, bookData: Partial<InsertBook>): Promise<Book | null> {
+    const book = this.books.get(id);
+    if (!book) return null;
+    
+    const updatedBook = { ...book, ...bookData };
+    this.books.set(id, updatedBook);
+    return updatedBook;
+  }
+
+  async deleteBook(id: string): Promise<boolean> {
+    return this.books.delete(id);
+  }
+
+  async updateBookAvailability(bookId: string, change: number): Promise<boolean> {
+    const book = this.books.get(bookId);
+    if (!book) return false;
+    
+    const updatedBook = { ...book, availableCopies: book.availableCopies + change };
+    this.books.set(bookId, updatedBook);
+    return true;
+  }
+
+  // Transaction methods
+  async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {
+    const transaction: Transaction = {
+      id: nanoid(),
+      ...insertTransaction,
+      borrowedDate: new Date(),
+      status: insertTransaction.status || TransactionStatus.BORROWED
+    };
+    this.transactions.set(transaction.id, transaction);
+
+    // Send notification for book borrowed
+    const book = await this.getBook(transaction.bookId);
+    if (book) {
+      await this.createNotification({
+        userId: transaction.userId,
+        type: "BOOK_BORROWED",
+        title: "Book Borrowed Successfully",
+        message: `You have successfully borrowed "${book.title}" by ${book.author}. Due date: ${new Date(transaction.dueDate).toLocaleDateString()}`
+      });
+    }
+
+    return transaction;
+  }
+
+  async getUserTransactions(userId: string): Promise<TransactionWithBook[]> {
+    const transactions = Array.from(this.transactions.values())
+      .filter(transaction => transaction.userId === userId)
+      .sort((a, b) => b.borrowedDate.getTime() - a.borrowedDate.getTime());
+
+    const result: TransactionWithBook[] = [];
+    for (const transaction of transactions) {
+      const book = await this.getBook(transaction.bookId);
+      if (book) {
+        result.push({ ...transaction, book });
+      }
+    }
+    return result;
+  }
+
+  async getAllTransactions(): Promise<TransactionWithUserAndBook[]> {
+    const transactions = Array.from(this.transactions.values())
+      .sort((a, b) => b.borrowedDate.getTime() - a.borrowedDate.getTime());
+
+    const result: TransactionWithUserAndBook[] = [];
+    for (const transaction of transactions) {
+      const user = await this.getUser(transaction.userId);
+      const book = await this.getBook(transaction.bookId);
+      if (user && book) {
+        result.push({ ...transaction, user, book });
+      }
+    }
+    return result;
+  }
+
+  async updateTransactionStatus(id: string, status: TransactionStatus, returnedDate?: Date): Promise<Transaction | null> {
+    const transaction = this.transactions.get(id);
+    if (!transaction) return null;
+    
+    const updatedTransaction = { 
+      ...transaction, 
+      status,
+      ...(returnedDate && { returnedDate })
+    };
+    this.transactions.set(id, updatedTransaction);
+
+    // Send notification for book returned
+    if (status === TransactionStatus.RETURNED) {
+      const book = await this.getBook(transaction.bookId);
+      if (book) {
+        await this.createNotification({
+          userId: transaction.userId,
+          type: "BOOK_RETURNED",
+          title: "Book Returned Successfully",
+          message: `You have successfully returned "${book.title}" by ${book.author}. Thank you for returning on time!`
+        });
+      }
+    }
+
+    return updatedTransaction;
+  }
+
+  async getActiveTransactions(): Promise<TransactionWithUserAndBook[]> {
+    const transactions = Array.from(this.transactions.values())
+      .filter(transaction => transaction.status === TransactionStatus.BORROWED)
+      .sort((a, b) => b.borrowedDate.getTime() - a.borrowedDate.getTime());
+
+    const result: TransactionWithUserAndBook[] = [];
+    for (const transaction of transactions) {
+      const user = await this.getUser(transaction.userId);
+      const book = await this.getBook(transaction.bookId);
+      if (user && book) {
+        result.push({ ...transaction, user, book });
+      }
+    }
+    return result;
+  }
+
+  // Book Request methods
+  async createBookRequest(insertRequest: InsertBookRequest): Promise<BookRequest> {
+    const request: BookRequest = {
+      id: nanoid(),
+      ...insertRequest,
+      requestDate: new Date(),
+      status: insertRequest.status || BookRequestStatus.PENDING
+    };
+    this.bookRequests.set(request.id, request);
+    return request;
+  }
+
+  async getBookRequestsByUser(userId: string): Promise<BookRequestWithBook[]> {
+    const requests = Array.from(this.bookRequests.values())
+      .filter(request => request.userId === userId)
+      .sort((a, b) => b.requestDate.getTime() - a.requestDate.getTime());
+
+    const result: BookRequestWithBook[] = [];
+    for (const request of requests) {
+      const book = await this.getBook(request.bookId);
+      if (book) {
+        result.push({ ...request, book });
+      }
+    }
+    return result;
+  }
+
+  async getAllBookRequests(): Promise<BookRequestWithUserAndBook[]> {
+    const requests = Array.from(this.bookRequests.values())
+      .sort((a, b) => b.requestDate.getTime() - a.requestDate.getTime());
+
+    const result: BookRequestWithUserAndBook[] = [];
+    for (const request of requests) {
+      const user = await this.getUser(request.userId);
+      const book = await this.getBook(request.bookId);
+      if (user && book) {
+        result.push({ ...request, user, book });
+      }
+    }
+    return result;
+  }
+
+  async getPendingBookRequests(): Promise<BookRequestWithUserAndBook[]> {
+    const requests = Array.from(this.bookRequests.values())
+      .filter(request => request.status === BookRequestStatus.PENDING)
+      .sort((a, b) => b.requestDate.getTime() - a.requestDate.getTime());
+
+    const result: BookRequestWithUserAndBook[] = [];
+    for (const request of requests) {
+      const user = await this.getUser(request.userId);
+      const book = await this.getBook(request.bookId);
+      if (user && book) {
+        result.push({ ...request, user, book });
+      }
+    }
+    return result;
+  }
+
+  async updateBookRequestStatus(id: string, status: BookRequestStatus): Promise<BookRequest | null> {
+    const request = this.bookRequests.get(id);
+    if (!request) return null;
+    
+    const updatedRequest = { ...request, status };
+    this.bookRequests.set(id, updatedRequest);
+    return updatedRequest;
+  }
+
+  async rejectBookRequest(requestId: string): Promise<BookRequest | null> {
+    const request = this.bookRequests.get(requestId);
+    if (!request || request.status !== BookRequestStatus.PENDING) return null;
+
+    const book = await this.getBook(request.bookId);
+    if (!book) return null;
+
+    // Update request status to rejected
+    const rejectedRequest = await this.updateBookRequestStatus(requestId, BookRequestStatus.REJECTED);
+
+    // Create notification for rejected request
+    await this.createNotification({
+      userId: request.userId,
+      type: "BOOK_REQUEST_REJECTED" as any,
+      title: "Book Request Rejected", 
+      message: `Your request for "${book.title}" by ${book.author} has been rejected by the librarian.`
+    });
+
+    return rejectedRequest;
+  }
+
+  async approveBookRequest(requestId: string, librarianId: string, customDueDate?: Date): Promise<Transaction | null> {
+    const request = this.bookRequests.get(requestId);
+    if (!request || request.status !== BookRequestStatus.PENDING) return null;
+
+    const book = await this.getBook(request.bookId);
+    if (!book || book.availableCopies <= 0) return null;
+
+    // Create transaction
+    const dueDate = customDueDate || (() => {
+      const defaultDue = new Date();
+      defaultDue.setDate(defaultDue.getDate() + 14);
+      return defaultDue;
+    })();
+
+    const transaction = await this.createTransaction({
+      userId: request.userId,
+      bookId: request.bookId,
+      dueDate,
+      status: TransactionStatus.BORROWED
+    });
+
+    // Update book availability
+    await this.updateBookAvailability(request.bookId, -1);
+
+    // Update request status
+    await this.updateBookRequestStatus(requestId, BookRequestStatus.FULFILLED);
+
+    // Create notification
+    await this.createNotification({
+      userId: transaction.userId,
+      type: "BOOK_BORROWED",
+      title: "Book Request Approved",
+      message: `Your request for "${book.title}" by ${book.author} has been approved. Due date: ${dueDate.toLocaleDateString()}`
+    });
+
+    return transaction;
+  }
+
+  // Extension Request methods
+  async createExtensionRequest(insertExtensionRequest: InsertExtensionRequest): Promise<ExtensionRequest> {
+    const extensionRequest: ExtensionRequest = {
+      id: nanoid(),
+      ...insertExtensionRequest,
+      requestDate: new Date(),
+      status: insertExtensionRequest.status || ExtensionRequestStatus.PENDING
+    };
+    this.extensionRequests.set(extensionRequest.id, extensionRequest);
+    return extensionRequest;
+  }
+
+  async getExtensionRequestsByUser(userId: string): Promise<ExtensionRequestWithUserAndTransaction[]> {
+    const requests = Array.from(this.extensionRequests.values())
+      .filter(request => request.userId === userId)
+      .sort((a, b) => b.requestDate.getTime() - a.requestDate.getTime());
+
+    const result: ExtensionRequestWithUserAndTransaction[] = [];
+    for (const request of requests) {
+      const user = await this.getUser(request.userId);
+      const transaction = this.transactions.get(request.transactionId);
+      if (user && transaction) {
+        const book = await this.getBook(transaction.bookId);
+        if (book) {
+          result.push({ 
+            ...request, 
+            user, 
+            transaction: { ...transaction, book } 
+          });
+        }
+      }
+    }
+    return result;
+  }
+
+  async getAllExtensionRequests(): Promise<ExtensionRequestWithUserAndTransaction[]> {
+    const requests = Array.from(this.extensionRequests.values())
+      .sort((a, b) => b.requestDate.getTime() - a.requestDate.getTime());
+
+    const result: ExtensionRequestWithUserAndTransaction[] = [];
+    for (const request of requests) {
+      const user = await this.getUser(request.userId);
+      const transaction = this.transactions.get(request.transactionId);
+      if (user && transaction) {
+        const book = await this.getBook(transaction.bookId);
+        if (book) {
+          result.push({ 
+            ...request, 
+            user, 
+            transaction: { ...transaction, book } 
+          });
+        }
+      }
+    }
+    return result;
+  }
+
+  async getPendingExtensionRequests(): Promise<ExtensionRequestWithUserAndTransaction[]> {
+    const requests = Array.from(this.extensionRequests.values())
+      .filter(request => request.status === ExtensionRequestStatus.PENDING)
+      .sort((a, b) => b.requestDate.getTime() - a.requestDate.getTime());
+
+    const result: ExtensionRequestWithUserAndTransaction[] = [];
+    for (const request of requests) {
+      const user = await this.getUser(request.userId);
+      const transaction = this.transactions.get(request.transactionId);
+      if (user && transaction) {
+        const book = await this.getBook(transaction.bookId);
+        if (book) {
+          result.push({ 
+            ...request, 
+            user, 
+            transaction: { ...transaction, book } 
+          });
+        }
+      }
+    }
+    return result;
+  }
+
+  async approveExtensionRequest(requestId: string, processedBy: string, customDueDate: Date): Promise<ExtensionRequest | null> {
+    const request = this.extensionRequests.get(requestId);
+    if (!request || request.status !== ExtensionRequestStatus.PENDING) return null;
+
+    const transaction = this.transactions.get(request.transactionId);
+    if (!transaction) return null;
+
+    // Update transaction due date
+    const updatedTransaction = { ...transaction, dueDate: customDueDate };
+    this.transactions.set(request.transactionId, updatedTransaction);
+
+    // Update extension request
+    const updatedRequest = {
+      ...request,
+      status: ExtensionRequestStatus.APPROVED,
+      processedBy,
+      processedDate: new Date()
+    };
+    this.extensionRequests.set(requestId, updatedRequest);
+
+    // Create notification
+    const book = await this.getBook(transaction.bookId);
+    if (book) {
+      await this.createNotification({
+        userId: request.userId,
+        type: "EXTENSION_REQUEST_APPROVED",
+        title: "Extension Request Approved",
+        message: `Your extension request for "${book.title}" has been approved. New due date: ${customDueDate.toLocaleDateString()}`
+      });
+    }
+
+    return updatedRequest;
+  }
+
+  async rejectExtensionRequest(requestId: string, processedBy: string): Promise<ExtensionRequest | null> {
+    const request = this.extensionRequests.get(requestId);
+    if (!request || request.status !== ExtensionRequestStatus.PENDING) return null;
+
+    const updatedRequest = {
+      ...request,
+      status: ExtensionRequestStatus.REJECTED,
+      processedBy,
+      processedDate: new Date()
+    };
+    this.extensionRequests.set(requestId, updatedRequest);
+
+    // Create notification
+    const transaction = this.transactions.get(request.transactionId);
+    if (transaction) {
+      const book = await this.getBook(transaction.bookId);
+      if (book) {
+        await this.createNotification({
+          userId: request.userId,
+          type: "EXTENSION_REQUEST_REJECTED",
+          title: "Extension Request Rejected",
+          message: `Your extension request for "${book.title}" has been rejected by the librarian.`
+        });
+      }
+    }
+
+    return updatedRequest;
+  }
+
+  // Notification methods
+  async createNotification(insertNotification: InsertNotification): Promise<Notification> {
+    const notification: Notification = {
+      id: nanoid(),
+      ...insertNotification,
+      isRead: false,
+      createdAt: new Date()
+    };
+    this.notifications.set(notification.id, notification);
+    return notification;
+  }
+
+  async getUserNotifications(userId: string): Promise<Notification[]> {
+    const notifications = Array.from(this.notifications.values())
+      .filter(notification => notification.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return notifications;
+  }
+
+  async markNotificationAsRead(id: string): Promise<Notification | null> {
+    const notification = this.notifications.get(id);
+    if (!notification) return null;
+    
+    const updatedNotification = { ...notification, isRead: true };
+    this.notifications.set(id, updatedNotification);
+    return updatedNotification;
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<boolean> {
+    const notifications = Array.from(this.notifications.values())
+      .filter(notification => notification.userId === userId && !notification.isRead);
+    
+    for (const notification of notifications) {
+      const updatedNotification = { ...notification, isRead: true };
+      this.notifications.set(notification.id, updatedNotification);
+    }
+    return true;
+  }
+
+  async clearAllNotifications(userId: string): Promise<boolean> {
+    const notifications = Array.from(this.notifications.values())
+      .filter(notification => notification.userId === userId);
+    
+    for (const notification of notifications) {
+      this.notifications.delete(notification.id);
+    }
+    return true;
+  }
+
+  // Push Subscription methods
+  async createPushSubscription(insertSubscription: InsertPushSubscription): Promise<PushSubscription> {
+    const subscription: PushSubscription = {
+      id: nanoid(),
+      ...insertSubscription,
+      createdAt: new Date()
+    };
+    this.pushSubscriptions.set(subscription.id, subscription);
+    return subscription;
+  }
+
+  async getUserPushSubscriptions(userId: string): Promise<PushSubscription[]> {
+    const subscriptions = Array.from(this.pushSubscriptions.values())
+      .filter(subscription => subscription.userId === userId);
+    return subscriptions;
+  }
+
+  async deletePushSubscription(id: string): Promise<boolean> {
+    return this.pushSubscriptions.delete(id);
+  }
+
+  async getAllPushSubscriptions(): Promise<PushSubscription[]> {
+    return Array.from(this.pushSubscriptions.values());
+  }
+}
+
+/* 
 export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
 
@@ -742,5 +1328,6 @@ export class DatabaseStorage implements IStorage {
     })) as PushSubscription[];
   }
 }
+*/
 
-export const storage = new DatabaseStorage();
+export const storage = new MemStorage();

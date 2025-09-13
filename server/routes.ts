@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { PushNotificationService } from "./push-service";
 import { insertBookSchema, insertTransactionSchema, insertBookRequestSchema, insertNotificationSchema, insertPushSubscriptionSchema, insertExtensionRequestSchema, updateProfileSchema, TransactionStatus, BookRequestStatus, NotificationType, ExtensionRequestStatus, forgotPasswordSchema, verifyOtpSchema, resetPasswordSchema } from "@shared/schema";
 import { z } from "zod";
-import { prisma } from "./db";
+// import { prisma } from "./db"; // Removed - using MemStorage instead
 import multer from "multer";
 import * as XLSX from "xlsx";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -587,9 +587,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/transactions/:id/return", requireAuth, async (req, res) => {
     try {
-      const transaction = await prisma.transaction.findUnique({
-        where: { id: req.params.id }
-      });
+      // Get transaction through storage interface
+      const allTransactions = await storage.getAllTransactions();
+      const transaction = allTransactions.find(t => t.id === req.params.id);
 
       if (!transaction) {
         return res.status(404).json({ message: "Transaction not found" });
@@ -895,9 +895,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user exists
-      const user = await prisma.user.findUnique({
-        where: { email: email.toLowerCase() }
-      });
+      const user = await storage.getUserByEmail(email.toLowerCase());
 
       if (!user) {
         // Don't reveal if user exists or not for security
@@ -979,9 +977,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user exists (security check)
-      const user = await prisma.user.findUnique({
-        where: { email: email.toLowerCase() }
-      });
+      const user = await storage.getUserByEmail(email.toLowerCase());
 
       if (!user) {
         return res.status(400).json({ 
@@ -1024,9 +1020,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Find user
-      const user = await prisma.user.findUnique({
-        where: { email: email.toLowerCase() }
-      });
+      const user = await storage.getUserByEmail(email.toLowerCase());
 
       if (!user) {
         return res.status(400).json({ 
@@ -1040,10 +1034,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const passwordWithSalt = hashedPassword.toString('hex') + '.' + salt;
 
       // Update password
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { password: passwordWithSalt }
-      });
+      await storage.updatePassword(user.id, passwordWithSalt);
 
       res.json({ 
         message: "Password reset successfully" 
