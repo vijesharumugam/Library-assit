@@ -1,17 +1,42 @@
-import { MailService } from '@sendgrid/mail';
+import * as nodemailer from 'nodemailer';
 
-const mailService = new MailService();
+// Create Gmail transporter with explicit SMTP configuration
+const createGmailTransporter = async () => {
+  if (!process.env.GMAIL_EMAIL || !process.env.GMAIL_APP_PASSWORD) {
+    console.warn("Gmail credentials not configured. Email functionality will not work.");
+    return null;
+  }
 
-// Initialize SendGrid if API key is available
-if (process.env.SENDGRID_API_KEY) {
-  mailService.setApiKey(process.env.SENDGRID_API_KEY);
-} else {
-  console.warn("SENDGRID_API_KEY environment variable is not set. Email functionality will not work.");
-}
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.GMAIL_EMAIL,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  });
+
+  // Verify connection configuration
+  try {
+    await transporter.verify();
+    console.log('Gmail SMTP configuration verified successfully');
+    return transporter;
+  } catch (error) {
+    console.error('Gmail SMTP configuration failed:', error);
+    return null;
+  }
+};
+
+let mailTransporter: nodemailer.Transporter | null = null;
+
+// Initialize transporter asynchronously
+createGmailTransporter().then((transporter) => {
+  mailTransporter = transporter;
+});
 
 interface EmailParams {
   to: string;
-  from: string;
   subject: string;
   text?: string;
   html?: string;
@@ -21,8 +46,8 @@ class EmailService {
   private readonly fromEmail: string;
 
   constructor() {
-    // Use a verified sender email for SendGrid
-    this.fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@library.com';
+    // Always use the configured Gmail address with a display name
+    this.fromEmail = process.env.GMAIL_EMAIL ? `Library Management System <${process.env.GMAIL_EMAIL}>` : '';
   }
 
   async sendOtpEmail(
@@ -31,27 +56,29 @@ class EmailService {
     userName?: string
   ): Promise<boolean> {
     try {
-      // Check if SendGrid is properly configured
-      if (!process.env.SENDGRID_API_KEY) {
-        console.error('SENDGRID_API_KEY not configured. Cannot send email.');
+      // Check if Gmail is properly configured
+      if (!mailTransporter) {
+        console.error('Gmail credentials not configured. Cannot send email.');
         return false;
       }
 
       const htmlTemplate = this.generateOtpEmailTemplate(otp, userName);
       const textTemplate = this.generateOtpEmailText(otp, userName);
 
-      await mailService.send({
-        to: toEmail,
+      const mailOptions = {
         from: this.fromEmail,
+        to: toEmail,
         subject: 'Password Reset OTP - Library Management System',
         text: textTemplate,
         html: htmlTemplate,
-      });
+      };
+
+      await mailTransporter.sendMail(mailOptions);
 
       console.log(`OTP email sent successfully to ${toEmail}`);
       return true;
     } catch (error) {
-      console.error('SendGrid email error:', error);
+      console.error('Gmail email error:', error);
       return false;
     }
   }
@@ -196,16 +223,23 @@ Library Management System
 
   async sendEmail(params: EmailParams): Promise<boolean> {
     try {
-      await mailService.send({
+      if (!mailTransporter) {
+        console.error('Gmail credentials not configured. Cannot send email.');
+        return false;
+      }
+
+      const mailOptions = {
+        from: this.fromEmail, // Always use authenticated Gmail address
         to: params.to,
-        from: params.from,
         subject: params.subject,
         text: params.text || '',
         html: params.html || '',
-      });
+      };
+
+      await mailTransporter.sendMail(mailOptions);
       return true;
     } catch (error) {
-      console.error('SendGrid email error:', error);
+      console.error('Gmail email error:', error);
       return false;
     }
   }
