@@ -18,6 +18,9 @@ import { useRoutePrefetch } from "@/hooks/use-route-prefetch";
 // Pre-load critical dashboard components for faster navigation
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
+import ForgotPasswordPage from "@/pages/forgot-password";
+import VerifyOtpPage from "@/pages/verify-otp";
+import ResetPasswordPage from "@/pages/reset-password";
 import StudentDashboard from "@/pages/student-dashboard";
 import LibrarianDashboard from "@/pages/librarian-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
@@ -125,6 +128,9 @@ function Router() {
           allowedRoles={[Role.ADMIN]} 
         />
         <Route path="/auth" component={() => <AuthPage />} />
+        <Route path="/forgot-password" component={() => <ForgotPasswordPage />} />
+        <Route path="/verify-otp" component={() => <VerifyOtpPage />} />
+        <Route path="/reset-password" component={() => <ResetPasswordPage />} />
         <Route component={() => <NotFound />} />
       </Switch>
     </Suspense>
