@@ -10,6 +10,7 @@ import {
   TransactionStatus,
   BookRequestStatus,
   ExtensionRequestStatus,
+  NotificationType,
   InsertUser, 
   InsertBook, 
   InsertTransaction, 
@@ -250,7 +251,7 @@ export class MemStorage implements IStorage {
     if (book) {
       await this.createNotification({
         userId: transaction.userId,
-        type: "BOOK_BORROWED",
+        type: NotificationType.BOOK_BORROWED,
         title: "Book Borrowed Successfully",
         message: `You have successfully borrowed "${book.title}" by ${book.author}. Due date: ${new Date(transaction.dueDate).toLocaleDateString()}`
       });
@@ -306,7 +307,7 @@ export class MemStorage implements IStorage {
       if (book) {
         await this.createNotification({
           userId: transaction.userId,
-          type: "BOOK_RETURNED",
+          type: NotificationType.BOOK_RETURNED,
           title: "Book Returned Successfully",
           message: `You have successfully returned "${book.title}" by ${book.author}. Thank you for returning on time!`
         });
@@ -450,7 +451,7 @@ export class MemStorage implements IStorage {
     // Create notification
     await this.createNotification({
       userId: transaction.userId,
-      type: "BOOK_BORROWED",
+      type: NotificationType.BOOK_BORROWED,
       title: "Book Request Approved",
       message: `Your request for "${book.title}" by ${book.author} has been approved. Due date: ${dueDate.toLocaleDateString()}`
     });
@@ -563,7 +564,7 @@ export class MemStorage implements IStorage {
     if (book) {
       await this.createNotification({
         userId: request.userId,
-        type: "EXTENSION_REQUEST_APPROVED",
+        type: NotificationType.EXTENSION_REQUEST_APPROVED,
         title: "Extension Request Approved",
         message: `Your extension request for "${book.title}" has been approved. New due date: ${customDueDate.toLocaleDateString()}`
       });
@@ -591,7 +592,7 @@ export class MemStorage implements IStorage {
       if (book) {
         await this.createNotification({
           userId: request.userId,
-          type: "EXTENSION_REQUEST_REJECTED",
+          type: NotificationType.EXTENSION_REQUEST_REJECTED,
           title: "Extension Request Rejected",
           message: `Your extension request for "${book.title}" has been rejected by the librarian.`
         });
