@@ -3,13 +3,15 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { PushNotificationService } from "./push-service";
-import { insertBookSchema, insertTransactionSchema, insertBookRequestSchema, insertNotificationSchema, insertPushSubscriptionSchema, insertExtensionRequestSchema, updateProfileSchema, TransactionStatus, BookRequestStatus, NotificationType, ExtensionRequestStatus } from "@shared/schema";
+import { insertBookSchema, insertTransactionSchema, insertBookRequestSchema, insertNotificationSchema, insertPushSubscriptionSchema, insertExtensionRequestSchema, updateProfileSchema, TransactionStatus, BookRequestStatus, NotificationType, ExtensionRequestStatus, forgotPasswordSchema, verifyOtpSchema, resetPasswordSchema } from "@shared/schema";
 import { z } from "zod";
 // import { prisma } from "./db"; // Removed - using MemStorage instead
 import multer from "multer";
 import * as XLSX from "xlsx";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { LibraryAIService } from "./ai-service";
+import { emailService } from "./email-service";
+import { otpService } from "./otp-service";
 import crypto from 'crypto';
 
 function requireAuth(req: any, res: any, next: any) {
@@ -73,6 +75,161 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
     limits: {
       fileSize: 2 * 1024 * 1024 // 2MB limit
+    }
+  });
+
+  // Forgot Password routes (no authentication required)
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = forgotPasswordSchema.parse(req.body);
+      const normalizedEmail = email.toLowerCase().trim();
+
+      // SECURITY: Always return identical response to prevent email enumeration attacks
+      const standardResponse = { 
+        message: "If the email address exists, an OTP has been sent to reset your password." 
+      };
+
+      // Check rate limiting first - apply to ALL requests regardless of user existence
+      if (otpService.hasActiveOtp(normalizedEmail)) {
+        // Internal logging for monitoring but don't expose to client
+        console.log(`Rate limit hit for email: ${normalizedEmail}`);
+        // Still return 200 with standard message to prevent timing attacks
+        return res.json(standardResponse);
+      }
+
+      // Check if user exists (but don't reveal this information in response)
+      const user = await storage.getUserByEmail(normalizedEmail);
+      
+      if (!user) {
+        // Log internally for monitoring
+        console.log(`Password reset requested for non-existent email: ${normalizedEmail}`);
+        // Return success response to prevent email enumeration
+        return res.json(standardResponse);
+      }
+
+      // User exists and no rate limit - generate and store OTP
+      const otp = otpService.generateOtp();
+      otpService.storeOtp(normalizedEmail, otp);
+
+      // Attempt to send OTP email
+      try {
+        const emailSent = await emailService.sendOtpEmail(normalizedEmail, otp, user.fullName);
+        
+        if (emailSent) {
+          console.log(`OTP sent successfully to ${normalizedEmail}`);
+        } else {
+          console.error(`Failed to send OTP email to ${normalizedEmail} - email service returned false`);
+        }
+      } catch (emailError) {
+        console.error(`Failed to send OTP email to ${normalizedEmail}:`, emailError);
+        // Don't expose email sending failures to prevent enumeration
+      }
+
+      // Always return success response regardless of email sending result
+      res.json(standardResponse);
+
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid email address", 
+          errors: error.errors 
+        });
+      }
+      console.error('Forgot password error:', error);
+      // Return standard response even for server errors to prevent enumeration
+      res.json({ 
+        message: "If the email address exists, an OTP has been sent to reset your password." 
+      });
+    }
+  });
+
+  app.post("/api/auth/verify-otp", async (req, res) => {
+    try {
+      const { email, otp } = verifyOtpSchema.parse(req.body);
+
+      // Verify OTP
+      const isValid = otpService.verifyOtp(email, otp);
+
+      if (!isValid) {
+        return res.status(400).json({ 
+          message: "Invalid or expired OTP. Please request a new one." 
+        });
+      }
+
+      // Generate reset token for password reset
+      const resetToken = otpService.createResetToken(email);
+
+      console.log(`OTP verified successfully for ${email}, reset token generated`);
+      res.json({ 
+        message: "OTP verified successfully. You can now reset your password.",
+        resetToken 
+      });
+
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid input", 
+          errors: error.errors 
+        });
+      }
+      console.error('Verify OTP error:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { resetToken, newPassword } = resetPasswordSchema.parse(req.body);
+
+      // Verify reset token and get email
+      const email = otpService.verifyResetToken(resetToken);
+
+      if (!email) {
+        return res.status(400).json({ 
+          message: "Invalid or expired reset token. Please start the password reset process again." 
+        });
+      }
+
+      // Get user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(404).json({ 
+          message: "User not found." 
+        });
+      }
+
+      // Hash the new password using the same method as registration
+      const { scrypt, randomBytes } = crypto;
+      const { promisify } = require('util');
+      const scryptAsync = promisify(scrypt);
+      
+      const salt = randomBytes(16).toString("hex");
+      const buf = (await scryptAsync(newPassword, salt, 64)) as Buffer;
+      const hashedPassword = `${buf.toString("hex")}.${salt}`;
+
+      // Update password in storage
+      const updatedUser = await storage.updatePassword(user.id, hashedPassword);
+
+      if (!updatedUser) {
+        return res.status(500).json({ 
+          message: "Failed to update password. Please try again." 
+        });
+      }
+
+      console.log(`Password successfully reset for user ${email}`);
+      res.json({ 
+        message: "Password has been successfully reset. You can now login with your new password." 
+      });
+
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid input", 
+          errors: error.errors 
+        });
+      }
+      console.error('Reset password error:', error);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 

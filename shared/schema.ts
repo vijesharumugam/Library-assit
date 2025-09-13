@@ -189,6 +189,21 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+// Forgot password schemas
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
+
+export const verifyOtpSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  otp: z.string().length(6, "OTP must be exactly 6 digits").regex(/^\d{6}$/, "OTP must contain only numbers"),
+});
+
+export const resetPasswordSchema = z.object({
+  resetToken: z.string().min(1, "Reset token is required"),
+  newPassword: z.string().min(6, "Password must be at least 6 characters"),
+});
+
 // Inferred types for creating new records
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpdateProfile = z.infer<typeof updateProfileSchema>;
@@ -198,6 +213,9 @@ export type InsertBookRequest = z.infer<typeof insertBookRequestSchema>;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type InsertExtensionRequest = z.infer<typeof insertExtensionRequestSchema>;
 export type LoginCredentials = z.infer<typeof loginSchema>;
+export type ForgotPasswordRequest = z.infer<typeof forgotPasswordSchema>;
+export type VerifyOtpRequest = z.infer<typeof verifyOtpSchema>;
+export type ResetPasswordRequest = z.infer<typeof resetPasswordSchema>;
 
 // Extended types for queries with relations (as returned by Prisma)
 export type TransactionWithBook = Transaction & {
