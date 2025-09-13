@@ -253,22 +253,3 @@ export type InsertPushSubscription = z.infer<typeof insertPushSubscriptionSchema
 
 // User without sensitive fields for frontend
 export type SafeUser = Omit<User, 'password'>;
-
-// Forgot Password schemas
-export const forgotPasswordSchema = z.object({
-  email: z.string().email("Invalid email address")
-});
-
-export const verifyOtpSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  otp: z.string().length(6, "OTP must be 6 digits")
-});
-
-export const resetPasswordSchema = z.object({
-  resetToken: z.string().min(1, "Reset token is required"),
-  newPassword: z.string().min(6, "Password must be at least 6 characters")
-});
-
-export type ForgotPasswordRequest = z.infer<typeof forgotPasswordSchema>;
-export type VerifyOtpRequest = z.infer<typeof verifyOtpSchema>;
-export type ResetPasswordRequest = z.infer<typeof resetPasswordSchema>;

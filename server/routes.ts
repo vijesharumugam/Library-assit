@@ -3,17 +3,13 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { PushNotificationService } from "./push-service";
-import { insertBookSchema, insertTransactionSchema, insertBookRequestSchema, insertNotificationSchema, insertPushSubscriptionSchema, insertExtensionRequestSchema, updateProfileSchema, TransactionStatus, BookRequestStatus, NotificationType, ExtensionRequestStatus, forgotPasswordSchema, verifyOtpSchema, resetPasswordSchema } from "@shared/schema";
+import { insertBookSchema, insertTransactionSchema, insertBookRequestSchema, insertNotificationSchema, insertPushSubscriptionSchema, insertExtensionRequestSchema, updateProfileSchema, TransactionStatus, BookRequestStatus, NotificationType, ExtensionRequestStatus } from "@shared/schema";
 import { z } from "zod";
 // import { prisma } from "./db"; // Removed - using MemStorage instead
 import multer from "multer";
 import * as XLSX from "xlsx";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { LibraryAIService } from "./ai-service";
-import { emailService } from './email-service';
-import { otpService } from './otp-service';
-import { resetTokenService } from './reset-token-service';
-import { rateLimiter } from './rate-limiter';
 import crypto from 'crypto';
 
 function requireAuth(req: any, res: any, next: any) {
@@ -869,188 +865,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Forgot Password Routes
-  
-  // Request password reset (send OTP)
-  app.post("/api/auth/forgot-password", async (req, res) => {
-    try {
-      const { email } = forgotPasswordSchema.parse(req.body);
-      const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
-
-      // Rate limiting
-      const ipLimit = rateLimiter.isRateLimited('forgotPasswordByIP', clientIP);
-      if (ipLimit.limited) {
-        return res.status(429).json({
-          message: "Too many password reset requests. Please try again later.",
-          retryAfter: ipLimit.retryAfter
-        });
-      }
-
-      const emailLimit = rateLimiter.isRateLimited('forgotPasswordByEmail', email.toLowerCase());
-      if (emailLimit.limited) {
-        return res.status(429).json({
-          message: "Too many password reset requests for this email. Please try again later.",
-          retryAfter: emailLimit.retryAfter
-        });
-      }
-
-      // Check if user exists
-      const user = await storage.getUserByEmail(email.toLowerCase());
-
-      if (!user) {
-        // Don't reveal if user exists or not for security
-        return res.json({ 
-          message: "If an account with this email exists, you will receive an OTP code.",
-          otpTTLSeconds: 600,
-          resendAfterSeconds: 60
-        });
-      }
-
-      // Check if email service is available
-      const emailAvailable = await emailService.isAvailable();
-      if (!emailAvailable) {
-        return res.status(503).json({ 
-          message: "Email service is currently unavailable. Please try again later." 
-        });
-      }
-
-      // Generate and store OTP
-      const otp = otpService.storeOtp(user.email, user.fullName);
-
-      // Send OTP email
-      const emailSent = await emailService.sendOTPEmail(user.email, otp, user.fullName);
-
-      if (!emailSent) {
-        return res.status(500).json({ 
-          message: "Failed to send OTP email. Please try again." 
-        });
-      }
-
-      res.json({ 
-        message: "If an account with this email exists, you will receive an OTP code.",
-        otpTTLSeconds: 600,
-        resendAfterSeconds: 60
-      });
-
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Invalid email address" 
-        });
-      }
-      res.status(500).json({ 
-        message: "Failed to process password reset request" 
-      });
-    }
-  });
-
-  // Verify OTP and issue reset token
-  app.post("/api/auth/verify-otp", async (req, res) => {
-    try {
-      const { email, otp } = verifyOtpSchema.parse(req.body);
-      const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
-
-      // Rate limiting
-      const ipLimit = rateLimiter.isRateLimited('verifyOtpByIP', clientIP);
-      if (ipLimit.limited) {
-        return res.status(429).json({
-          message: "Too many verification attempts. Please try again later.",
-          retryAfter: ipLimit.retryAfter
-        });
-      }
-
-      const emailLimit = rateLimiter.isRateLimited('verifyOtpByEmail', email.toLowerCase());
-      if (emailLimit.limited) {
-        return res.status(429).json({
-          message: "Too many verification attempts for this email. Please try again later.",
-          retryAfter: emailLimit.retryAfter
-        });
-      }
-
-      // Verify and consume the OTP
-      const isValid = otpService.consumeOtp(email, otp);
-
-      if (!isValid) {
-        return res.status(400).json({ 
-          message: "Invalid or expired OTP" 
-        });
-      }
-
-      // Check if user exists (security check)
-      const user = await storage.getUserByEmail(email.toLowerCase());
-
-      if (!user) {
-        return res.status(400).json({ 
-          message: "Invalid request" 
-        });
-      }
-
-      // Generate and return reset token
-      const resetToken = resetTokenService.storeToken(email);
-
-      res.json({ 
-        message: "OTP verified successfully",
-        resetToken
-      });
-
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Invalid email or OTP format" 
-        });
-      }
-      res.status(500).json({ 
-        message: "Failed to verify OTP" 
-      });
-    }
-  });
-
-  // Reset password with reset token
-  app.post("/api/auth/reset-password", async (req, res) => {
-    try {
-      const { resetToken, newPassword } = resetPasswordSchema.parse(req.body);
-
-      // Verify and consume reset token
-      const email = resetTokenService.verifyAndConsumeToken(resetToken);
-
-      if (!email) {
-        return res.status(400).json({ 
-          message: "Invalid or expired reset token" 
-        });
-      }
-
-      // Find user
-      const user = await storage.getUserByEmail(email.toLowerCase());
-
-      if (!user) {
-        return res.status(400).json({ 
-          message: "Invalid request" 
-        });
-      }
-
-      // Hash new password (match registration format)
-      const salt = crypto.randomBytes(16).toString('hex');
-      const hashedPassword = crypto.scryptSync(newPassword, salt, 64);
-      const passwordWithSalt = hashedPassword.toString('hex') + '.' + salt;
-
-      // Update password
-      await storage.updatePassword(user.id, passwordWithSalt);
-
-      res.json({ 
-        message: "Password reset successfully" 
-      });
-
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Invalid input data" 
-        });
-      }
-      res.status(500).json({ 
-        message: "Failed to reset password" 
-      });
-    }
-  });
 
   // Test push notification endpoint (for admin testing)
   app.post("/api/push/test", requireRole(["ADMIN"]), async (req, res) => {
