@@ -17,6 +17,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Book, Transaction, User, TransactionStatus, Role } from "@shared/schema";
 import { AddBookModal } from "@/components/add-book-modal";
+import { AddUserModal } from "@/components/add-user-modal";
 import FloatingLibraryElements from "@/components/FloatingLibraryElements";
 
 const pushNotificationSchema = z.object({
@@ -29,6 +30,7 @@ function AdminDashboard() {
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
   const [showAddBookModal, setShowAddBookModal] = useState(false);
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
 
@@ -329,7 +331,10 @@ function AdminDashboard() {
                 <h2 className="text-2xl font-bold text-foreground">User Management</h2>
                 <p className="text-muted-foreground">Oversee user accounts, roles, and permissions</p>
               </div>
-              <Button data-testid="button-add-user">
+              <Button 
+                onClick={() => setShowAddUserModal(true)}
+                data-testid="button-add-user"
+              >
                 <UserPlus className="h-4 w-4 mr-2" />
                 Add New User
               </Button>
@@ -705,6 +710,10 @@ function AdminDashboard() {
         <AddBookModal 
           open={showAddBookModal} 
           onOpenChange={setShowAddBookModal}
+        />
+        <AddUserModal 
+          open={showAddUserModal} 
+          onOpenChange={setShowAddUserModal}
         />
       </div>
     </div>
