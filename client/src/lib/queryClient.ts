@@ -38,8 +38,10 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     // Ensure URL is absolute for production
     const baseUrl = import.meta.env.PROD ? window.location.origin : '';
-    const url = queryKey.join("/") as string;
-    const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+    // Construct URL properly - first element should be the base path, remaining elements are parameters
+    const [basePath, ...params] = queryKey;
+    const url = params.length > 0 ? `${basePath}/${params.join('/')}` : basePath as string;
+    const fullUrl = (url as string).startsWith('http') ? url : `${baseUrl}${url}`;
     
     const res = await fetch(fullUrl, {
       credentials: "include",

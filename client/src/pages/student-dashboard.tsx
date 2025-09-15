@@ -19,6 +19,7 @@ import { BottomNavigation } from "@/components/bottom-navigation";
 import { MobileBookCard } from "@/components/mobile-book-card";
 import { ProfileDropdown } from "@/components/profile-dropdown";
 import { useFavorites } from "@/hooks/use-favorites";
+import { BookDetailModal } from "@/components/book-detail-modal";
 
 function StudentDashboard() {
   const { user, logoutMutation } = useAuth();
@@ -468,57 +469,73 @@ function StudentDashboard() {
                   </thead>
                   <tbody className="bg-card divide-y divide-border">
                     {filteredBooks.map((book) => (
-                      <tr key={book.id} className="hover:bg-muted/50" data-testid={`row-book-${book.id}`}>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center">
-                            <div className="h-12 w-8 bg-gradient-to-b from-blue-600 to-blue-800 rounded shadow-sm mr-4 flex items-center justify-center">
-                              <BookOpen className="h-3 w-3 text-white" />
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium text-foreground" data-testid={`text-book-title-${book.id}`}>
-                                {book.title}
+                      <BookDetailModal
+                        key={book.id}
+                        book={book}
+                        onRequestBook={(bookId) => requestMutation.mutate({ bookId })}
+                        isRequesting={requestMutation.isPending}
+                      >
+                        <tr className="hover:bg-muted/50 cursor-pointer transition-colors" data-testid={`row-book-${book.id}`}>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center">
+                              <div className="h-12 w-8 bg-gradient-to-b from-blue-600 to-blue-800 rounded shadow-sm mr-4 flex items-center justify-center">
+                                <BookOpen className="h-3 w-3 text-white" />
                               </div>
-                              {book.isbn && (
-                                <div className="text-sm text-muted-foreground" data-testid={`text-book-isbn-${book.id}`}>
-                                  ISBN: {book.isbn}
+                              <div>
+                                <div className="text-sm font-medium text-foreground flex items-center gap-2" data-testid={`text-book-title-${book.id}`}>
+                                  {book.title}
+                                  <Badge variant="secondary" className="text-xs">
+                                    View Details
+                                  </Badge>
                                 </div>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-foreground" data-testid={`text-book-author-${book.id}`}>
-                          {book.author}
-                        </td>
-                        <td className="px-6 py-4">
-                          <Badge variant="outline" data-testid={`badge-book-category-${book.id}`}>
-                            {book.category}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-foreground">
-                          <span className="font-medium" data-testid={`text-book-available-${book.id}`}>
-                            {book.availableCopies}
-                          </span> / {book.totalCopies}
-                        </td>
-                        <td className="px-6 py-4">
-                          <Button
-                            onClick={() => requestMutation.mutate({ bookId: book.id })}
-                            disabled={requestMutation.isPending || book.availableCopies === 0}
-                            data-testid={`button-request-${book.id}`}
-                            className="transition-all duration-200 hover:scale-105 active:scale-95"
-                          >
-                            {requestMutation.isPending ? (
-                              <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                Requesting...
+                                {book.isbn && (
+                                  <div className="text-sm text-muted-foreground" data-testid={`text-book-isbn-${book.id}`}>
+                                    ISBN: {book.isbn}
+                                  </div>
+                                )}
                               </div>
-                            ) : book.availableCopies === 0 ? (
-                              "Unavailable"
-                            ) : (
-                              "Request Book"
-                            )}
-                          </Button>
-                        </td>
-                      </tr>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-foreground" data-testid={`text-book-author-${book.id}`}>
+                            {book.author}
+                          </td>
+                          <td className="px-6 py-4">
+                            <Badge variant="outline" data-testid={`badge-book-category-${book.id}`}>
+                              {book.category}
+                            </Badge>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-foreground">
+                            <span className="font-medium" data-testid={`text-book-available-${book.id}`}>
+                              {book.availableCopies}
+                            </span> / {book.totalCopies}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  requestMutation.mutate({ bookId: book.id });
+                                }}
+                                disabled={requestMutation.isPending || book.availableCopies === 0}
+                                data-testid={`button-request-${book.id}`}
+                                className="transition-all duration-200 hover:scale-105 active:scale-95"
+                                size="sm"
+                              >
+                                {requestMutation.isPending ? (
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    Requesting...
+                                  </div>
+                                ) : book.availableCopies === 0 ? (
+                                  "Unavailable"
+                                ) : (
+                                  "Request"
+                                )}
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      </BookDetailModal>
                     ))}
                   </tbody>
                 </table>
