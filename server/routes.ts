@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { setupAuth } from "./auth";
+import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
 import { PushNotificationService } from "./push-service";
 import { insertBookSchema, insertTransactionSchema, insertBookRequestSchema, insertNotificationSchema, insertPushSubscriptionSchema, insertExtensionRequestSchema, updateProfileSchema, TransactionStatus, BookRequestStatus, NotificationType, ExtensionRequestStatus, forgotPasswordSchema, verifyOtpSchema, resetPasswordSchema } from "@shared/schema";
@@ -199,13 +199,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Hash the new password using the same method as registration
-      const { scrypt, randomBytes } = crypto;
-      const { promisify } = require('util');
-      const scryptAsync = promisify(scrypt);
-      
-      const salt = randomBytes(16).toString("hex");
-      const buf = (await scryptAsync(newPassword, salt, 64)) as Buffer;
-      const hashedPassword = `${buf.toString("hex")}.${salt}`;
+      const hashedPassword = await hashPassword(newPassword);
 
       // Update password in storage
       const updatedUser = await storage.updatePassword(user.id, hashedPassword);
