@@ -42,13 +42,15 @@ import {
   Eye,
   Download,
   Database,
-  Lightbulb
+  Lightbulb,
+  ArrowLeft
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { AIAnalytics, AIPrediction, Role } from "@shared/schema";
 import { cn } from "@/lib/utils";
+import { useLocation } from "wouter";
 
 interface DashboardData {
   analytics: {
@@ -80,8 +82,21 @@ const CHART_COLORS = [
 export function AIAnalyticsDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("overview");
   const [generatingType, setGeneratingType] = useState<string | null>(null);
+
+  const handleGoBack = () => {
+    // Navigate back to the appropriate dashboard based on user role
+    if (user?.role === Role.ADMIN) {
+      setLocation("/admin");
+    } else if (user?.role === Role.LIBRARIAN) {
+      setLocation("/librarian");
+    } else {
+      // Fallback to browser back if role is unclear
+      window.history.back();
+    }
+  };
 
   // Main dashboard data query
   const { data: dashboardData, isLoading, error, refetch } = useQuery<DashboardData>({
@@ -230,14 +245,26 @@ export function AIAnalyticsDashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3" data-testid="title-ai-dashboard">
-            <Brain className="h-8 w-8 text-primary" />
-            AI Analytics Dashboard
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Comprehensive insights powered by artificial intelligence
-          </p>
+        <div className="flex items-center gap-4">
+          <Button
+            onClick={handleGoBack}
+            variant="ghost"
+            size="sm"
+            className="flex items-center gap-2"
+            data-testid="button-back"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3" data-testid="title-ai-dashboard">
+              <Brain className="h-8 w-8 text-primary" />
+              AI Analytics Dashboard
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Comprehensive insights powered by artificial intelligence
+            </p>
+          </div>
         </div>
         <Button
           onClick={() => refetch()}
