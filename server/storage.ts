@@ -40,6 +40,7 @@ import MemoryStore from "memorystore";
 import MongoStore from "connect-mongo";
 import { nanoid } from "nanoid";
 import { prisma } from "./db";
+import { convertPrismaUser, convertPrismaBook, convertPrismaTransaction, convertPrismaBookRequest, convertPrismaExtensionRequest, convertPrismaBookAIContent, convertPrismaAIAnalytics, convertPrismaAIPrediction } from "./types";
 
 const MemoryStoreSession = MemoryStore(session);
 
@@ -870,74 +871,6 @@ export class MemStorage implements IStorage {
   }
 }
 
-// Helper functions to convert Prisma types to our types
-function convertPrismaUser(prismaUser: any): User {
-  return {
-    id: prismaUser.id,
-    username: prismaUser.username,
-    email: prismaUser.email,
-    fullName: prismaUser.fullName,
-    studentId: prismaUser.studentId,
-    phone: prismaUser.phone,
-    password: prismaUser.password,
-    role: prismaUser.role as Role,
-    profilePicture: prismaUser.profilePicture,
-    createdAt: prismaUser.createdAt
-  };
-}
-
-function convertPrismaBook(prismaBook: any): Book {
-  return {
-    id: prismaBook.id,
-    title: prismaBook.title,
-    author: prismaBook.author,
-    isbn: prismaBook.isbn,
-    category: prismaBook.category,
-    description: prismaBook.description,
-    publisher: prismaBook.publisher,
-    totalCopies: prismaBook.totalCopies,
-    availableCopies: prismaBook.availableCopies,
-    createdAt: prismaBook.createdAt
-  };
-}
-
-function convertPrismaTransaction(prismaTransaction: any): Transaction {
-  return {
-    id: prismaTransaction.id,
-    userId: prismaTransaction.userId,
-    bookId: prismaTransaction.bookId,
-    borrowedDate: prismaTransaction.borrowedDate,
-    dueDate: prismaTransaction.dueDate,
-    returnedDate: prismaTransaction.returnedDate,
-    status: prismaTransaction.status as TransactionStatus
-  };
-}
-
-function convertPrismaBookRequest(prismaBookRequest: any): BookRequest {
-  return {
-    id: prismaBookRequest.id,
-    userId: prismaBookRequest.userId,
-    bookId: prismaBookRequest.bookId,
-    requestDate: prismaBookRequest.requestDate,
-    status: prismaBookRequest.status as BookRequestStatus,
-    requestedBy: prismaBookRequest.requestedBy
-  };
-}
-
-function convertPrismaExtensionRequest(prismaExtensionRequest: any): ExtensionRequest {
-  return {
-    id: prismaExtensionRequest.id,
-    userId: prismaExtensionRequest.userId,
-    transactionId: prismaExtensionRequest.transactionId,
-    requestDate: prismaExtensionRequest.requestDate,
-    currentDueDate: prismaExtensionRequest.currentDueDate,
-    requestedDueDate: prismaExtensionRequest.requestedDueDate,
-    reason: prismaExtensionRequest.reason,
-    status: prismaExtensionRequest.status as ExtensionRequestStatus,
-    processedBy: prismaExtensionRequest.processedBy,
-    processedDate: prismaExtensionRequest.processedDate
-  };
-}
 
 export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
@@ -1623,61 +1556,123 @@ export class DatabaseStorage implements IStorage {
     })) as PushSubscription[];
   }
 
-  // AI Content methods - Using fallback to MemStorage for now
-  private memStorageFallback = new MemStorage();
-
+  // AI Content methods - MongoDB implementation
   async getBookAIContent(bookId: string): Promise<BookAIContent | null> {
-    return this.memStorageFallback.getBookAIContent(bookId);
+    if (!prisma) return null;
+    const content = await prisma.bookAIContent.findUnique({
+      where: { bookId }
+    });
+    return content ? convertPrismaBookAIContent(content) : null;
   }
 
   async createBookAIContent(content: InsertBookAIContent): Promise<BookAIContent> {
-    return this.memStorageFallback.createBookAIContent(content);
+    if (!prisma) throw new Error("Database not available");
+    const created = await prisma.bookAIContent.create({
+      data: content as any
+    });
+    return convertPrismaBookAIContent(created);
   }
 
   async updateBookAIContent(bookId: string, content: Partial<InsertBookAIContent>): Promise<BookAIContent | null> {
-    return this.memStorageFallback.updateBookAIContent(bookId, content);
+    try {
+      if (!prisma) return null;
+      const updated = await prisma.bookAIContent.update({
+        where: { bookId },
+        data: { ...content, lastUpdated: new Date() } as any
+      });
+      return convertPrismaBookAIContent(updated);
+    } catch (error) {
+      return null;
+    }
   }
 
   async getAllBookAIContent(): Promise<BookAIContent[]> {
-    return this.memStorageFallback.getAllBookAIContent();
+    if (!prisma) return [];
+    const contents = await prisma.bookAIContent.findMany({
+      orderBy: { lastUpdated: 'desc' }
+    });
+    return contents.map(convertPrismaBookAIContent);
   }
 
-  // AI Analytics methods
+  // AI Analytics methods - MongoDB implementation
   async createAIAnalytics(analytics: InsertAIAnalytics): Promise<AIAnalytics> {
-    return this.memStorageFallback.createAIAnalytics(analytics);
+    if (!prisma) throw new Error("Database not available");
+    const created = await prisma.aIAnalytics.create({
+      data: analytics as any
+    });
+    return convertPrismaAIAnalytics(created);
   }
 
   async getAIAnalyticsByType(type: string): Promise<AIAnalytics[]> {
-    return this.memStorageFallback.getAIAnalyticsByType(type);
+    if (!prisma) return [];
+    const analytics = await prisma.aIAnalytics.findMany({
+      where: { type },
+      orderBy: { generatedAt: 'desc' }
+    });
+    return analytics.map(convertPrismaAIAnalytics);
   }
 
   async getAllAIAnalytics(): Promise<AIAnalytics[]> {
-    return this.memStorageFallback.getAllAIAnalytics();
+    if (!prisma) return [];
+    const analytics = await prisma.aIAnalytics.findMany({
+      orderBy: { generatedAt: 'desc' }
+    });
+    return analytics.map(convertPrismaAIAnalytics);
   }
 
   async deleteOldAIAnalytics(cutoffDate: Date): Promise<number> {
-    return this.memStorageFallback.deleteOldAIAnalytics(cutoffDate);
+    if (!prisma) return 0;
+    const result = await prisma.aIAnalytics.deleteMany({
+      where: {
+        generatedAt: { lt: cutoffDate }
+      }
+    });
+    return result.count;
   }
 
-  // AI Prediction methods
+  // AI Prediction methods - MongoDB implementation
   async createAIPrediction(prediction: InsertAIPrediction): Promise<AIPrediction> {
-    return this.memStorageFallback.createAIPrediction(prediction);
+    if (!prisma) throw new Error("Database not available");
+    const created = await prisma.aIPrediction.create({
+      data: prediction as any
+    });
+    return convertPrismaAIPrediction(created);
   }
 
   async getAIPredictionsByType(type: string): Promise<AIPrediction[]> {
-    return this.memStorageFallback.getAIPredictionsByType(type);
+    if (!prisma) return [];
+    const predictions = await prisma.aIPrediction.findMany({
+      where: { type },
+      orderBy: { createdAt: 'desc' }
+    });
+    return predictions.map(convertPrismaAIPrediction);
   }
 
   async getAIPredictionsByTarget(targetId: string): Promise<AIPrediction[]> {
-    return this.memStorageFallback.getAIPredictionsByTarget(targetId);
+    if (!prisma) return [];
+    const predictions = await prisma.aIPrediction.findMany({
+      where: { targetId },
+      orderBy: { createdAt: 'desc' }
+    });
+    return predictions.map(convertPrismaAIPrediction);
   }
 
   async getAllAIPredictions(): Promise<AIPrediction[]> {
-    return this.memStorageFallback.getAllAIPredictions();
+    if (!prisma) return [];
+    const predictions = await prisma.aIPrediction.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+    return predictions.map(convertPrismaAIPrediction);
   }
 
   async deleteOldAIPredictions(cutoffDate: Date): Promise<number> {
-    return this.memStorageFallback.deleteOldAIPredictions(cutoffDate);
+    if (!prisma) return 0;
+    const result = await prisma.aIPrediction.deleteMany({
+      where: {
+        createdAt: { lt: cutoffDate }
+      }
+    });
+    return result.count;
   }
 
   // Chat Session methods

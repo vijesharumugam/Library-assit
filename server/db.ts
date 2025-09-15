@@ -2,13 +2,17 @@
 import { PrismaClient } from '@prisma/client';
 
 // Create Prisma client with MongoDB connection
-if (!process.env.MONGODB_URI) {
-  throw new Error('MONGODB_URI environment variable is required');
+function createPrismaClient(): PrismaClient {
+  if (!process.env.MONGODB_URI) {
+    throw new Error('MONGODB_URI environment variable is required');
+  }
+  
+  return new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+  });
 }
 
-export const prisma: PrismaClient = new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
-});
+export const prisma: PrismaClient = createPrismaClient();
 
 // Gracefully close the connection when the process exits (only if prisma exists)
 process.on('beforeExit', async () => {

@@ -1,6 +1,6 @@
 // Server-side type conversions to handle Prisma/Schema enum differences
-import type { User as PrismaUser, Book as PrismaBook, Transaction as PrismaTransaction, BookRequest as PrismaBookRequest } from "@prisma/client";
-import type { User, Book, Transaction, BookRequest, ExtensionRequest } from "@shared/schema";
+import type { User as PrismaUser, Book as PrismaBook, Transaction as PrismaTransaction, BookRequest as PrismaBookRequest, BookAIContent as PrismaBookAIContent, AIAnalytics as PrismaAIAnalytics, AIPrediction as PrismaAIPrediction } from "@prisma/client";
+import type { User, Book, Transaction, BookRequest, ExtensionRequest, BookAIContent, AIAnalytics, AIPrediction } from "@shared/schema";
 
 // Convert Prisma types to shared schema types
 export function convertPrismaUser(user: PrismaUser): User {
@@ -32,5 +32,29 @@ export function convertPrismaExtensionRequest(extensionRequest: any): ExtensionR
   return {
     ...extensionRequest,
     status: extensionRequest.status as any,
+  };
+}
+
+export function convertPrismaBookAIContent(content: PrismaBookAIContent): BookAIContent {
+  return {
+    ...content,
+    quotes: content.quotes as string[] | null,
+    comprehensionQA: content.comprehensionQA as { question: string; answer: string }[] | null,
+  };
+}
+
+export function convertPrismaAIAnalytics(analytics: PrismaAIAnalytics): AIAnalytics {
+  return {
+    ...analytics,
+    type: analytics.type as any,
+    data: analytics.data as any,
+  };
+}
+
+export function convertPrismaAIPrediction(prediction: PrismaAIPrediction): AIPrediction {
+  return {
+    ...prediction,
+    type: prediction.type as any,
+    prediction: prediction.prediction as any,
   };
 }
