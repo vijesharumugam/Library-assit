@@ -37,7 +37,7 @@ import {
 } from "@shared/schema";
 import session from "express-session";
 import MemoryStore from "memorystore";
-import pgSession from "connect-pg-simple";
+import MongoStore from "connect-mongo";
 import { nanoid } from "nanoid";
 import { prisma } from "./db";
 import { convertPrismaUser, convertPrismaBook, convertPrismaTransaction, convertPrismaBookRequest, convertPrismaExtensionRequest, convertPrismaBookAIContent, convertPrismaAIAnalytics, convertPrismaAIPrediction } from "./types";

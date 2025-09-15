@@ -465,6 +465,19 @@ function LibrarianDashboard() {
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
+            {/* Quick Actions */}
+            <div className="flex justify-end mb-4">
+              <Button
+                onClick={() => setLocation("/librarian/ai-analytics")}
+                variant="outline"
+                className="flex items-center gap-2"
+                data-testid="button-ai-analytics-librarian"
+              >
+                <Brain className="h-4 w-4" />
+                AI Analytics Dashboard
+              </Button>
+            </div>
+
             {/* Statistics Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 fade-in-float">
               <Card className="library-card">

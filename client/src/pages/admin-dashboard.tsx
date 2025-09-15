@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { BookOpen, Users, Shield, TrendingUp, LogOut, UserPlus, Edit, Trash2, ChevronUp, Bell, Send } from "lucide-react";
+import { BookOpen, Users, Shield, TrendingUp, LogOut, UserPlus, Edit, Trash2, ChevronUp, Bell, Send, Brain } from "lucide-react";
 import { useState, useMemo, memo } from "react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
@@ -19,6 +19,7 @@ import { Book, Transaction, User, TransactionStatus, Role } from "@shared/schema
 import { AddBookModal } from "@/components/add-book-modal";
 import { AddUserModal } from "@/components/add-user-modal";
 import FloatingLibraryElements from "@/components/FloatingLibraryElements";
+import { useLocation } from "wouter";
 
 const pushNotificationSchema = z.object({
   userId: z.string().optional(),
@@ -29,6 +30,7 @@ const pushNotificationSchema = z.object({
 function AdminDashboard() {
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [showAddBookModal, setShowAddBookModal] = useState(false);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState("");
@@ -274,6 +276,19 @@ function AdminDashboard() {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="flex justify-end mb-4">
+              <Button
+                onClick={() => setLocation("/admin/ai-analytics")}
+                variant="outline"
+                className="flex items-center gap-2"
+                data-testid="button-ai-analytics"
+              >
+                <Brain className="h-4 w-4" />
+                AI Analytics Dashboard
+              </Button>
             </div>
 
             {/* System Activity */}
