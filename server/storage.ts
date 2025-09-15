@@ -1560,6 +1560,63 @@ export class DatabaseStorage implements IStorage {
       user: sub.user ? convertPrismaUser(sub.user) : undefined
     })) as PushSubscription[];
   }
+
+  // AI Content methods - Using fallback to MemStorage for now
+  private memStorageFallback = new MemStorage();
+
+  async getBookAIContent(bookId: string): Promise<BookAIContent | null> {
+    return this.memStorageFallback.getBookAIContent(bookId);
+  }
+
+  async createBookAIContent(content: InsertBookAIContent): Promise<BookAIContent> {
+    return this.memStorageFallback.createBookAIContent(content);
+  }
+
+  async updateBookAIContent(bookId: string, content: Partial<InsertBookAIContent>): Promise<BookAIContent | null> {
+    return this.memStorageFallback.updateBookAIContent(bookId, content);
+  }
+
+  async getAllBookAIContent(): Promise<BookAIContent[]> {
+    return this.memStorageFallback.getAllBookAIContent();
+  }
+
+  // AI Analytics methods
+  async createAIAnalytics(analytics: InsertAIAnalytics): Promise<AIAnalytics> {
+    return this.memStorageFallback.createAIAnalytics(analytics);
+  }
+
+  async getAIAnalyticsByType(type: string): Promise<AIAnalytics[]> {
+    return this.memStorageFallback.getAIAnalyticsByType(type);
+  }
+
+  async getAllAIAnalytics(): Promise<AIAnalytics[]> {
+    return this.memStorageFallback.getAllAIAnalytics();
+  }
+
+  async deleteOldAIAnalytics(cutoffDate: Date): Promise<number> {
+    return this.memStorageFallback.deleteOldAIAnalytics(cutoffDate);
+  }
+
+  // AI Prediction methods
+  async createAIPrediction(prediction: InsertAIPrediction): Promise<AIPrediction> {
+    return this.memStorageFallback.createAIPrediction(prediction);
+  }
+
+  async getAIPredictionsByType(type: string): Promise<AIPrediction[]> {
+    return this.memStorageFallback.getAIPredictionsByType(type);
+  }
+
+  async getAIPredictionsByTarget(targetId: string): Promise<AIPrediction[]> {
+    return this.memStorageFallback.getAIPredictionsByTarget(targetId);
+  }
+
+  async getAllAIPredictions(): Promise<AIPrediction[]> {
+    return this.memStorageFallback.getAllAIPredictions();
+  }
+
+  async deleteOldAIPredictions(cutoffDate: Date): Promise<number> {
+    return this.memStorageFallback.deleteOldAIPredictions(cutoffDate);
+  }
 }
 
 // Use DatabaseStorage if MongoDB URI is available, otherwise fallback to MemStorage
