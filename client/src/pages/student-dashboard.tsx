@@ -128,7 +128,7 @@ function StudentDashboard() {
                 <BookOpen className="h-4 w-4 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-foreground" data-testid="mobile-header-title">Library</h1>
+                <h1 className="text-lg font-bold text-foreground" data-testid="mobile-header-title">{user?.fullName || 'Student'}</h1>
                 <p className="text-xs text-muted-foreground -mt-1">Student Portal</p>
               </div>
             </div>
@@ -146,7 +146,7 @@ function StudentDashboard() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-primary mr-2 sm:mr-3" />
-              <h1 className="text-lg sm:text-xl library-heading">Library Sanctum</h1>
+              <h1 className="text-lg sm:text-xl library-heading">{user?.fullName || 'Student'}</h1>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <NotificationBell />
