@@ -41,11 +41,21 @@ export function ProfileDropdown() {
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="flex items-center gap-2 h-auto px-3 py-2 hover:bg-muted/50 text-sm font-medium"
+            className="flex items-center gap-2 h-auto px-2 py-2 hover:bg-muted/50"
             data-testid="profile-dropdown-trigger"
           >
-            <User className="h-4 w-4" />
-            <span className="hidden sm:inline-block">{user.fullName}</span>
+            {user.profilePicture ? (
+              <img 
+                src={user.profilePicture} 
+                alt={`${user.fullName}'s profile`}
+                className="h-8 w-8 rounded-full object-cover border border-border"
+                data-testid="profile-picture"
+              />
+            ) : (
+              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center border border-border">
+                <User className="h-4 w-4" />
+              </div>
+            )}
             <ChevronDown className="h-3 w-3 opacity-50" />
           </Button>
         </DropdownMenuTrigger>
