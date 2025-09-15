@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
-import { BookOpen, Users, Clock, TrendingUp, LogOut, Plus, Edit, Trash2, Upload, CheckCircle, CalendarIcon } from "lucide-react";
+import { BookOpen, Users, Clock, TrendingUp, LogOut, Plus, Edit, Trash2, Upload, CheckCircle, CalendarIcon, Brain } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState, useMemo, memo } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -437,6 +437,15 @@ function LibrarianDashboard() {
             >
               <Upload className="h-4 w-4 mr-2" />
               Upload Excel
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full justify-start" 
+              onClick={() => setLocation("/librarian/ai-analytics")}
+              data-testid="mobile-ai-analytics"
+            >
+              <Brain className="h-4 w-4 mr-2" />
+              AI Analytics Dashboard
             </Button>
           </CardContent>
         </Card>

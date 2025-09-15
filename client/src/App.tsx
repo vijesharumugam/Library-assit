@@ -35,6 +35,7 @@ const StudentFavorites = lazy(() => import("@/pages/student-favorites"));
 const StudentBooks = lazy(() => import("@/pages/student-books"));
 const StudentDueSoon = lazy(() => import("@/pages/student-due-soon"));
 const LibrarianProfile = lazy(() => import("@/pages/librarian-profile"));
+const AIAnalyticsPage = lazy(() => import("@/pages/ai-analytics-page"));
 
 // Loading component with library theme
 function LoadingSpinner() {
@@ -123,8 +124,18 @@ function Router() {
           allowedRoles={[Role.LIBRARIAN, Role.ADMIN]} 
         />
         <ProtectedRoute 
+          path="/librarian/ai-analytics" 
+          component={() => <AIAnalyticsPage />} 
+          allowedRoles={[Role.LIBRARIAN, Role.ADMIN]} 
+        />
+        <ProtectedRoute 
           path="/admin" 
           component={() => <AdminDashboard />} 
+          allowedRoles={[Role.ADMIN]} 
+        />
+        <ProtectedRoute 
+          path="/admin/ai-analytics" 
+          component={() => <AIAnalyticsPage />} 
           allowedRoles={[Role.ADMIN]} 
         />
         <Route path="/auth" component={() => <AuthPage />} />
