@@ -525,15 +525,15 @@ export function AIAnalyticsDashboard() {
                           </AlertDescription>
                         </Alert>
                       )}
-                      {dashboardData?.analytics?.usagePatterns?.[0]?.data && (
+                      {dashboardData?.analytics?.usagePatterns?.[0]?.data?.popularCategories && (
                         <div className="h-64">
                           <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={dashboardData?.analytics?.usagePatterns?.[0]?.data || []}>
+                            <BarChart data={dashboardData?.analytics?.usagePatterns?.[0]?.data?.popularCategories || []}>
                               <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis dataKey="name" />
+                              <XAxis dataKey="category" />
                               <YAxis />
                               <Tooltip />
-                              <Bar dataKey="value" fill={CHART_COLORS[0]} />
+                              <Bar dataKey="count" fill={CHART_COLORS[0]} />
                             </BarChart>
                           </ResponsiveContainer>
                         </div>
@@ -586,19 +586,19 @@ export function AIAnalyticsDashboard() {
                           </AlertDescription>
                         </Alert>
                       )}
-                      {dashboardData?.analytics?.inventoryInsights?.[0]?.data && (
+                      {dashboardData?.analytics?.inventoryInsights?.[0]?.data?.categoryDistribution && (
                         <div className="h-64">
                           <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                               <Pie
-                                data={dashboardData?.analytics?.inventoryInsights?.[0]?.data || []}
+                                data={dashboardData?.analytics?.inventoryInsights?.[0]?.data?.categoryDistribution || []}
                                 cx="50%"
                                 cy="50%"
                                 outerRadius={80}
-                                dataKey="value"
+                                dataKey="totalBooks"
                                 label
                               >
-                                {(dashboardData?.analytics?.inventoryInsights?.[0]?.data || []).map((entry: any, index: number) => (
+                                {(dashboardData?.analytics?.inventoryInsights?.[0]?.data?.categoryDistribution || []).map((entry: any, index: number) => (
                                   <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                                 ))}
                               </Pie>
@@ -655,15 +655,15 @@ export function AIAnalyticsDashboard() {
                           </AlertDescription>
                         </Alert>
                       )}
-                      {dashboardData?.analytics?.userBehavior?.[0]?.data && (
+                      {dashboardData?.analytics?.userBehavior?.[0]?.data?.peakBorrowingHours && (
                         <div className="h-64">
                           <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={dashboardData?.analytics?.userBehavior?.[0]?.data || []}>
+                            <LineChart data={dashboardData?.analytics?.userBehavior?.[0]?.data?.peakBorrowingHours || []}>
                               <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis dataKey="name" />
+                              <XAxis dataKey="hour" />
                               <YAxis />
                               <Tooltip />
-                              <Line type="monotone" dataKey="value" stroke={CHART_COLORS[2]} strokeWidth={2} />
+                              <Line type="monotone" dataKey="count" stroke={CHART_COLORS[2]} strokeWidth={2} />
                             </LineChart>
                           </ResponsiveContainer>
                         </div>
