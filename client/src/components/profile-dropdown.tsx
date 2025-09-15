@@ -9,8 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, BookOpen, Heart, LogOut, Settings } from "lucide-react";
+import { User, BookOpen, Heart, LogOut, Settings, ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useState } from "react";
@@ -22,14 +21,6 @@ export function ProfileDropdown() {
 
   if (!user) return null;
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   const getRoleDisplay = (role: string) => {
     switch (role) {
@@ -50,21 +41,12 @@ export function ProfileDropdown() {
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="flex items-center h-auto p-2 hover:bg-muted/50"
+            className="flex items-center gap-2 h-auto px-3 py-2 hover:bg-muted/50 text-sm font-medium"
             data-testid="profile-dropdown-trigger"
           >
-            <Avatar className="h-8 w-8">
-              {user.profilePicture && (
-                <AvatarImage 
-                  src={user.profilePicture} 
-                  alt={user.fullName}
-                  className="object-cover"
-                />
-              )}
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs font-medium">
-                {getInitials(user.fullName)}
-              </AvatarFallback>
-            </Avatar>
+            <User className="h-4 w-4" />
+            <span className="hidden sm:inline-block">{user.fullName}</span>
+            <ChevronDown className="h-3 w-3 opacity-50" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
