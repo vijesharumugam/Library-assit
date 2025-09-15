@@ -11,6 +11,7 @@ import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Book, User } from "@shared/schema";
+import { AIDueDateSuggestion } from "@/components/ai-due-date-suggestion";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, Search, BookOpen } from "lucide-react";
@@ -254,6 +255,20 @@ export function BorrowModal({ open, onOpenChange }: BorrowModalProps) {
               <p className="text-sm text-destructive">{form.formState.errors.userId.message}</p>
             )}
           </div>
+
+          {/* AI Due Date Suggestion */}
+          {selectedBook && selectedStudent && (
+            <AIDueDateSuggestion
+              userId={selectedStudent.id}
+              bookId={selectedBook.id}
+              userName={selectedStudent.fullName}
+              bookTitle={selectedBook.title}
+              onSuggestionAccepted={(suggestedDate) => {
+                form.setValue("dueDate", suggestedDate);
+              }}
+              compact={false}
+            />
+          )}
 
           {/* Due Date */}
           <div className="space-y-2">

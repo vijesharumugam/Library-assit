@@ -8,6 +8,7 @@ import { Link } from "wouter";
 import { Transaction, User as UserType, Book } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { AIRiskIndicator } from "@/components/ai-risk-indicator";
 
 export default function BorrowedBooksPage() {
   const { user } = useAuth();
@@ -121,6 +122,18 @@ export default function BorrowedBooksPage() {
                               {transaction.user.fullName}
                             </span>
                           </div>
+                          
+                          {/* AI Risk Assessment */}
+                          <div className="mb-3">
+                            <AIRiskIndicator
+                              userId={transaction.user.id}
+                              userName={transaction.user.fullName}
+                              bookId={transaction.book.id}
+                              bookTitle={transaction.book.title}
+                              compact={true}
+                            />
+                          </div>
+                          
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-muted-foreground">Due Date:</span>
                             <div className="text-right">
@@ -167,6 +180,7 @@ export default function BorrowedBooksPage() {
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Student</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Book</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">AI Risk</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Borrowed Date</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Due Date</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
@@ -214,6 +228,15 @@ export default function BorrowedBooksPage() {
                                 )}
                               </div>
                             </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <AIRiskIndicator
+                              userId={transaction.user.id}
+                              userName={transaction.user.fullName}
+                              bookId={transaction.book.id}
+                              bookTitle={transaction.book.title}
+                              compact={true}
+                            />
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center text-sm text-foreground">

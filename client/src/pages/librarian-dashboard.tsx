@@ -22,6 +22,8 @@ import { ExcelUploadModal } from "@/components/excel-upload-modal";
 import FloatingLibraryElements from "@/components/FloatingLibraryElements";
 import { ProfileDropdown } from "@/components/profile-dropdown";
 import { BottomNavigation } from "@/components/bottom-navigation";
+import { AIPopularityBadge } from "@/components/ai-popularity-badge";
+import { AIDueDateSuggestion } from "@/components/ai-due-date-suggestion";
 
 function LibrarianDashboard() {
   const { user, logoutMutation } = useAuth();
@@ -1098,9 +1100,16 @@ function LibrarianDashboard() {
                               </div>
                             </td>
                             <td className="px-6 py-4">
-                              <Badge variant="outline" data-testid={`badge-book-category-${book.id}`}>
-                                {book.category}
-                              </Badge>
+                              <div className="space-y-2">
+                                <Badge variant="outline" data-testid={`badge-book-category-${book.id}`}>
+                                  {book.category}
+                                </Badge>
+                                <AIPopularityBadge 
+                                  bookId={book.id}
+                                  bookTitle={book.title}
+                                  compact={true}
+                                />
+                              </div>
                             </td>
                             <td className="px-6 py-4 text-sm text-foreground">
                               <div className="flex items-center space-x-2">
@@ -1271,6 +1280,41 @@ function LibrarianDashboard() {
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center space-y-4">
+            {/* AI Due Date Suggestion for Book Requests */}
+            {requestType === 'book' && selectedRequestId && (() => {
+              const selectedRequest = pendingRequests.find(req => req.id === selectedRequestId);
+              return selectedRequest ? (
+                <AIDueDateSuggestion
+                  userId={selectedRequest.user.id}
+                  bookId={selectedRequest.book.id}
+                  userName={selectedRequest.user.fullName}
+                  bookTitle={selectedRequest.book.title}
+                  onSuggestionAccepted={(suggestedDate) => {
+                    setSelectedDueDate(suggestedDate);
+                  }}
+                  compact={false}
+                />
+              ) : null;
+            })()}
+            
+            {/* AI Due Date Suggestion for Extension Requests */}
+            {requestType === 'extension' && selectedRequestId && (() => {
+              const selectedExtension = pendingExtensionRequests.find(req => req.id === selectedRequestId);
+              return selectedExtension ? (
+                <AIDueDateSuggestion
+                  userId={selectedExtension.user.id}
+                  bookId={selectedExtension.transaction.book.id}
+                  userName={selectedExtension.user.fullName}
+                  bookTitle={selectedExtension.transaction.book.title}
+                  currentDueDate={new Date(selectedExtension.transaction.dueDate)}
+                  onSuggestionAccepted={(suggestedDate) => {
+                    setSelectedDueDate(suggestedDate);
+                  }}
+                  compact={false}
+                />
+              ) : null;
+            })()}
+            
             <Calendar
               mode="single"
               selected={selectedDueDate}

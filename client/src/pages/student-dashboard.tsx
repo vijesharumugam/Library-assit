@@ -20,6 +20,7 @@ import { MobileBookCard } from "@/components/mobile-book-card";
 import { ProfileDropdown } from "@/components/profile-dropdown";
 import { useFavorites } from "@/hooks/use-favorites";
 import { BookDetailModal } from "@/components/book-detail-modal";
+import { AIPopularityBadge } from "@/components/ai-popularity-badge";
 
 function StudentDashboard() {
   const { user, logoutMutation } = useAuth();
@@ -500,9 +501,16 @@ function StudentDashboard() {
                             {book.author}
                           </td>
                           <td className="px-6 py-4">
-                            <Badge variant="outline" data-testid={`badge-book-category-${book.id}`}>
-                              {book.category}
-                            </Badge>
+                            <div className="flex flex-col gap-1">
+                              <Badge variant="outline" data-testid={`badge-book-category-${book.id}`}>
+                                {book.category}
+                              </Badge>
+                              <AIPopularityBadge
+                                bookId={book.id}
+                                bookTitle={book.title}
+                                compact={true}
+                              />
+                            </div>
                           </td>
                           <td className="px-6 py-4 text-sm text-foreground">
                             <span className="font-medium" data-testid={`text-book-available-${book.id}`}>
