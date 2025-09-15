@@ -21,11 +21,31 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-const registerSchema = insertUserSchema.extend({
+const registerSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  email: z.string().email("Invalid email address"),
+  fullName: z.string().min(1, "Full name is required"),
+  studentId: z.string().trim().optional(),
+  phone: z.string().min(10, "Phone number must be at least 10 digits").regex(/^[0-9+\-\s()]+$/, "Please enter a valid phone number"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
+  role: z.nativeEnum(Role),
+  profilePicture: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.role === Role.STUDENT && (!data.studentId || data.studentId.trim() === "")) {
+    ctx.addIssue({ 
+      code: z.ZodIssueCode.custom, 
+      path: ["studentId"], 
+      message: "Student ID is required for students" 
+    });
+  }
+  if (data.password !== data.confirmPassword) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["confirmPassword"],
+      message: "Passwords don't match",
+    });
+  }
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
