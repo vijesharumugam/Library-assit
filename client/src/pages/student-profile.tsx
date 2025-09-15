@@ -154,8 +154,38 @@ function StudentProfile() {
         {/* Profile Card */}
         <Card>
           <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-muted/20 rounded-lg flex items-center justify-center mb-4">
-              <User className="h-8 w-8 text-muted-foreground" />
+            <div className="relative mx-auto w-16 h-16 mb-4">
+              <div 
+                className="w-16 h-16 bg-muted/20 rounded-lg flex items-center justify-center cursor-pointer hover:bg-muted/30 transition-colors overflow-hidden"
+                onClick={() => fileInputRef.current?.click()}
+                data-testid="profile-picture-container"
+              >
+                {user.profilePicture ? (
+                  <img 
+                    src={user.profilePicture} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover rounded-lg" 
+                    data-testid="profile-picture-image"
+                  />
+                ) : (
+                  <User className="h-8 w-8 text-muted-foreground" />
+                )}
+              </div>
+              <div 
+                className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+                data-testid="profile-picture-camera-button"
+              >
+                <Camera className="h-3 w-3 text-primary-foreground" />
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+                data-testid="input-profile-picture"
+              />
             </div>
             <CardTitle data-testid="profile-user-name">{user.fullName}</CardTitle>
             <div className="flex justify-center gap-2 mt-2">
