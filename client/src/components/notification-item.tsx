@@ -32,6 +32,11 @@ const notificationColors: Record<NotificationType, string> = {
 export function NotificationItem({ notification }: NotificationItemProps) {
   const queryClient = useQueryClient();
 
+  // Add safety check for notification object
+  if (!notification || !notification.id) {
+    return null;
+  }
+
   const markAsReadMutation = useMutation({
     mutationFn: () => apiRequest("PUT", `/api/notifications/${notification.id}/read`),
     onSuccess: () => {
@@ -73,12 +78,24 @@ export function NotificationItem({ notification }: NotificationItemProps) {
           <p className="text-xs text-muted-foreground mt-2" data-testid={`notification-time-${notification.id}`}>
             {(() => {
               try {
-                const date = new Date(notification.createdAt);
+                // Handle various date formats (string, number, Date object)
+                const dateValue = notification.createdAt;
+                let date: Date;
+                
+                if (dateValue instanceof Date) {
+                  date = dateValue;
+                } else if (typeof dateValue === 'string' || typeof dateValue === 'number') {
+                  date = new Date(dateValue);
+                } else {
+                  return "Recently";
+                }
+                
                 if (isNaN(date.getTime())) {
                   return "Recently";
                 }
                 return formatDistanceToNow(date, { addSuffix: true });
               } catch (error) {
+                console.warn('Error formatting notification date:', error);
                 return "Recently";
               }
             })()}

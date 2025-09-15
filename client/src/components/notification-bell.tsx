@@ -15,11 +15,14 @@ interface NotificationBellProps {
 }
 
 export function NotificationBell({ className }: NotificationBellProps) {
-  const { data: notifications = [], isLoading } = useQuery<Notification[]>({
+  const { data: notifications = [], isLoading, error } = useQuery<Notification[]>({
     queryKey: ["/api/notifications"],
+    retry: 2,
   });
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  // Add safety check for notifications array
+  const safeNotifications = Array.isArray(notifications) ? notifications : [];
+  const unreadCount = safeNotifications.filter(n => n && !n.isRead).length;
 
   return (
     <DropdownMenu>
@@ -47,7 +50,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
         className="w-80 p-0"
         data-testid="dropdown-notifications"
       >
-        <NotificationList notifications={notifications} isLoading={isLoading} />
+        <NotificationList notifications={safeNotifications} isLoading={isLoading} />
       </DropdownMenuContent>
     </DropdownMenu>
   );

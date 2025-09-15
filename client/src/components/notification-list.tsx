@@ -28,8 +28,10 @@ export function NotificationList({ notifications, isLoading }: NotificationListP
     },
   });
 
-  const unreadNotifications = notifications.filter(n => !n.isRead);
-  const readNotifications = notifications.filter(n => n.isRead);
+  // Add safety checks for notifications array
+  const safeNotifications = Array.isArray(notifications) ? notifications : [];
+  const unreadNotifications = safeNotifications.filter(n => n && !n.isRead);
+  const readNotifications = safeNotifications.filter(n => n && n.isRead);
 
   if (isLoading) {
     return (
@@ -39,7 +41,7 @@ export function NotificationList({ notifications, isLoading }: NotificationListP
     );
   }
 
-  if (notifications.length === 0) {
+  if (safeNotifications.length === 0) {
     return (
       <div className="p-4 text-center" data-testid="no-notifications">
         <p className="text-sm text-muted-foreground">No notifications yet</p>
@@ -52,7 +54,7 @@ export function NotificationList({ notifications, isLoading }: NotificationListP
       <div className="p-4 border-b bg-muted/30">
         <div className="space-y-3">
           <h3 className="font-semibold text-base">Notifications</h3>
-          {(unreadNotifications.length > 0 || notifications.length > 0) && (
+          {(unreadNotifications.length > 0 || safeNotifications.length > 0) && (
             <div className="flex gap-2">
               {unreadNotifications.length > 0 && (
                 <Button
@@ -66,7 +68,7 @@ export function NotificationList({ notifications, isLoading }: NotificationListP
                   Mark all read
                 </Button>
               )}
-              {notifications.length > 0 && (
+              {safeNotifications.length > 0 && (
                 <Button
                   variant="outline"
                   size="sm"
