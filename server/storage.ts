@@ -28,7 +28,9 @@ import {
 } from "@shared/schema";
 import session from "express-session";
 import MemoryStore from "memorystore";
+import MongoStore from "connect-mongo";
 import { nanoid } from "nanoid";
+import { prisma } from "./db";
 
 const MemoryStoreSession = MemoryStore(session);
 
@@ -677,7 +679,74 @@ export class MemStorage implements IStorage {
   }
 }
 
-/* 
+// Helper functions to convert Prisma types to our types
+function convertPrismaUser(prismaUser: any): User {
+  return {
+    id: prismaUser.id,
+    username: prismaUser.username,
+    email: prismaUser.email,
+    fullName: prismaUser.fullName,
+    studentId: prismaUser.studentId,
+    phone: prismaUser.phone,
+    password: prismaUser.password,
+    role: prismaUser.role as Role,
+    profilePicture: prismaUser.profilePicture,
+    createdAt: prismaUser.createdAt
+  };
+}
+
+function convertPrismaBook(prismaBook: any): Book {
+  return {
+    id: prismaBook.id,
+    title: prismaBook.title,
+    author: prismaBook.author,
+    isbn: prismaBook.isbn,
+    category: prismaBook.category,
+    description: prismaBook.description,
+    publisher: prismaBook.publisher,
+    totalCopies: prismaBook.totalCopies,
+    availableCopies: prismaBook.availableCopies,
+    createdAt: prismaBook.createdAt
+  };
+}
+
+function convertPrismaTransaction(prismaTransaction: any): Transaction {
+  return {
+    id: prismaTransaction.id,
+    userId: prismaTransaction.userId,
+    bookId: prismaTransaction.bookId,
+    borrowedDate: prismaTransaction.borrowedDate,
+    dueDate: prismaTransaction.dueDate,
+    returnedDate: prismaTransaction.returnedDate,
+    status: prismaTransaction.status as TransactionStatus
+  };
+}
+
+function convertPrismaBookRequest(prismaBookRequest: any): BookRequest {
+  return {
+    id: prismaBookRequest.id,
+    userId: prismaBookRequest.userId,
+    bookId: prismaBookRequest.bookId,
+    requestDate: prismaBookRequest.requestDate,
+    status: prismaBookRequest.status as BookRequestStatus,
+    requestedBy: prismaBookRequest.requestedBy
+  };
+}
+
+function convertPrismaExtensionRequest(prismaExtensionRequest: any): ExtensionRequest {
+  return {
+    id: prismaExtensionRequest.id,
+    userId: prismaExtensionRequest.userId,
+    transactionId: prismaExtensionRequest.transactionId,
+    requestDate: prismaExtensionRequest.requestDate,
+    requestedDueDate: prismaExtensionRequest.requestedDueDate,
+    reason: prismaExtensionRequest.reason,
+    status: prismaExtensionRequest.status as ExtensionRequestStatus,
+    processedBy: prismaExtensionRequest.processedBy,
+    processedDate: prismaExtensionRequest.processedDate
+  };
+}
+
 export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
 
@@ -690,6 +759,7 @@ export class DatabaseStorage implements IStorage {
 
   // User methods
   async getUser(id: string): Promise<User | null> {
+    if (!prisma) return null;
     const user = await prisma.user.findUnique({
       where: { id }
     });
@@ -697,6 +767,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | null> {
+    if (!prisma) return null;
     const user = await prisma.user.findUnique({
       where: { username }
     });
@@ -704,6 +775,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
+    if (!prisma) return null;
     const user = await prisma.user.findUnique({
       where: { email }
     });
@@ -711,6 +783,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByRegisterNumber(registerNumber: string): Promise<User | null> {
+    if (!prisma) return null;
     const user = await prisma.user.findFirst({
       where: { studentId: registerNumber }
     });
@@ -718,6 +791,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
+    if (!prisma) throw new Error("Database not available");
     const user = await prisma.user.create({
       data: {
         ...insertUser,
@@ -729,6 +803,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserRole(userId: string, role: Role): Promise<User | null> {
     try {
+      if (!prisma) return null;
       const user = await prisma.user.update({
         where: { id: userId },
         data: { role: role as any }
@@ -741,6 +816,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateProfile(userId: string, profile: UpdateProfile): Promise<User | null> {
     try {
+      if (!prisma) return null;
       const user = await prisma.user.update({
         where: { id: userId },
         data: profile
@@ -751,8 +827,22 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async updatePassword(userId: string, password: string): Promise<User | null> {
+    try {
+      if (!prisma) return null;
+      const user = await prisma.user.update({
+        where: { id: userId },
+        data: { password }
+      });
+      return convertPrismaUser(user);
+    } catch (error) {
+      return null;
+    }
+  }
+
   async deleteUser(userId: string): Promise<boolean> {
     try {
+      if (!prisma) return false;
       await prisma.user.delete({
         where: { id: userId }
       });
@@ -763,6 +853,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllUsers(): Promise<User[]> {
+    if (!prisma) return [];
     const users = await prisma.user.findMany({
       orderBy: { createdAt: 'desc' }
     });
@@ -770,6 +861,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getStudents(): Promise<User[]> {
+    if (!prisma) return [];
     const users = await prisma.user.findMany({
       where: { role: Role.STUDENT },
       orderBy: { fullName: 'asc' }
@@ -779,6 +871,7 @@ export class DatabaseStorage implements IStorage {
 
   // Book methods
   async getBook(id: string): Promise<Book | null> {
+    if (!prisma) return null;
     const book = await prisma.book.findUnique({
       where: { id }
     });
@@ -786,6 +879,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllBooks(): Promise<Book[]> {
+    if (!prisma) return [];
     const books = await prisma.book.findMany({
       orderBy: { createdAt: 'desc' }
     });
@@ -793,6 +887,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAvailableBooks(): Promise<Book[]> {
+    if (!prisma) return [];
     const books = await prisma.book.findMany({
       where: {
         availableCopies: { gt: 0 }
@@ -803,6 +898,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createBook(insertBook: InsertBook): Promise<Book> {
+    if (!prisma) throw new Error("Database not available");
     const book = await prisma.book.create({
       data: {
         ...insertBook,
@@ -814,6 +910,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateBook(id: string, bookData: Partial<InsertBook>): Promise<Book | null> {
     try {
+      if (!prisma) return null;
       const book = await prisma.book.update({
         where: { id },
         data: bookData
@@ -826,6 +923,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteBook(id: string): Promise<boolean> {
     try {
+      if (!prisma) return false;
       await prisma.book.delete({
         where: { id }
       });
@@ -837,6 +935,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateBookAvailability(bookId: string, change: number): Promise<boolean> {
     try {
+      if (!prisma) return false;
       await prisma.book.update({
         where: { id: bookId },
         data: {
@@ -853,6 +952,7 @@ export class DatabaseStorage implements IStorage {
 
   // Transaction methods
   async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {
+    if (!prisma) throw new Error("Database not available");
     const transaction = await prisma.transaction.create({
       data: insertTransaction,
       include: { book: true, user: true }
@@ -870,6 +970,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserTransactions(userId: string): Promise<TransactionWithBook[]> {
+    if (!prisma) return [];
     const transactions = await prisma.transaction.findMany({
       where: { userId },
       include: { book: true },
@@ -882,6 +983,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllTransactions(): Promise<TransactionWithUserAndBook[]> {
+    if (!prisma) return [];
     const transactions = await prisma.transaction.findMany({
       include: { 
         user: true, 
@@ -1329,6 +1431,6 @@ export class DatabaseStorage implements IStorage {
     })) as PushSubscription[];
   }
 }
-*/
 
-export const storage = new MemStorage();
+// Use DatabaseStorage if MongoDB URI is available, otherwise fallback to MemStorage
+export const storage = process.env.MONGODB_URI ? new DatabaseStorage() : new MemStorage();
