@@ -394,19 +394,12 @@ function AdminDashboard() {
                           return (
                             <tr key={u.id} className="hover:bg-muted/50" data-testid={`row-user-${u.id}`}>
                               <td className="px-6 py-4">
-                                <div className="flex items-center">
-                                  <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center mr-4">
-                                    <span className="text-sm font-medium text-primary" data-testid={`text-user-initials-${u.id}`}>
-                                      {u.fullName.split(' ').map(n => n[0]).join('')}
-                                    </span>
+                                <div className="flex flex-col">
+                                  <div className="text-sm font-medium text-foreground" data-testid={`text-user-name-${u.id}`}>
+                                    {u.fullName}
                                   </div>
-                                  <div>
-                                    <div className="text-sm font-medium text-foreground" data-testid={`text-user-name-${u.id}`}>
-                                      {u.fullName}
-                                    </div>
-                                    <div className="text-sm text-muted-foreground" data-testid={`text-user-email-${u.id}`}>
-                                      {u.email}
-                                    </div>
+                                  <div className="text-sm text-muted-foreground" data-testid={`text-user-email-${u.id}`}>
+                                    {u.email}
                                   </div>
                                 </div>
                               </td>
