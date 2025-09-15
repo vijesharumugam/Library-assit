@@ -1,10 +1,10 @@
-// Database connection using MongoDB with Prisma
+// Database connection using PostgreSQL with Prisma
 import { PrismaClient } from '@prisma/client';
 
-// Create Prisma client with MongoDB connection
+// Create Prisma client with PostgreSQL connection
 function createPrismaClient(): PrismaClient {
-  if (!process.env.MONGODB_URI) {
-    throw new Error('MONGODB_URI environment variable is required');
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL environment variable is required');
   }
   
   return new PrismaClient({

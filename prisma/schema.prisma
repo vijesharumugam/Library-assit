@@ -6,12 +6,12 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
-  url      = env("MONGODB_URI")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  id             String   @id @default(cuid())
   username       String   @unique
   email          String   @unique
   fullName       String
@@ -34,7 +34,7 @@ model User {
 }
 
 model Book {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  id              String   @id @default(cuid())
   title           String
   author          String
   isbn            String?
@@ -54,9 +54,9 @@ model Book {
 }
 
 model Transaction {
-  id           String            @id @default(auto()) @map("_id") @db.ObjectId
-  userId       String            @db.ObjectId
-  bookId       String            @db.ObjectId
+  id           String            @id @default(cuid())
+  userId       String
+  bookId       String
   borrowedDate DateTime          @default(now())
   dueDate      DateTime
   returnedDate DateTime?
@@ -71,9 +71,9 @@ model Transaction {
 }
 
 model BookRequest {
-  id          String            @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String            @db.ObjectId
-  bookId      String            @db.ObjectId
+  id          String            @id @default(cuid())
+  userId      String
+  bookId      String
   requestDate DateTime          @default(now())
   status      BookRequestStatus @default(PENDING)
   requestedBy String            // Student name/ID for easier identification
@@ -87,8 +87,8 @@ model BookRequest {
 }
 
 model Notification {
-  id        String            @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String            @db.ObjectId
+  id        String            @id @default(cuid())
+  userId    String
   type      NotificationType
   title     String
   message   String
@@ -102,9 +102,9 @@ model Notification {
 }
 
 model ExtensionRequest {
-  id              String                  @id @default(auto()) @map("_id") @db.ObjectId
-  transactionId   String                  @db.ObjectId
-  userId          String                  @db.ObjectId
+  id              String                  @id @default(cuid())
+  transactionId   String
+  userId          String
   requestDate     DateTime                @default(now())
   currentDueDate  DateTime
   requestedDueDate DateTime
@@ -156,8 +156,8 @@ enum ExtensionRequestStatus {
 }
 
 model PushSubscription {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String   @db.ObjectId
+  id        String   @id @default(cuid())
+  userId    String
   endpoint  String
   p256dh    String
   auth      String
@@ -172,8 +172,8 @@ model PushSubscription {
 }
 
 model ChatSession {
-  id           String        @id @default(auto()) @map("_id") @db.ObjectId
-  userId       String        @unique @db.ObjectId
+  id           String        @id @default(cuid())
+  userId       String        @unique
   messages     Json          // Array of ChatMessage objects
   lastActivity DateTime      @default(now())
   createdAt    DateTime      @default(now())
@@ -185,8 +185,8 @@ model ChatSession {
 }
 
 model BookAIContent {
-  id             String    @id @default(auto()) @map("_id") @db.ObjectId
-  bookId         String    @unique @db.ObjectId
+  id             String    @id @default(cuid())
+  bookId         String    @unique
   summary        String?
   studyGuide     String?
   quotes         Json?     // Array of strings
@@ -200,7 +200,7 @@ model BookAIContent {
 }
 
 model AIAnalytics {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  id          String    @id @default(cuid())
   type        String    // USAGE_PATTERN, INVENTORY_INSIGHT, USER_BEHAVIOR, PERFORMANCE_METRIC
   title       String
   description String
@@ -213,7 +213,7 @@ model AIAnalytics {
 }
 
 model AIPrediction {
-  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  id         String    @id @default(cuid())
   type       String    // OVERDUE_RISK, POPULAR_BOOK_FORECAST, OPTIMAL_DUE_DATE
   targetId   String    // userId for overdue risk, bookId for popularity, transactionId for due date
   prediction Json      // Prediction data
