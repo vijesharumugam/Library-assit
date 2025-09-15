@@ -413,34 +413,40 @@ export default function AuthPage() {
       </div>
 
       {/* Hero Section */}
-      <div className="hidden lg:block lg:flex-1 relative bg-gradient-to-br from-primary/20 via-primary/10 to-accent/15">
-        <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center p-8 max-w-lg">
-            <div className="mb-8 mx-auto w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center">
-              <BookOpen className="h-10 w-10 text-primary" />
+      <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:items-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-12">
+        <div className="max-w-md w-full text-center space-y-8">
+          {/* App Icon */}
+          <div className="mx-auto w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-lg">
+            <BookOpen className="h-8 w-8 text-primary-foreground" />
+          </div>
+          
+          {/* Title */}
+          <div className="space-y-3">
+            <h1 className="text-3xl font-bold text-foreground">Welcome to Library Assist</h1>
+            <p className="text-base text-muted-foreground">Your comprehensive library management solution</p>
+          </div>
+          
+          {/* Features */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3 text-left">
+              <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <BookOpen className="h-4 w-4 text-primary" />
+              </div>
+              <span className="text-sm font-medium text-foreground">Browse and borrow books easily</span>
             </div>
-            <h1 className="text-4xl font-bold mb-4 text-foreground">Welcome to Library Assist</h1>
-            <p className="text-xl mb-8 text-muted-foreground">Your comprehensive library management solution</p>
-            <div className="grid grid-cols-1 gap-6 max-w-md mx-auto">
-              <div className="flex items-center space-x-4 p-4 bg-background/50 rounded-lg backdrop-blur-sm">
-                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <BookOpen className="h-5 w-5 text-primary" />
-                </div>
-                <span className="text-foreground font-medium">Browse and borrow books easily</span>
+            
+            <div className="flex items-center space-x-3 text-left">
+              <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Users className="h-4 w-4 text-primary" />
               </div>
-              <div className="flex items-center space-x-4 p-4 bg-background/50 rounded-lg backdrop-blur-sm">
-                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <Users className="h-5 w-5 text-primary" />
-                </div>
-                <span className="text-foreground font-medium">Manage library operations</span>
+              <span className="text-sm font-medium text-foreground">Manage library operations</span>
+            </div>
+            
+            <div className="flex items-center space-x-3 text-left">
+              <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Shield className="h-4 w-4 text-primary" />
               </div>
-              <div className="flex items-center space-x-4 p-4 bg-background/50 rounded-lg backdrop-blur-sm">
-                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <Shield className="h-5 w-5 text-primary" />
-                </div>
-                <span className="text-foreground font-medium">Role-based access control</span>
-              </div>
+              <span className="text-sm font-medium text-foreground">Role-based access control</span>
             </div>
           </div>
         </div>
