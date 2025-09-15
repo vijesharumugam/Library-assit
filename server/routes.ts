@@ -10,6 +10,9 @@ import multer from "multer";
 import * as XLSX from "xlsx";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { LibraryAIService } from "./ai-service";
+import { AIContentService } from "./ai-content-service";
+import { AIAnalyticsService } from "./ai-analytics-service";
+import { AIPredictiveService } from "./ai-predictive-service";
 import { emailService } from "./email-service";
 import { otpService } from "./otp-service";
 import crypto from 'crypto';
@@ -36,11 +39,12 @@ function requireRole(roles: string[]) {
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
-  // Initialize Google Gemini AI client for intelligent search
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
   
-  // Initialize AI Service
+  // Initialize AI Services
   const aiService = new LibraryAIService();
+  const aiContentService = new AIContentService();
+  const aiAnalyticsService = new AIAnalyticsService();
+  const aiPredictiveService = new AIPredictiveService();
 
   // Configure multer for file uploads (for Excel files)
   const upload = multer({
@@ -1042,6 +1046,284 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Test push notification error:', error);
       res.status(500).json({ message: "Failed to send test notification" });
+    }
+  });
+
+  // ===== AI FEATURES ROUTES =====
+
+  // AI Content Summarization & Analysis Routes
+  app.post("/api/ai/content/generate/:bookId", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const { bookId } = req.params;
+      const book = await storage.getBook(bookId);
+      
+      if (!book) {
+        return res.status(404).json({ message: "Book not found" });
+      }
+
+      const content = await aiContentService.generateBookContent(book);
+      res.json(content);
+    } catch (error) {
+      console.error('Error generating book content:', error);
+      res.status(500).json({ message: "Failed to generate AI content" });
+    }
+  });
+
+  app.get("/api/ai/content/:bookId", requireAuth, async (req, res) => {
+    try {
+      const { bookId } = req.params;
+      const content = await aiContentService.getBookContent(bookId);
+      
+      if (!content) {
+        return res.status(404).json({ message: "AI content not found for this book" });
+      }
+
+      res.json(content);
+    } catch (error) {
+      console.error('Error fetching book content:', error);
+      res.status(500).json({ message: "Failed to fetch AI content" });
+    }
+  });
+
+  app.put("/api/ai/content/:bookId", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const { bookId } = req.params;
+      const updates = req.body;
+      
+      const content = await aiContentService.updateBookContent(bookId, updates);
+      
+      if (!content) {
+        return res.status(404).json({ message: "AI content not found for this book" });
+      }
+
+      res.json(content);
+    } catch (error) {
+      console.error('Error updating book content:', error);
+      res.status(500).json({ message: "Failed to update AI content" });
+    }
+  });
+
+  app.post("/api/ai/content/question/:bookId", requireAuth, async (req, res) => {
+    try {
+      const { bookId } = req.params;
+      const { question } = req.body;
+      
+      if (!question) {
+        return res.status(400).json({ message: "Question is required" });
+      }
+
+      const book = await storage.getBook(bookId);
+      if (!book) {
+        return res.status(404).json({ message: "Book not found" });
+      }
+
+      const answer = await aiContentService.answerBookQuestion(book, question);
+      res.json({ question, answer });
+    } catch (error) {
+      console.error('Error answering book question:', error);
+      res.status(500).json({ message: "Failed to answer question" });
+    }
+  });
+
+  app.get("/api/ai/content", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const allContent = await aiContentService.getAllBookContent();
+      res.json(allContent);
+    } catch (error) {
+      console.error('Error fetching all AI content:', error);
+      res.status(500).json({ message: "Failed to fetch AI content" });
+    }
+  });
+
+  // AI Analytics Routes
+  app.post("/api/ai/analytics/usage-patterns", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const analytics = await aiAnalyticsService.generateUsagePatterns();
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error generating usage patterns:', error);
+      res.status(500).json({ message: "Failed to generate usage pattern analytics" });
+    }
+  });
+
+  app.post("/api/ai/analytics/inventory-insights", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const analytics = await aiAnalyticsService.generateInventoryInsights();
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error generating inventory insights:', error);
+      res.status(500).json({ message: "Failed to generate inventory analytics" });
+    }
+  });
+
+  app.post("/api/ai/analytics/user-behavior", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const analytics = await aiAnalyticsService.generateUserBehaviorAnalysis();
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error generating user behavior analysis:', error);
+      res.status(500).json({ message: "Failed to generate user behavior analytics" });
+    }
+  });
+
+  app.post("/api/ai/analytics/performance-metrics", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const analytics = await aiAnalyticsService.generatePerformanceMetrics();
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error generating performance metrics:', error);
+      res.status(500).json({ message: "Failed to generate performance analytics" });
+    }
+  });
+
+  app.get("/api/ai/analytics", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const { type } = req.query;
+      
+      let analytics;
+      if (type) {
+        analytics = await aiAnalyticsService.getAnalyticsByType(type as string);
+      } else {
+        analytics = await aiAnalyticsService.getAllAnalytics();
+      }
+      
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  app.delete("/api/ai/analytics/cleanup", requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const deletedCount = await aiAnalyticsService.cleanupOldAnalytics();
+      res.json({ message: `Cleaned up ${deletedCount} old analytics records` });
+    } catch (error) {
+      console.error('Error cleaning up analytics:', error);
+      res.status(500).json({ message: "Failed to cleanup analytics" });
+    }
+  });
+
+  // AI Predictive Features Routes
+  app.post("/api/ai/predictions/overdue-risk", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const { userId } = req.body;
+      const predictions = await aiPredictiveService.predictOverdueRisk(userId);
+      res.json(predictions);
+    } catch (error) {
+      console.error('Error predicting overdue risk:', error);
+      res.status(500).json({ message: "Failed to generate overdue risk predictions" });
+    }
+  });
+
+  app.post("/api/ai/predictions/book-popularity", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const { bookId } = req.body;
+      const predictions = await aiPredictiveService.forecastBookPopularity(bookId);
+      res.json(predictions);
+    } catch (error) {
+      console.error('Error forecasting book popularity:', error);
+      res.status(500).json({ message: "Failed to generate popularity forecasts" });
+    }
+  });
+
+  app.post("/api/ai/predictions/optimal-due-date", requireAuth, async (req, res) => {
+    try {
+      const { userId, bookId } = req.body;
+      
+      if (!userId || !bookId) {
+        return res.status(400).json({ message: "userId and bookId are required" });
+      }
+
+      const prediction = await aiPredictiveService.calculateOptimalDueDate(userId, bookId);
+      res.json(prediction);
+    } catch (error) {
+      console.error('Error calculating optimal due date:', error);
+      res.status(500).json({ message: "Failed to calculate optimal due date" });
+    }
+  });
+
+  app.get("/api/ai/predictions", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const { type, targetId } = req.query;
+      
+      let predictions;
+      if (targetId) {
+        predictions = await aiPredictiveService.getPredictionsByTarget(targetId as string);
+      } else if (type) {
+        predictions = await aiPredictiveService.getPredictionsByType(type as string);
+      } else {
+        predictions = await aiPredictiveService.getAllPredictions();
+      }
+      
+      res.json(predictions);
+    } catch (error) {
+      console.error('Error fetching predictions:', error);
+      res.status(500).json({ message: "Failed to fetch predictions" });
+    }
+  });
+
+  app.post("/api/ai/predictions/risk-assessment/:userId", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const assessment = await aiPredictiveService.generateRiskAssessment(userId);
+      res.json({ userId, assessment });
+    } catch (error) {
+      console.error('Error generating risk assessment:', error);
+      res.status(500).json({ message: "Failed to generate risk assessment" });
+    }
+  });
+
+  app.delete("/api/ai/predictions/cleanup", requireRole(["ADMIN"]), async (req, res) => {
+    try {
+      const deletedCount = await aiPredictiveService.cleanupOldPredictions();
+      res.json({ message: `Cleaned up ${deletedCount} old prediction records` });
+    } catch (error) {
+      console.error('Error cleaning up predictions:', error);
+      res.status(500).json({ message: "Failed to cleanup predictions" });
+    }
+  });
+
+  // Comprehensive AI Dashboard Route
+  app.get("/api/ai/dashboard", requireRole(["LIBRARIAN", "ADMIN"]), async (req, res) => {
+    try {
+      // Get latest analytics
+      const usagePatterns = await aiAnalyticsService.getAnalyticsByType('USAGE_PATTERN');
+      const inventoryInsights = await aiAnalyticsService.getAnalyticsByType('INVENTORY_INSIGHT');
+      const userBehavior = await aiAnalyticsService.getAnalyticsByType('USER_BEHAVIOR');
+      const performanceMetrics = await aiAnalyticsService.getAnalyticsByType('PERFORMANCE_METRIC');
+      
+      // Get recent predictions
+      const overdueRisks = await aiPredictiveService.getPredictionsByType('OVERDUE_RISK');
+      const popularityForecasts = await aiPredictiveService.getPredictionsByType('POPULAR_BOOK_FORECAST');
+      
+      // Get recent AI content
+      const aiContent = await aiContentService.getAllBookContent();
+      
+      res.json({
+        analytics: {
+          usagePatterns: usagePatterns.slice(0, 1), // Latest only
+          inventoryInsights: inventoryInsights.slice(0, 1),
+          userBehavior: userBehavior.slice(0, 1),
+          performanceMetrics: performanceMetrics.slice(0, 1)
+        },
+        predictions: {
+          overdueRisks: overdueRisks.slice(0, 10), // Top 10 risks
+          popularityForecasts: popularityForecasts.slice(0, 10)
+        },
+        content: {
+          totalBooksWithContent: aiContent.length,
+          recentContent: aiContent.slice(-5) // 5 most recent
+        },
+        summary: {
+          totalAnalytics: usagePatterns.length + inventoryInsights.length + userBehavior.length + performanceMetrics.length,
+          totalPredictions: overdueRisks.length + popularityForecasts.length,
+          totalAIContent: aiContent.length
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching AI dashboard data:', error);
+      res.status(500).json({ message: "Failed to fetch AI dashboard data" });
     }
   });
 
