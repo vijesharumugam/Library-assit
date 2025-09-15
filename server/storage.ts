@@ -6,6 +6,9 @@ import {
   ExtensionRequest,
   Notification,
   PushSubscription,
+  BookAIContent,
+  AIAnalytics,
+  AIPrediction,
   Role, 
   TransactionStatus,
   BookRequestStatus,
@@ -18,6 +21,9 @@ import {
   InsertExtensionRequest,
   InsertNotification,
   InsertPushSubscription,
+  InsertBookAIContent,
+  InsertAIAnalytics,
+  InsertAIPrediction,
   UpdateProfile,
   TransactionWithBook, 
   TransactionWithUserAndBook,
@@ -93,6 +99,25 @@ export interface IStorage {
   getUserPushSubscriptions(userId: string): Promise<PushSubscription[]>;
   deletePushSubscription(id: string): Promise<boolean>;
   getAllPushSubscriptions(): Promise<PushSubscription[]>;
+
+  // AI Content methods
+  getBookAIContent(bookId: string): Promise<BookAIContent | null>;
+  createBookAIContent(content: InsertBookAIContent): Promise<BookAIContent>;
+  updateBookAIContent(bookId: string, content: Partial<InsertBookAIContent>): Promise<BookAIContent | null>;
+  getAllBookAIContent(): Promise<BookAIContent[]>;
+
+  // AI Analytics methods
+  createAIAnalytics(analytics: InsertAIAnalytics): Promise<AIAnalytics>;
+  getAIAnalyticsByType(type: string): Promise<AIAnalytics[]>;
+  getAllAIAnalytics(): Promise<AIAnalytics[]>;
+  deleteOldAIAnalytics(cutoffDate: Date): Promise<number>;
+
+  // AI Prediction methods
+  createAIPrediction(prediction: InsertAIPrediction): Promise<AIPrediction>;
+  getAIPredictionsByType(type: string): Promise<AIPrediction[]>;
+  getAIPredictionsByTarget(targetId: string): Promise<AIPrediction[]>;
+  getAllAIPredictions(): Promise<AIPrediction[]>;
+  deleteOldAIPredictions(cutoffDate: Date): Promise<number>;
   
   sessionStore: session.Store;
 }
@@ -105,6 +130,9 @@ export class MemStorage implements IStorage {
   private extensionRequests = new Map<string, ExtensionRequest>();
   private notifications = new Map<string, Notification>();
   private pushSubscriptions = new Map<string, PushSubscription>();
+  private bookAIContent = new Map<string, BookAIContent>();
+  private aiAnalytics = new Map<string, AIAnalytics>();
+  private aiPredictions = new Map<string, AIPrediction>();
 
   sessionStore: session.Store;
 
@@ -676,6 +704,108 @@ export class MemStorage implements IStorage {
 
   async getAllPushSubscriptions(): Promise<PushSubscription[]> {
     return Array.from(this.pushSubscriptions.values());
+  }
+
+  // AI Content methods
+  async getBookAIContent(bookId: string): Promise<BookAIContent | null> {
+    return Array.from(this.bookAIContent.values()).find(content => content.bookId === bookId) || null;
+  }
+
+  async createBookAIContent(content: InsertBookAIContent): Promise<BookAIContent> {
+    const aiContent: BookAIContent = {
+      id: nanoid(),
+      ...content,
+      lastUpdated: new Date(),
+    };
+    this.bookAIContent.set(aiContent.id, aiContent);
+    return aiContent;
+  }
+
+  async updateBookAIContent(bookId: string, content: Partial<InsertBookAIContent>): Promise<BookAIContent | null> {
+    const existingContent = Array.from(this.bookAIContent.values()).find(c => c.bookId === bookId);
+    if (!existingContent) return null;
+    
+    const updatedContent = { 
+      ...existingContent, 
+      ...content, 
+      lastUpdated: new Date() 
+    };
+    this.bookAIContent.set(existingContent.id, updatedContent);
+    return updatedContent;
+  }
+
+  async getAllBookAIContent(): Promise<BookAIContent[]> {
+    return Array.from(this.bookAIContent.values());
+  }
+
+  // AI Analytics methods
+  async createAIAnalytics(analytics: InsertAIAnalytics): Promise<AIAnalytics> {
+    const aiAnalytics: AIAnalytics = {
+      id: nanoid(),
+      ...analytics,
+      generatedAt: new Date(),
+    };
+    this.aiAnalytics.set(aiAnalytics.id, aiAnalytics);
+    return aiAnalytics;
+  }
+
+  async getAIAnalyticsByType(type: string): Promise<AIAnalytics[]> {
+    return Array.from(this.aiAnalytics.values()).filter(analytics => analytics.type === type);
+  }
+
+  async getAllAIAnalytics(): Promise<AIAnalytics[]> {
+    return Array.from(this.aiAnalytics.values());
+  }
+
+  async deleteOldAIAnalytics(cutoffDate: Date): Promise<number> {
+    const analytics = Array.from(this.aiAnalytics.values());
+    let deletedCount = 0;
+    
+    analytics.forEach(item => {
+      if (item.generatedAt < cutoffDate) {
+        this.aiAnalytics.delete(item.id);
+        deletedCount++;
+      }
+    });
+    
+    return deletedCount;
+  }
+
+  // AI Prediction methods
+  async createAIPrediction(prediction: InsertAIPrediction): Promise<AIPrediction> {
+    const aiPrediction: AIPrediction = {
+      id: nanoid(),
+      ...prediction,
+      createdAt: new Date(),
+    };
+    this.aiPredictions.set(aiPrediction.id, aiPrediction);
+    return aiPrediction;
+  }
+
+  async getAIPredictionsByType(type: string): Promise<AIPrediction[]> {
+    return Array.from(this.aiPredictions.values()).filter(prediction => prediction.type === type);
+  }
+
+  async getAIPredictionsByTarget(targetId: string): Promise<AIPrediction[]> {
+    return Array.from(this.aiPredictions.values()).filter(prediction => prediction.targetId === targetId);
+  }
+
+  async getAllAIPredictions(): Promise<AIPrediction[]> {
+    return Array.from(this.aiPredictions.values());
+  }
+
+  async deleteOldAIPredictions(cutoffDate: Date): Promise<number> {
+    const predictions = Array.from(this.aiPredictions.values());
+    let deletedCount = 0;
+    
+    predictions.forEach(item => {
+      if (item.createdAt < cutoffDate) {
+        this.aiPredictions.delete(item.id);
+        deletedCount++;
+      }
+    });
+    
+    return deletedCount;
   }
 }
 

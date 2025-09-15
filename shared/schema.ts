@@ -277,5 +277,74 @@ export const insertPushSubscriptionSchema = z.object({
 
 export type InsertPushSubscription = z.infer<typeof insertPushSubscriptionSchema>;
 
+// AI Content Summarization types
+export type BookAIContent = {
+  id: string;
+  bookId: string;
+  summary?: string | null;
+  studyGuide?: string | null;
+  quotes?: string[] | null;
+  comprehensionQA?: { question: string; answer: string }[] | null;
+  lastUpdated: Date;
+  book?: Book;
+};
+
+export type AIAnalytics = {
+  id: string;
+  type: 'USAGE_PATTERN' | 'INVENTORY_INSIGHT' | 'USER_BEHAVIOR' | 'PERFORMANCE_METRIC';
+  title: string;
+  description: string;
+  data: any; // JSON data for charts/analytics
+  insights?: string | null; // AI-generated insights
+  generatedAt: Date;
+  validUntil?: Date | null;
+};
+
+export type AIPrediction = {
+  id: string;
+  type: 'OVERDUE_RISK' | 'POPULAR_BOOK_FORECAST' | 'OPTIMAL_DUE_DATE';
+  targetId: string; // userId for overdue risk, bookId for popularity, transactionId for due date
+  prediction: any; // JSON prediction data
+  confidence: number; // 0-1 confidence score
+  reasoning?: string | null; // AI reasoning
+  createdAt: Date;
+  validUntil?: Date | null;
+};
+
+// Zod schemas for AI features
+export const insertBookAIContentSchema = z.object({
+  bookId: z.string().min(1, "Book ID is required"),
+  summary: z.string().optional(),
+  studyGuide: z.string().optional(),
+  quotes: z.array(z.string()).optional(),
+  comprehensionQA: z.array(z.object({
+    question: z.string(),
+    answer: z.string()
+  })).optional(),
+});
+
+export const insertAIAnalyticsSchema = z.object({
+  type: z.enum(['USAGE_PATTERN', 'INVENTORY_INSIGHT', 'USER_BEHAVIOR', 'PERFORMANCE_METRIC']),
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  data: z.any(), // JSON data
+  insights: z.string().optional(),
+  validUntil: z.date().optional(),
+});
+
+export const insertAIPredictionSchema = z.object({
+  type: z.enum(['OVERDUE_RISK', 'POPULAR_BOOK_FORECAST', 'OPTIMAL_DUE_DATE']),
+  targetId: z.string().min(1, "Target ID is required"),
+  prediction: z.any(), // JSON prediction data
+  confidence: z.number().min(0).max(1),
+  reasoning: z.string().optional(),
+  validUntil: z.date().optional(),
+});
+
+// Inferred types
+export type InsertBookAIContent = z.infer<typeof insertBookAIContentSchema>;
+export type InsertAIAnalytics = z.infer<typeof insertAIAnalyticsSchema>;
+export type InsertAIPrediction = z.infer<typeof insertAIPredictionSchema>;
+
 // User without sensitive fields for frontend
 export type SafeUser = Omit<User, 'password'>;
