@@ -413,30 +413,33 @@ export default function AuthPage() {
       </div>
 
       {/* Hero Section */}
-      <div className="hidden lg:block lg:flex-1 relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10" />
-        <img
-          src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=800"
-          alt="Modern library interior with students studying"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/20" />
+      <div className="hidden lg:block lg:flex-1 relative bg-gradient-to-br from-primary/20 via-primary/10 to-accent/15">
+        <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center text-white p-8">
-            <h1 className="text-4xl font-bold mb-4">Welcome to Library Assist</h1>
-            <p className="text-xl mb-6">Your comprehensive library management solution</p>
-            <div className="grid grid-cols-1 gap-4 max-w-md">
-              <div className="flex items-center space-x-3">
-                <BookOpen className="h-6 w-6" />
-                <span>Browse and borrow books easily</span>
+          <div className="text-center p-8 max-w-lg">
+            <div className="mb-8 mx-auto w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center">
+              <BookOpen className="h-10 w-10 text-primary" />
+            </div>
+            <h1 className="text-4xl font-bold mb-4 text-foreground">Welcome to Library Assist</h1>
+            <p className="text-xl mb-8 text-muted-foreground">Your comprehensive library management solution</p>
+            <div className="grid grid-cols-1 gap-6 max-w-md mx-auto">
+              <div className="flex items-center space-x-4 p-4 bg-background/50 rounded-lg backdrop-blur-sm">
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                </div>
+                <span className="text-foreground font-medium">Browse and borrow books easily</span>
               </div>
-              <div className="flex items-center space-x-3">
-                <Users className="h-6 w-6" />
-                <span>Manage library operations</span>
+              <div className="flex items-center space-x-4 p-4 bg-background/50 rounded-lg backdrop-blur-sm">
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Users className="h-5 w-5 text-primary" />
+                </div>
+                <span className="text-foreground font-medium">Manage library operations</span>
               </div>
-              <div className="flex items-center space-x-3">
-                <Shield className="h-6 w-6" />
-                <span>Role-based access control</span>
+              <div className="flex items-center space-x-4 p-4 bg-background/50 rounded-lg backdrop-blur-sm">
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Shield className="h-5 w-5 text-primary" />
+                </div>
+                <span className="text-foreground font-medium">Role-based access control</span>
               </div>
             </div>
           </div>
