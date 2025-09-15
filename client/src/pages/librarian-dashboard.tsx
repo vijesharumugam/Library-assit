@@ -272,7 +272,7 @@ function LibrarianDashboard() {
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <span className="text-xs sm:text-sm text-muted-foreground hidden lg:block">
-                Welcome, <span className="font-medium text-foreground" data-testid="text-user-name">{user?.fullName}</span>
+                Librarian
               </span>
               <ProfileDropdown />
             </div>
