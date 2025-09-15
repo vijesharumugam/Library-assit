@@ -10,6 +10,7 @@ import { insertUserSchema, Role } from "@shared/schema";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 type UserForm = z.infer<typeof insertUserSchema>;
 
@@ -35,6 +36,16 @@ export function AddUserModal({ open, onOpenChange }: AddUserModalProps) {
     },
   });
 
+  const role = form.watch("role");
+
+  // Clear studentId when switching away from STUDENT role
+  useEffect(() => {
+    if (role !== Role.STUDENT) {
+      form.setValue("studentId", "", { shouldValidate: true, shouldDirty: false });
+      form.clearErrors("studentId");
+    }
+  }, [role, form]);
+
   const addUserMutation = useMutation({
     mutationFn: async (userData: UserForm) => {
       const res = await apiRequest("POST", "/api/register", userData);
@@ -59,7 +70,13 @@ export function AddUserModal({ open, onOpenChange }: AddUserModalProps) {
   });
 
   const onSubmit = (data: UserForm) => {
-    addUserMutation.mutate(data);
+    // Omit studentId for non-students to avoid sending empty string
+    if (data.role !== Role.STUDENT) {
+      const { studentId, ...submitData } = data;
+      addUserMutation.mutate(submitData as UserForm);
+    } else {
+      addUserMutation.mutate(data);
+    }
   };
 
   return (
@@ -118,40 +135,10 @@ export function AddUserModal({ open, onOpenChange }: AddUserModalProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="studentId">Student ID *</Label>
-              <Input
-                id="studentId"
-                placeholder="Enter student ID"
-                data-testid="input-user-studentid"
-                {...form.register("studentId")}
-              />
-              {form.formState.errors.studentId && (
-                <p className="text-sm text-destructive">
-                  {form.formState.errors.studentId.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number *</Label>
-              <Input
-                id="phone"
-                placeholder="Enter phone number"
-                data-testid="input-user-phone"
-                {...form.register("phone")}
-              />
-              {form.formState.errors.phone && (
-                <p className="text-sm text-destructive">
-                  {form.formState.errors.phone.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="role">Role *</Label>
               <Select 
-                value={form.watch("role")} 
-                onValueChange={(value) => form.setValue("role", value as Role)}
+                value={role} 
+                onValueChange={(value) => form.setValue("role", value as Role, { shouldValidate: true })}
               >
                 <SelectTrigger data-testid="select-user-role">
                   <SelectValue placeholder="Select role" />
@@ -162,9 +149,45 @@ export function AddUserModal({ open, onOpenChange }: AddUserModalProps) {
                   <SelectItem value={Role.ADMIN}>Administrator</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                Student ID is only required for Student role
+              </p>
               {form.formState.errors.role && (
                 <p className="text-sm text-destructive">
                   {form.formState.errors.role.message}
+                </p>
+              )}
+            </div>
+
+            {role === Role.STUDENT && (
+              <div className="space-y-2">
+                <Label htmlFor="studentId">Student ID *</Label>
+                <Input
+                  id="studentId"
+                  placeholder="Enter student ID"
+                  data-testid="input-user-studentid"
+                  {...form.register("studentId")}
+                />
+                {form.formState.errors.studentId && (
+                  <p className="text-sm text-destructive">
+                    {form.formState.errors.studentId.message}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number *</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="e.g., +1 (555) 123-4567"
+                data-testid="input-user-phone"
+                {...form.register("phone")}
+              />
+              {form.formState.errors.phone && (
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.phone.message}
                 </p>
               )}
             </div>
