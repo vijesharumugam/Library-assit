@@ -41,7 +41,7 @@ export function ProfileDropdown() {
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="flex items-center gap-2 h-auto px-2 py-2 hover:bg-muted/50"
+            className="flex items-center h-auto px-2 py-2 hover:bg-muted/50"
             data-testid="profile-dropdown-trigger"
           >
             {user.profilePicture ? (
@@ -56,7 +56,6 @@ export function ProfileDropdown() {
                 <User className="h-4 w-4" />
               </div>
             )}
-            <ChevronDown className="h-3 w-3 opacity-50" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
