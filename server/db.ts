@@ -1,12 +1,14 @@
-// Database connection disabled - using in-memory storage for development
-// This file is kept for potential future database integration
-
+// Database connection using MongoDB with Prisma
 import { PrismaClient } from '@prisma/client';
 
-// Only create Prisma client if MongoDB URI is provided (optional for development)
-export const prisma = process.env.MONGODB_URI ? new PrismaClient({
+// Create Prisma client with MongoDB connection
+if (!process.env.MONGODB_URI) {
+  throw new Error('MONGODB_URI environment variable is required');
+}
+
+export const prisma = new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
-}) : null;
+});
 
 // Gracefully close the connection when the process exits (only if prisma exists)
 process.on('beforeExit', async () => {

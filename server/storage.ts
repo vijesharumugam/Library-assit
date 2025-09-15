@@ -742,7 +742,12 @@ export class MemStorage implements IStorage {
   async createAIAnalytics(analytics: InsertAIAnalytics): Promise<AIAnalytics> {
     const aiAnalytics: AIAnalytics = {
       id: nanoid(),
-      ...analytics,
+      type: analytics.type,
+      title: analytics.title,
+      description: analytics.description,
+      data: analytics.data || {},
+      insights: analytics.insights,
+      validUntil: analytics.validUntil,
       generatedAt: new Date(),
     };
     this.aiAnalytics.set(aiAnalytics.id, aiAnalytics);
@@ -775,7 +780,12 @@ export class MemStorage implements IStorage {
   async createAIPrediction(prediction: InsertAIPrediction): Promise<AIPrediction> {
     const aiPrediction: AIPrediction = {
       id: nanoid(),
-      ...prediction,
+      type: prediction.type,
+      targetId: prediction.targetId,
+      prediction: prediction.prediction || {},
+      confidence: prediction.confidence,
+      reasoning: prediction.reasoning,
+      validUntil: prediction.validUntil,
       createdAt: new Date(),
     };
     this.aiPredictions.set(aiPrediction.id, aiPrediction);
@@ -869,6 +879,7 @@ function convertPrismaExtensionRequest(prismaExtensionRequest: any): ExtensionRe
     userId: prismaExtensionRequest.userId,
     transactionId: prismaExtensionRequest.transactionId,
     requestDate: prismaExtensionRequest.requestDate,
+    currentDueDate: prismaExtensionRequest.currentDueDate,
     requestedDueDate: prismaExtensionRequest.requestedDueDate,
     reason: prismaExtensionRequest.reason,
     status: prismaExtensionRequest.status as ExtensionRequestStatus,
