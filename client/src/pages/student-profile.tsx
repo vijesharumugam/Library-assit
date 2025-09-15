@@ -154,34 +154,8 @@ function StudentProfile() {
         {/* Profile Card */}
         <Card>
           <CardHeader className="text-center">
-            <div className="relative mx-auto w-20 h-20 mb-4">
-              {user.profilePicture ? (
-                <img 
-                  src={user.profilePicture} 
-                  alt="Profile" 
-                  className="w-20 h-20 rounded-full object-cover border-4 border-background shadow-lg"
-                />
-              ) : (
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <User className="h-10 w-10 text-white" />
-                </div>
-              )}
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadImageMutation.isPending}
-                className="absolute -bottom-1 -right-1 w-7 h-7 bg-primary text-primary-foreground rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors shadow-lg"
-                data-testid="button-change-picture"
-              >
-                <Camera className="h-3 w-3" />
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-                data-testid="input-profile-picture"
-              />
+            <div className="mx-auto w-16 h-16 bg-muted/20 rounded-lg flex items-center justify-center mb-4">
+              <User className="h-8 w-8 text-muted-foreground" />
             </div>
             <CardTitle data-testid="profile-user-name">{user.fullName}</CardTitle>
             <div className="flex justify-center gap-2 mt-2">

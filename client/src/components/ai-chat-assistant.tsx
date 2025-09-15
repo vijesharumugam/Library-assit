@@ -1,10 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, Send, X, BookOpen, ExternalLink, Download, ShoppingCart } from "lucide-react";
+import { MessageCircle, Send, X, BookOpen, ExternalLink, Download, ShoppingCart, Bot, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -296,11 +295,9 @@ How can I assist you today?`,
                       )}
                     >
                       {message.type === 'assistant' && (
-                        <Avatar className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0">
-                          <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                            AI
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0 bg-primary/10 rounded-lg flex items-center justify-center">
+                          <Bot className="h-4 w-4 text-primary" />
+                        </div>
                       )}
                       <div
                         className={cn(
@@ -316,21 +313,17 @@ How can I assist you today?`,
                         {renderBookLinks(message.bookLinks)}
                       </div>
                       {message.type === 'user' && (
-                        <Avatar className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0">
-                          <AvatarFallback className="bg-muted text-xs">
-                            {user?.fullName?.[0] || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0 bg-muted/30 rounded-lg flex items-center justify-center">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                        </div>
                       )}
                     </div>
                   ))}
                   {isLoading && (
                     <div className="flex gap-2 sm:gap-3 justify-start">
-                      <Avatar className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0">
-                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                          AI
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0 bg-primary/10 rounded-lg flex items-center justify-center">
+                        <Bot className="h-4 w-4 text-primary" />
+                      </div>
                       <div className="bg-muted/50 border border-border/50 rounded-lg rounded-bl-sm p-3 text-sm max-w-[85%] sm:max-w-[90%]">
                         <div className="flex items-center gap-2">
                           <div className="flex gap-1">
