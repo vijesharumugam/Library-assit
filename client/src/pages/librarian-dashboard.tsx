@@ -268,7 +268,7 @@ function LibrarianDashboard() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-primary mr-2 sm:mr-3" />
-              <h1 className="text-base sm:text-xl library-heading">{user?.fullName}</h1>
+              <h1 className="text-base sm:text-xl library-heading">{user?.username}</h1>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <span className="text-xs sm:text-sm text-muted-foreground hidden lg:block">
