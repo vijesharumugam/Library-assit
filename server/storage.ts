@@ -9,6 +9,8 @@ import {
   BookAIContent,
   AIAnalytics,
   AIPrediction,
+  ChatSession,
+  ChatMessage,
   Role, 
   TransactionStatus,
   BookRequestStatus,
@@ -24,6 +26,7 @@ import {
   InsertBookAIContent,
   InsertAIAnalytics,
   InsertAIPrediction,
+  InsertChatSession,
   UpdateProfile,
   TransactionWithBook, 
   TransactionWithUserAndBook,
@@ -118,6 +121,12 @@ export interface IStorage {
   getAIPredictionsByTarget(targetId: string): Promise<AIPrediction[]>;
   getAllAIPredictions(): Promise<AIPrediction[]>;
   deleteOldAIPredictions(cutoffDate: Date): Promise<number>;
+
+  // Chat Session methods
+  getChatSession(userId: string): Promise<ChatSession | null>;
+  createChatSession(session: InsertChatSession): Promise<ChatSession>;
+  updateChatSession(userId: string, messages: ChatMessage[]): Promise<ChatSession | null>;
+  clearChatSession(userId: string): Promise<boolean>;
   
   sessionStore: session.Store;
 }
@@ -133,6 +142,7 @@ export class MemStorage implements IStorage {
   private bookAIContent = new Map<string, BookAIContent>();
   private aiAnalytics = new Map<string, AIAnalytics>();
   private aiPredictions = new Map<string, AIPrediction>();
+  private chatSessions = new Map<string, ChatSession>();
 
   sessionStore: session.Store;
 
@@ -816,6 +826,47 @@ export class MemStorage implements IStorage {
     });
     
     return deletedCount;
+  }
+
+  // Chat Session methods
+  async getChatSession(userId: string): Promise<ChatSession | null> {
+    return Array.from(this.chatSessions.values()).find(session => session.userId === userId) || null;
+  }
+
+  async createChatSession(sessionData: InsertChatSession): Promise<ChatSession> {
+    const session: ChatSession = {
+      id: nanoid(),
+      ...sessionData,
+      lastActivity: new Date(),
+      createdAt: new Date(),
+    };
+    this.chatSessions.set(session.id, session);
+    return session;
+  }
+
+  async updateChatSession(userId: string, messages: ChatMessage[]): Promise<ChatSession | null> {
+    const existingSession = await this.getChatSession(userId);
+    if (!existingSession) {
+      // Create new session if it doesn't exist
+      return await this.createChatSession({ userId, messages });
+    }
+    
+    const updatedSession = { 
+      ...existingSession, 
+      messages, 
+      lastActivity: new Date() 
+    };
+    this.chatSessions.set(existingSession.id, updatedSession);
+    return updatedSession;
+  }
+
+  async clearChatSession(userId: string): Promise<boolean> {
+    const session = await this.getChatSession(userId);
+    if (session) {
+      this.chatSessions.delete(session.id);
+      return true;
+    }
+    return false;
   }
 }
 
@@ -1627,6 +1678,94 @@ export class DatabaseStorage implements IStorage {
 
   async deleteOldAIPredictions(cutoffDate: Date): Promise<number> {
     return this.memStorageFallback.deleteOldAIPredictions(cutoffDate);
+  }
+
+  // Chat Session methods
+  async getChatSession(userId: string): Promise<ChatSession | null> {
+    const session = await (prisma as any).chatSession.findUnique({
+      where: { userId }
+    });
+    if (!session) return null;
+    
+    return {
+      id: session.id,
+      userId: session.userId,
+      messages: Array.isArray(session.messages) ? session.messages.map((msg: any) => ({
+        role: msg.role,
+        content: msg.content,
+        timestamp: new Date(msg.timestamp)
+      })) : [],
+      lastActivity: session.lastActivity,
+      createdAt: session.createdAt
+    };
+  }
+
+  async createChatSession(sessionData: InsertChatSession): Promise<ChatSession> {
+    const session = await (prisma as any).chatSession.create({
+      data: {
+        userId: sessionData.userId,
+        messages: sessionData.messages,
+        lastActivity: new Date(),
+        createdAt: new Date()
+      }
+    });
+    
+    return {
+      id: session.id,
+      userId: session.userId,
+      messages: Array.isArray(session.messages) ? session.messages.map((msg: any) => ({
+        role: msg.role,
+        content: msg.content,
+        timestamp: new Date(msg.timestamp)
+      })) : [],
+      lastActivity: session.lastActivity,
+      createdAt: session.createdAt
+    };
+  }
+
+  async updateChatSession(userId: string, messages: ChatMessage[]): Promise<ChatSession | null> {
+    try {
+      const session = await (prisma as any).chatSession.upsert({
+        where: { userId },
+        update: {
+          messages: messages,
+          lastActivity: new Date()
+        },
+        create: {
+          userId: userId,
+          messages: messages,
+          lastActivity: new Date(),
+          createdAt: new Date()
+        }
+      });
+      
+      return {
+        id: session.id,
+        userId: session.userId,
+        messages: Array.isArray(session.messages) ? session.messages.map((msg: any) => ({
+          role: msg.role,
+          content: msg.content,
+          timestamp: new Date(msg.timestamp)
+        })) : [],
+        lastActivity: session.lastActivity,
+        createdAt: session.createdAt
+      };
+    } catch (error) {
+      console.error('Error updating chat session:', error);
+      return null;
+    }
+  }
+
+  async clearChatSession(userId: string): Promise<boolean> {
+    try {
+      await (prisma as any).chatSession.delete({
+        where: { userId }
+      });
+      return true;
+    } catch (error) {
+      console.error('Error clearing chat session:', error);
+      return false;
+    }
   }
 }
 

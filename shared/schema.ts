@@ -348,3 +348,29 @@ export type InsertAIPrediction = z.infer<typeof insertAIPredictionSchema>;
 
 // User without sensitive fields for frontend
 export type SafeUser = Omit<User, 'password'>;
+
+// AI Chat Session types
+export type ChatSession = {
+  id: string;
+  userId: string;
+  messages: ChatMessage[];
+  lastActivity: Date;
+  createdAt: Date;
+};
+
+export type ChatMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+};
+
+export const insertChatSessionSchema = z.object({
+  userId: z.string().min(1, "User ID is required"),
+  messages: z.array(z.object({
+    role: z.enum(['user', 'assistant']),
+    content: z.string(),
+    timestamp: z.date()
+  })),
+});
+
+export type InsertChatSession = z.infer<typeof insertChatSessionSchema>;

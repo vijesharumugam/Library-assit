@@ -6,7 +6,7 @@ if (!process.env.MONGODB_URI) {
   throw new Error('MONGODB_URI environment variable is required');
 }
 
-export const prisma = new PrismaClient({
+export const prisma: PrismaClient = new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
 });
 

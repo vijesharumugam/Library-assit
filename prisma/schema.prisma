@@ -28,6 +28,7 @@ model User {
   notifications Notification[]
   extensionRequests ExtensionRequest[]
   pushSubscriptions PushSubscription[]
+  chatSession ChatSession?
 
   @@map("users")
 }
@@ -47,6 +48,7 @@ model Book {
   // Relations
   transactions Transaction[]
   bookRequests BookRequest[]
+  aiContent BookAIContent?
 
   @@map("books")
 }
@@ -167,4 +169,58 @@ model PushSubscription {
   // Ensure one subscription per user per endpoint
   @@unique([userId, endpoint])
   @@map("push_subscriptions")
+}
+
+model ChatSession {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String        @unique @db.ObjectId
+  messages     Json          // Array of ChatMessage objects
+  lastActivity DateTime      @default(now())
+  createdAt    DateTime      @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("chat_sessions")
+}
+
+model BookAIContent {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  bookId         String    @unique @db.ObjectId
+  summary        String?
+  studyGuide     String?
+  quotes         Json?     // Array of strings
+  comprehensionQA Json?    // Array of {question, answer} objects
+  lastUpdated    DateTime  @default(now())
+
+  // Relations
+  book Book @relation(fields: [bookId], references: [id])
+
+  @@map("book_ai_content")
+}
+
+model AIAnalytics {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  type        String    // USAGE_PATTERN, INVENTORY_INSIGHT, USER_BEHAVIOR, PERFORMANCE_METRIC
+  title       String
+  description String
+  data        Json      // Analytics data for charts
+  insights    String?   // AI-generated insights
+  generatedAt DateTime  @default(now())
+  validUntil  DateTime?
+
+  @@map("ai_analytics")
+}
+
+model AIPrediction {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  type       String    // OVERDUE_RISK, POPULAR_BOOK_FORECAST, OPTIMAL_DUE_DATE
+  targetId   String    // userId for overdue risk, bookId for popularity, transactionId for due date
+  prediction Json      // Prediction data
+  confidence Float     // 0-1 confidence score
+  reasoning  String?   // AI reasoning
+  createdAt  DateTime  @default(now())
+  validUntil DateTime?
+
+  @@map("ai_predictions")
 }

@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { Request } from "express";
-import { User, Transaction, BookRequest, TransactionWithBook, BookRequestWithBook } from "@shared/schema";
+import { User, Transaction, BookRequest, TransactionWithBook, BookRequestWithBook, ChatMessage } from "@shared/schema";
 import { storage } from "./storage";
 
 /*
@@ -27,28 +27,16 @@ interface AIResponse {
   bookLinks?: BookSearchResult[];
 }
 
-// In-memory chat sessions storage
-const chatSessions = new Map<string, ChatMessage[]>();
-
-interface ChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
+// Note: Chat sessions are now stored in the database via storage interface
 
 export class LibraryAIService {
-  private getSessionId(userId: string): string {
-    return `chat_${userId}`;
+  private async getChatHistory(userId: string): Promise<ChatMessage[]> {
+    const session = await storage.getChatSession(userId);
+    return session?.messages || [];
   }
 
-  private getChatHistory(userId: string): ChatMessage[] {
-    const sessionId = this.getSessionId(userId);
-    return chatSessions.get(sessionId) || [];
-  }
-
-  private addToChatHistory(userId: string, role: 'user' | 'assistant', content: string): void {
-    const sessionId = this.getSessionId(userId);
-    const history = this.getChatHistory(userId);
+  private async addToChatHistory(userId: string, role: 'user' | 'assistant', content: string): Promise<void> {
+    const history = await this.getChatHistory(userId);
     
     history.push({
       role,
@@ -61,12 +49,11 @@ export class LibraryAIService {
       history.shift();
     }
     
-    chatSessions.set(sessionId, history);
+    await storage.updateChatSession(userId, history);
   }
 
-  clearChatHistory(userId: string): void {
-    const sessionId = this.getSessionId(userId);
-    chatSessions.delete(sessionId);
+  async clearChatHistory(userId: string): Promise<void> {
+    await storage.clearChatSession(userId);
     console.log(`Cleared chat history for user ${userId}`);
   }
 
@@ -76,11 +63,11 @@ export class LibraryAIService {
       const userContext = await this.getUserLibraryContext(user);
       
       // Get chat history for context
-      const chatHistory = this.getChatHistory(user.id);
+      const chatHistory = await this.getChatHistory(user.id);
       console.log(`Processing query with ${chatHistory.length} previous messages in context`);
       
       // Add current user message to history
-      this.addToChatHistory(user.id, 'user', message);
+      await this.addToChatHistory(user.id, 'user', message);
       
       // Check if this is a book search/download request
       const isBookSearchQuery = this.isBookSearchQuery(message);
@@ -139,7 +126,7 @@ Current query: "${message}"`;
       }
 
       // Add assistant's response to chat history
-      this.addToChatHistory(user.id, 'assistant', aiResponse);
+      await this.addToChatHistory(user.id, 'assistant', aiResponse);
 
       return {
         response: aiResponse,
